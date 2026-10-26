@@ -29,7 +29,7 @@ def get(prefix):
 rem=get('予約');sites=get('フレンド')
 pik=[i for _,v in dated for i in v if '【ピクミン】' in i]
 call=['📞 中道さんぽ 電話予約：10/28(水) 9:00〜（前日10/27 19:00にリマインド）',
- '🍄 ピクミン巨大キノコイベント：10/28(水) リマインド（通話では「8時」、登録済みリマインダーは20:00 → どちらか確認中）',
+ '🍄 ピクミン巨大キノコイベント：10/28(水) 20:00 リマインド',
  '📒 みんなの便利帳：10/25〜26に作成済み']
 now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 card=lambda title,inner:f'<section class="card"><h2>{title}</h2>{inner}</section>'
