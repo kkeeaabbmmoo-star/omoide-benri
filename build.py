@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate ゆずの思い出＆便利帳 from md sources. Usage: python3 build.py [--push]
+"""Regenerate 💖 ゆず＆みんなの思い出 (旧 思い出＆便利帳) from md sources. Usage: python3 build.py [--push]
 PUBLIC page: never put passwords/passphrases in the md sources."""
 import glob,os,re,html,json,sys,subprocess,datetime
 D=os.path.dirname(os.path.abspath(__file__))
@@ -16,21 +16,8 @@ for f in sorted(glob.glob('/workspace/思い出ノート/*.md')):
         lines=s.strip().split('\n');date=lines[0].strip();body=[l.lstrip('- ').strip() for l in lines[1:] if l.strip()]
         mem.append((date,who,body))
 mem.sort(key=lambda x:x[0],reverse=True)
-# --- 便利帳
-bt=open('/workspace/みんなの便利帳/みんなの便利帳.md').read()
-sections=[(s.split('\n')[0].strip(),[l[2:].strip() for l in s.split('\n')[1:] if l.startswith('- ')]) for s in re.split(r'^## ',bt,flags=re.M)[1:]]
-dated=[x for x in sections if re.match(r'\d{4}-\d\d-\d\d',x[0])]
-other={k:v for k,v in sections if not re.match(r'\d{4}-\d\d-\d\d',k)}
+# --- 便利帳は 2026-10-27 に便利ノートへ引っ越し（benri-note/tools/publish_benricho.py）
 def ul(items):return '<ul>'+''.join('<li>'+link(i)+'</li>' for i in items)+'</ul>'
-def get(prefix):
-    for k,v in other.items():
-        if k.startswith(prefix):return v
-    return []
-rem=get('予約');sites=get('フレンド')
-pik=[i for _,v in dated for i in v if '【ピクミン】' in i]
-call=['📞 中道さんぽ 電話予約：10/28(水) 9:00〜（前日10/27 19:00にリマインド）',
- '🍄 ピクミン巨大キノコイベント：10/28(水) 20:00 リマインド',
- '📒 みんなの便利帳：10/25〜26に作成済み']
 now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 card=lambda title,inner:f'<section class="card"><h2>{title}</h2>{inner}</section>'
 ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸','愛🍒','おーさー','みきティ']
@@ -65,9 +52,9 @@ def mbar():
         it+=f'<a href="#m-{n}" title="{n}" aria-label="{n}" data-last="{E(last(w))}"><span class="mi">{ic}</span><small class="ago"></small></a>'
     return f'<div id="mbar">{it}</div>'
 memhtml=f'<p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
-dhtml=''.join(f'<h3>{E(k)}</h3>'+ul(v) for k,v in dated)
-body=card('☀️ 今朝の通話から',ul(call))+card('⏰ 予約・リマインダー',ul(rem))+card('📒 便利帳（日付別）',dhtml)+card('🍄 ピクミン情報',ul(pik))+card('💞 みんなの思い出',memhtml)+card('🤝 フレンド募集サイト',ul(sites))
-JS=r'''<script src="send.js?v=1"></script><script src="backup_om.js?v=1"></script><script src="sent-status.js?v=ss1"></script><script>
+BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
+body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
+JS=r'''<script src="send.js?v=1"></script><script src="backup_om.js?v=1"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv3"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}'),EM=['❤️','🙏','👏'];
 Object.keys(P).forEach(function(k){if(typeof P[k]==='string')P[k]={t:P[k]}});
 function sv(){localStorage.setItem(K,JSON.stringify(R));localStorage.setItem(KR,JSON.stringify(P))}
@@ -100,7 +87,7 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');})();
 </script></body></html>'''
 page=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ゆずの思い出＆便利帳</title>
+<title>ゆず＆みんなの思い出</title>
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="思い出＆便利帳">
@@ -113,16 +100,16 @@ main{{max-width:620px;margin:auto;padding:8px 12px 40px}}.card{{background:#fff;
 #rlf{{position:fixed;right:calc(env(safe-area-inset-right) + 16px);bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:9;width:56px;height:56px;border-radius:50%;border:0;background:#d0567f;color:#fff;font-size:24px;box-shadow:0 3px 10px #0004}}
 body{{padding-bottom:calc(env(safe-area-inset-bottom) + 80px)}}
 h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10px 0 2px}}ul{{padding-left:20px;margin:4px 0}}li{{margin:4px 0}}a{{color:#d0567f;word-break:break-all}}
-.mem{{border-left:4px solid #ffb3c8;padding:2px 10px;margin:8px 0}}.mem p{{margin:2px 0}}.md{{font-size:13px;color:#9a7b88}}.nm{{display:flex;align-items:center;gap:6px;margin:4px 0}}.ic{{font-size:22px;width:32px;height:32px;border-radius:50%;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center}}.mem{{scroll-margin-top:12px}}#mbar{{display:flex;justify-content:flex-end;gap:2px;margin:18px 0 2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}}#mbar::-webkit-scrollbar{{display:none}}#mbar a{{flex:none;width:26px;display:inline-flex;flex-direction:column;align-items:center;text-decoration:none}}#mbar .mi{{width:24px;height:24px;border-radius:50%;overflow:hidden;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 0 1.5px #ffd0e0}}.ago{{display:block;font-size:9px;line-height:1.3;color:#9a7b88;white-space:nowrap;text-align:center}}.ago.lg{{color:#c0587f;font-weight:bold}}.avw{{display:inline-flex;flex-direction:column;align-items:center;flex:none}}.fold{{margin:3px 0}}.fold>summary{{cursor:pointer;font-size:14px;color:#a0466a;padding:4px 2px;list-style-position:inside}}.ln{{border-radius:6px;padding:0 2px}}.ln.sel{{background:#ffe08a}}.qt{{font-size:12px;color:#a0466a;width:100%}}.qt a{{margin-left:6px}}#mbar img{{width:24px;height:24px;object-fit:cover;border-radius:50%}}html{{scroll-behavior:smooth}}#bk{{display:flex;gap:6px;justify-content:center;margin:6px 0 0}}#bk button{{border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:14px;font-size:13px;padding:4px 10px}}.av{{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px #ffe4ee}}
+.mem{{border-left:4px solid #ffb3c8;padding:2px 10px;margin:8px 0}}.mem p{{margin:2px 0}}.md{{font-size:13px;color:#9a7b88}}.nm{{display:flex;align-items:center;gap:6px;margin:4px 0}}.ic{{font-size:22px;width:32px;height:32px;border-radius:50%;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center}}.mem{{scroll-margin-top:12px}}#mbar{{display:flex;justify-content:flex-end;gap:2px;margin:18px 0 2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}}#mbar::-webkit-scrollbar{{display:none}}#mbar a{{flex:none;width:26px;display:inline-flex;flex-direction:column;align-items:center;text-decoration:none}}#mbar .mi{{width:24px;height:24px;border-radius:50%;overflow:hidden;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 0 1.5px #ffd0e0}}.ago{{display:block;font-size:9px;line-height:1.3;color:#9a7b88;white-space:nowrap;text-align:center}}.ago.lg{{color:#c0587f;font-weight:bold}}.avw{{display:inline-flex;flex-direction:column;align-items:center;flex:none}}.fold{{margin:3px 0}}.fold>summary{{cursor:pointer;font-size:14px;color:#a0466a;padding:4px 2px;list-style-position:inside}}.ln{{border-radius:6px;padding:0 2px}}.ln.sel{{background:#ffe08a}}.qt{{font-size:12px;color:#a0466a;width:100%}}.qt a{{margin-left:6px}}#mbar img{{width:24px;height:24px;object-fit:cover;border-radius:50%}}html{{scroll-behavior:smooth}}#bk{{display:flex;gap:6px;justify-content:center;margin:6px 0 0}}#bk button{{border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:14px;font-size:13px;padding:4px 10px}}.mv{{display:block;text-align:center;margin:14px 0 6px;padding:10px;border-radius:14px;background:#fff;color:#2a9d7f;font-weight:bold;text-decoration:none;border:1px dashed #9fd8c4}}.av{{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px #ffe4ee}}
 .post{{border-top:1px dashed #f3c6d5;padding:4px 6px;border-radius:10px;transition:background .4s}}.post.rd{{background:#eef7ee}}.post.rd>.md::after{{content:' 👀既読';color:#5a9a5a}}.rp{{font-size:13px;background:#fff6f9;border-radius:10px;padding:2px 8px;margin:3px 0}}
 .act{{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:4px 0}}.act button{{border:1px solid #f3c6d5;background:#fff;border-radius:14px;font-size:15px;padding:2px 8px}}.act button.on{{background:#ffd6e4;border-color:#d0567f}}
 .act input{{flex:1;min-width:120px;border:1px solid #f3c6d5;border-radius:12px;padding:5px 8px;font-size:16px}}
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}</style></head>
-<body><header><h1>💖 ゆずの思い出＆便利帳</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
+<body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v8'
+SWV='omoide-v9'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
-json.dump({"name":"ゆずの思い出＆便利帳","short_name":"思い出＆便利帳","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
-print('built',len(mem),'memories',len(dated),'days')
+json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
+print('built',len(mem),'memories')
 if '--push' in sys.argv:
     subprocess.run(['git','-C',D,'add','-A']);subprocess.run(['git','-C',D,'commit','-qm','update '+now]);subprocess.run(['git','-C',D,'push','-q'],check=True)
