@@ -21,13 +21,13 @@ mem.sort(key=lambda x:x[0],reverse=True)
 def ul(items):return '<ul>'+''.join('<li>'+link(i)+'</li>' for i in items)+'</ul>'
 now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 card=lambda title,inner:f'<section class="card"><h2>{title}</h2>{inner}</section>'
-ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸','愛🍒','おーさー','みきティ']
+ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸','愛🍒','おーさー','みきティ','しの','由紀','マキ','星野王子']
 people={}
 for d,w,b in mem: people.setdefault(w,[]).append((d,b))
 for w in empty: people.setdefault(w,[])
 names=[n for n in ORDER if n in people]+sorted(n for n in people if n not in ORDER)
-AV={'ゆず💖':'yuzu','まい🍊':'mai','まちゃ':'macha','らん':'ran','レイ':'rei','恵':'megumi','瀬戸':'seto','由依🌸':'yui','愛🍒':'ai','おーさー':'osa','みきティ':'mikity'}
-ICON={'ゆず💖':'💖','すーさん':'🍺','まい🍊':'🍊','まちゃ':'😂','らん':'☺️','レイ':'💓','恵':'🫂','瀬戸':'🥺','由依🌸':'🌸'}
+AV={'ゆず💖':'yuzu','まい🍊':'mai','まちゃ':'macha','らん':'ran','レイ':'rei','恵':'megumi','瀬戸':'seto','由依🌸':'yui','愛🍒':'ai','おーさー':'osa','みきティ':'mikity','しの':'shino','由紀':'yuki','マキ':'maki'}
+ICON={'ゆず💖':'💖','すーさん':'🍺','まい🍊':'🍊','まちゃ':'😂','らん':'☺️','レイ':'💓','恵':'🫂','瀬戸':'🥺','由依🌸':'🌸','星野王子':'🤩'}
 for _w in list(people):
     if _w not in AV and os.path.exists(os.path.join(D,'img','avatars',re.sub(r'[^\w・ー]','',_w)+'.png')):AV[_w]=re.sub(r'[^\w・ー]','',_w)
 def plain(w):return re.sub(r'[^\w・ー]','',w) or w
@@ -47,7 +47,7 @@ def pcard(w):
     return f'<div class="mem" id="m-{E(plain(w))}" data-last="{E(last(w))}"><div class="nm"><span class="avw">{av}<small class="ago"></small></span><b>{E(plain(w))}</b><span class="md">（最新{len(es)}日分）</span></div>{inner}</div>'
 def last(w):
     ds=sorted(d for d,_ in people.get(w,[]) if re.match(r'\d{4}-\d\d-\d\d$',d));return ds[-1] if ds else ('old' if people.get(w) else '')
-ROW=['愛🍒','おーさー','みきティ','すーさん','恵','レイ','まい🍊','瀬戸','らん','まちゃ','由依🌸','ゆず💖']
+ROW=['愛🍒','おーさー','みきティ','すーさん','恵','レイ','まい🍊','瀬戸','らん','まちゃ','由依🌸','ゆず💖','しの','由紀','マキ','星野王子']
 def mbar():
     it=''
     for w in [x for x in ROW if x in people]+[x for x in names if x not in ROW]:
@@ -128,7 +128,7 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}</style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v10'
+SWV='omoide-v11'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
