@@ -33,8 +33,16 @@ call=['📞 中道さんぽ 電話予約：10/28(水) 9:00〜（前日10/27 19:0
  '📒 みんなの便利帳：10/25〜26に作成済み']
 now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 card=lambda title,inner:f'<section class="card"><h2>{title}</h2>{inner}</section>'
-memhtml=''.join(f'<div class="mem"><div class="md">{E(d)} ・ <b>{E(w)}</b></div>'+''.join(f'<p>{link(b)}</p>' for b in body)+'</div>' for d,w,body in mem) or '<p>まだ記録なし</p>'
-memhtml+=f'<p class="sub">まだ記録なし：{E("・".join(empty))}</p>' if empty else ''
+ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸']
+people={}
+for d,w,b in mem: people.setdefault(w,[]).append((d,b))
+for w in empty: people.setdefault(w,[])
+names=[n for n in ORDER if n in people]+[n for n in people if n not in ORDER]
+def pcard(w):
+    es=people[w]
+    inner=''.join(f'<div class="md">{E(d)}</div>'+''.join(f'<p>{link(b)}</p>' for b in body) for d,body in es) or '<p class="sub">まだ記録なし（書いてくれるのを待ってるよ✍️）</p>'
+    return f'<div class="mem"><div class="md"><b>{E(w)}</b>（{len(es)}件）</div>{inner}</div>'
+memhtml=f'<p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)
 dhtml=''.join(f'<h3>{E(k)}</h3>'+ul(v) for k,v in dated)
 body=card('☀️ 今朝の通話から',ul(call))+card('⏰ 予約・リマインダー',ul(rem))+card('📒 便利帳（日付別）',dhtml)+card('🍄 ピクミン情報',ul(pik))+card('💞 みんなの思い出',memhtml)+card('🤝 フレンド募集サイト',ul(sites))
 page=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
