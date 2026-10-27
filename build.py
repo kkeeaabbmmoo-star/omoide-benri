@@ -37,7 +37,7 @@ ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','�
 people={}
 for d,w,b in mem: people.setdefault(w,[]).append((d,b))
 for w in empty: people.setdefault(w,[])
-names=[n for n in ORDER if n in people]+[n for n in people if n not in ORDER]
+names=[n for n in ORDER if n in people]
 def pcard(w):
     es=people[w]
     inner=''.join(f'<div class="md">{E(d)}</div>'+''.join(f'<p>{link(b)}</p>' for b in body) for d,body in es) or '<p class="sub">まだ記録なし（書いてくれるのを待ってるよ✍️）</p>'
