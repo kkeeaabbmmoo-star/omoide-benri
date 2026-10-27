@@ -33,11 +33,12 @@ call=['📞 中道さんぽ 電話予約：10/28(水) 9:00〜（前日10/27 19:0
  '📒 みんなの便利帳：10/25〜26に作成済み']
 now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 card=lambda title,inner:f'<section class="card"><h2>{title}</h2>{inner}</section>'
-ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸']
+ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸','愛🍒','おーさー','みきティ']
 people={}
 for d,w,b in mem: people.setdefault(w,[]).append((d,b))
 for w in empty: people.setdefault(w,[])
 names=[n for n in ORDER if n in people]
+AV={'ゆず💖':'yuzu','まい🍊':'mai','まちゃ':'macha','らん':'ran','レイ':'rei','恵':'megumi','瀬戸':'seto','由依🌸':'yui','愛🍒':'ai','おーさー':'osa','みきティ':'mikity'}
 ICON={'ゆず💖':'💖','すーさん':'🍺','まい🍊':'🍊','まちゃ':'😂','らん':'☺️','レイ':'💓','恵':'🫂','瀬戸':'🥺','由依🌸':'🌸'}
 def plain(w):return re.sub(r'[^\w・ー]','',w) or w
 RP=os.path.join('/workspace/思い出ノート','replies.json')
@@ -48,8 +49,8 @@ def pcard(w):
     def post(d,body):
         i=pid(w,d);rs=''.join(f'<div class="rp">↩️ <b>{E(r["who"])}</b>：{E(r["text"])}</div>' for r in replies.get(i,[]))
         return f'<div class="post" data-id="{E(i)}" data-who="{E(plain(w))}"><div class="md">{E(d)}</div>'+''.join(f'<p>{link(b)}</p>' for b in body)+rs+'<div class="act"></div></div>'
-    inner=''.join(post(d,b) for d,b in es) or '<p class="sub">まだ記録なし（書いてくれるのを待ってるよ✍️）</p>'
-    return f'<div class="mem"><div class="nm"><span class="ic">{ICON.get(w,"💬")}</span><b>{E(plain(w))}</b><span class="md">（最新{len(es)}日分）</span></div>{inner}</div>'
+    inner=''.join(post(d,b) for d,b in es) or '<p class="sub">まだ書き込みはないよ</p>'
+    return f'<div class="mem"><div class="nm">{(f'<img class="av" src="img/avatars/{AV[w]}.png?v=1" alt="" width="32" height="32">' if w in AV else f'<span class="ic">{ICON.get(w,"💬")}</span>')}<b>{E(plain(w))}</b><span class="md">（最新{len(es)}日分）</span></div>{inner}</div>'
 memhtml=f'<p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずに送る（リアクション・返事）</button>'
 dhtml=''.join(f'<h3>{E(k)}</h3>'+ul(v) for k,v in dated)
 body=card('☀️ 今朝の通話から',ul(call))+card('⏰ 予約・リマインダー',ul(rem))+card('📒 便利帳（日付別）',dhtml)+card('🍄 ピクミン情報',ul(pik))+card('💞 みんなの思い出',memhtml)+card('🤝 フレンド募集サイト',ul(sites))
@@ -87,14 +88,14 @@ main{{max-width:620px;margin:auto;padding:8px 12px 40px}}.card{{background:#fff;
 #rlf{{position:fixed;right:calc(env(safe-area-inset-right) + 16px);bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:9;width:56px;height:56px;border-radius:50%;border:0;background:#d0567f;color:#fff;font-size:24px;box-shadow:0 3px 10px #0004}}
 body{{padding-bottom:calc(env(safe-area-inset-bottom) + 80px)}}
 h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10px 0 2px}}ul{{padding-left:20px;margin:4px 0}}li{{margin:4px 0}}a{{color:#d0567f;word-break:break-all}}
-.mem{{border-left:4px solid #ffb3c8;padding:2px 10px;margin:8px 0}}.mem p{{margin:2px 0}}.md{{font-size:13px;color:#9a7b88}}.nm{{display:flex;align-items:center;gap:6px;margin:4px 0}}.ic{{font-size:22px;width:32px;height:32px;border-radius:50%;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center}}
+.mem{{border-left:4px solid #ffb3c8;padding:2px 10px;margin:8px 0}}.mem p{{margin:2px 0}}.md{{font-size:13px;color:#9a7b88}}.nm{{display:flex;align-items:center;gap:6px;margin:4px 0}}.ic{{font-size:22px;width:32px;height:32px;border-radius:50%;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center}}.av{{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none;box-shadow:0 0 0 2px #ffe4ee}}
 .post{{border-top:1px dashed #f3c6d5;padding:4px 6px;border-radius:10px;transition:background .4s}}.post.rd{{background:#eef7ee}}.post.rd>.md::after{{content:' 👀既読';color:#5a9a5a}}.rp{{font-size:13px;background:#fff6f9;border-radius:10px;padding:2px 8px;margin:3px 0}}
 .act{{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:4px 0}}.act button{{border:1px solid #f3c6d5;background:#fff;border-radius:14px;font-size:15px;padding:2px 8px}}.act button.on{{background:#ffd6e4;border-color:#d0567f}}
 .act input{{flex:1;min-width:120px;border:1px solid #f3c6d5;border-radius:12px;padding:5px 8px;font-size:16px}}
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}</style></head>
 <body><header><h1>💖 ゆずの思い出＆便利帳</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v3'
+SWV='omoide-v4'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆずの思い出＆便利帳","short_name":"思い出＆便利帳","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 print('built',len(mem),'memories',len(dated),'days')
