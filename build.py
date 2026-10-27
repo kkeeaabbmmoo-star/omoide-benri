@@ -56,10 +56,12 @@ page=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <style>body{{margin:0;background:linear-gradient(180deg,#fff0f5,#fff8e6) fixed;font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;color:#4a3340;line-height:1.6}}
 header{{padding:calc(env(safe-area-inset-top) + 18px) 16px 8px;text-align:center}}h1{{font-size:22px;margin:0}}.sub{{color:#9a7b88;font-size:13px}}
 main{{max-width:620px;margin:auto;padding:8px 12px 40px}}.card{{background:#fff;border-radius:18px;padding:12px 16px;margin:12px 0;box-shadow:0 2px 10px #f3c6d555}}
-#rl{{position:sticky;top:calc(env(safe-area-inset-top) + 6px);float:right;z-index:9;background:#d0567f;color:#fff;border:0;border-radius:20px;padding:8px 14px;font-size:16px;font-weight:bold;box-shadow:0 2px 6px #0003}}
+#rl{{display:block;width:100%;min-height:48px;margin:10px 0 2px;background:#d0567f;color:#fff;border:0;border-radius:24px;font-size:17px;font-weight:bold;box-shadow:0 2px 6px #0003}}
+#rlf{{position:fixed;right:calc(env(safe-area-inset-right) + 16px);bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:9;width:56px;height:56px;border-radius:50%;border:0;background:#d0567f;color:#fff;font-size:24px;box-shadow:0 3px 10px #0004}}
+body{{padding-bottom:calc(env(safe-area-inset-bottom) + 80px)}}
 h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10px 0 2px}}ul{{padding-left:20px;margin:4px 0}}li{{margin:4px 0}}a{{color:#d0567f;word-break:break-all}}
 .mem{{border-left:4px solid #ffb3c8;padding:2px 10px;margin:8px 0}}.mem p{{margin:2px 0}}.md{{font-size:13px;color:#9a7b88}}</style></head>
-<body><header><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><h1>💖 ゆずの思い出＆便利帳</h1><div class="sub">エイジ専用・最終更新 {now}</div></header><main>{body}</main></body></html>'''
+<body><header><h1>💖 ゆずの思い出＆便利帳</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main></body></html>'''
 open(os.path.join(D,'index.html'),'w').write(page)
 json.dump({"name":"ゆずの思い出＆便利帳","short_name":"思い出＆便利帳","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 print('built',len(mem),'memories',len(dated),'days')
