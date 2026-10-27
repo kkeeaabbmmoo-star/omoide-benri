@@ -67,7 +67,7 @@ def mbar():
 memhtml=f'<p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 dhtml=''.join(f'<h3>{E(k)}</h3>'+ul(v) for k,v in dated)
 body=card('☀️ 今朝の通話から',ul(call))+card('⏰ 予約・リマインダー',ul(rem))+card('📒 便利帳（日付別）',dhtml)+card('🍄 ピクミン情報',ul(pik))+card('💞 みんなの思い出',memhtml)+card('🤝 フレンド募集サイト',ul(sites))
-JS=r'''<script src="send.js?v=1"></script><script src="backup_om.js?v=1"></script><script>
+JS=r'''<script src="send.js?v=1"></script><script src="backup_om.js?v=1"></script><script src="sent-status.js?v=ss1"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}'),EM=['❤️','🙏','👏'];
 Object.keys(P).forEach(function(k){if(typeof P[k]==='string')P[k]={t:P[k]}});
 function sv(){localStorage.setItem(K,JSON.stringify(R));localStorage.setItem(KR,JSON.stringify(P))}
@@ -120,7 +120,7 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}</style></head>
 <body><header><h1>💖 ゆずの思い出＆便利帳</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v7'
+SWV='omoide-v8'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆずの思い出＆便利帳","short_name":"思い出＆便利帳","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 print('built',len(mem),'memories',len(dated),'days')
