@@ -3,7 +3,7 @@
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function jst(){return new Date(Date.now()+9*3600e3).toISOString()}
-function snap(){return {app:'omoide',v:2,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{})}}
+function snap(){var c=(window.__OM_CLOSE)||{};return {app:'omoide',v:3,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}}}
 window.omSend=function(){
   var R=g(K.r,{}),P=g(K.p,{});
   if(!Object.keys(R).length&&!Object.keys(P).length){alert('まだリアクションも返事もないよ💖');return}
@@ -25,6 +25,9 @@ window.omRestore=function(){
   var o;try{o=JSON.parse(s.slice(s.indexOf('{'),s.lastIndexOf('}')+1))}catch(e){alert('JSONが読めなかったよ💦');return}
   var add=0;function m(k,src,conv){var cur=g(k,{});Object.keys(src||{}).forEach(function(i){if(cur[i]==null){cur[i]=conv?conv(src[i]):src[i];add++}});localStorage.setItem(k,JSON.stringify(cur))}
   m(K.r,o.reactions);m(K.p,o.replies,function(v){return typeof v==='string'?{t:v}:v});m(K.d,o.read);
+  if(o.closeness){var cl=o.closeness;if(cl.lv){var lv=g('om_lv',{});Object.keys(cl.lv).forEach(function(k){lv[k]=Math.max(lv[k]||1,cl.lv[k]||1)});localStorage.setItem('om_lv',JSON.stringify(lv))}
+   if(cl.peak){var pk=g('om_pts_peak',{});Object.keys(cl.peak).forEach(function(k){pk[k]=Math.max(pk[k]||0,cl.peak[k]||0)});localStorage.setItem('om_pts_peak',JSON.stringify(pk))}
+   if(cl.open!=null)localStorage.setItem('om_close_open',JSON.stringify(!!cl.open))}
   if(Array.isArray(o.history)){var h=g(K.h,[]),seen={};h.forEach(function(x){seen[x.sent]=1});o.history.forEach(function(x){if(!seen[x.sent])h.push(x)});localStorage.setItem(K.h,JSON.stringify(h.slice(-30)))}
   alert(add+'件たしたよ💖');location.reload()};
 })();
