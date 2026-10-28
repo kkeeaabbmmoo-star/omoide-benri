@@ -182,14 +182,14 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
     var rest=s.slice(i),g;(typeof Intl!=='undefined'&&Intl.Segmenter)?(g=Array.from(new Intl.Segmenter('ja',{granularity:'grapheme'}).segment(rest))[0].segment):(g=Array.from(rest)[0]);
     out.push(g);i+=g.length}return out}
  function draw(){a.innerHTML='';EM=loadEM();
-  var mode=!!p._comboMode,sel=p._comboSel||[];
+  var mode=!!p._comboMode,cSel=p._comboSel||[];
   /* existing combo / orphan as one pill */
   if(R[id]&&EM.indexOf(R[id])<0){var ob=document.createElement('button');ob.type='button';ob.className='on rxCombo';ob.textContent=R[id];ob.title=splitRx(R[id]).length>=2?'組み合わせリアクション（1件）':'セット外のマーク';
    ob.onclick=function(){if(mode)return;delete R[id];sv();draw()};a.appendChild(ob)}
   EM.forEach(function(e){var b=document.createElement('button');b.type='button';b.textContent=e;
-   var ix=sel.indexOf(e);
+   var ix=cSel.indexOf(e);
    if(mode){if(ix>=0){b.className='on comboPick';var n=document.createElement('i');n.className='comboOrd';n.textContent=String(ix+1);b.appendChild(n)}
-    b.onclick=function(ev){ev.stopPropagation();var i2=sel.indexOf(e);if(i2>=0)sel.splice(i2,1);else sel.push(e);p._comboSel=sel;draw()}}
+    b.onclick=function(ev){ev.stopPropagation();var i2=cSel.indexOf(e);if(i2>=0)cSel.splice(i2,1);else cSel.push(e);p._comboSel=cSel;draw()}}
    else{if(R[id]===e)b.className='on';
     b.onclick=function(){if(R[id]===e)delete R[id];else R[id]=e;sv();draw()}}
    a.appendChild(b)});
@@ -198,10 +198,10 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
   cb.onclick=function(ev){ev.stopPropagation();if(mode){p._comboMode=0;p._comboSel=[];draw();return}
    p._comboMode=1;p._comboSel=(R[id]&&EM.indexOf(R[id])<0)?splitRx(R[id]).filter(function(x){return EM.indexOf(x)>=0}):[];draw()};a.appendChild(cb);
   if(mode){var bar=document.createElement('div');bar.className='comboBar';
-   var prev=document.createElement('span');prev.className='comboPrev';prev.textContent=sel.length?('プレビュー：'+sel.join('')):'マークを2つ以上タップしてね';
+   var prev=document.createElement('span');prev.className='comboPrev';prev.textContent=cSel.length?('プレビュー：'+cSel.join('')):'マークを2つ以上タップしてね';
    bar.appendChild(prev);
-   var ok=document.createElement('button');ok.type='button';ok.className='comboOk';ok.textContent='この組み合わせで送る';ok.disabled=sel.length<2;
-   ok.onclick=function(ev){ev.stopPropagation();if(sel.length<2)return;R[id]=sel.join('');p._comboMode=0;p._comboSel=[];sv();draw()};
+   var ok=document.createElement('button');ok.type='button';ok.className='comboOk';ok.textContent='この組み合わせで送る';ok.disabled=cSel.length<2;
+   ok.onclick=function(ev){ev.stopPropagation();if(cSel.length<2)return;R[id]=cSel.join('');p._comboMode=0;p._comboSel=[];sv();draw()};
    var ng=document.createElement('button');ng.type='button';ng.className='comboNg';ng.textContent='やめる';
    ng.onclick=function(ev){ev.stopPropagation();p._comboMode=0;p._comboSel=[];draw()};
    bar.appendChild(ok);bar.appendChild(ng);a.appendChild(bar)}
@@ -212,7 +212,8 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
    var row=document.createElement('div');row.className='actRow';row.style.cssText='display:flex;gap:4px;align-items:center;width:100%;flex-wrap:wrap';
    var i=document.createElement('input');i.placeholder=sel?'この一文にひとこと…':'ひとこと返事…';i.maxLength=60;i.style.flex='1';i.style.minWidth='100px';
    var s=document.createElement('button');s.type='button';s.textContent='送る';
-   s.onclick=function(){var v=i.value.trim();if(v){var o={t:v,at:TD};if(sel){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}P[id]=o;sv();markAck(p,'reply');draw()}};
+   /* v33: sel は行選択（.ln）。コンボ配列は cSel。影付けで送るが TypeError になってたのを修正 */
+   s.onclick=function(){var v=i.value.trim();if(!v){i.focus();return}var o={t:v,at:TD};if(sel&&sel.textContent){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}P[id]=o;sv();markAck(p,'reply');draw();nwDraw()};
    row.appendChild(i);attachMic(i,row);row.appendChild(s);a.appendChild(row)}
   paintPost(p)}
  p._omDraw=draw;
@@ -346,7 +347,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v32'
+SWV='omoide-v33'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
