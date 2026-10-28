@@ -128,7 +128,8 @@ document.querySelectorAll('[data-last]').forEach(function(el){var d=el.dataset.l
 });
 document.querySelectorAll('.fold').forEach(function(f){var d=f.dataset.d,sm=f.querySelector('summary');
  sm.textContent=d===TD?'今日（'+d.slice(5).replace('-','/')+'）':d===YD?'昨日（'+d.slice(5).replace('-','/')+'）':/^\d{4}-/.test(d)?d.slice(5).replace('-','/'):d;
- if(d===TD)f.open=true});
+ /* 自動では開かない（今日も閉じたまま）。開くのはタップ時だけ */
+ f.open=false});
 /* 既読は明示のみ（スクロールでは消えない）。新キー om_ack / om_ackrp。旧 om_read / om_seenrp は消さない */
 var KD='om_read',RD=JSON.parse(localStorage.getItem(KD)||'{}'); /* legacy keep */
 var SR='om_seenrp',SRD=JSON.parse(localStorage.getItem(SR)||'{}'); /* legacy keep */
@@ -246,7 +247,7 @@ function nwDraw(){var tot=0,who=[],uwho=[];
 }
 function applyFilt(m){m.querySelectorAll('.post').forEach(function(p){var rd=replied(p.dataset.id),hide=FILT==='unreplied'?rd:FILT==='replied'?!rd:false;p.classList.toggle('hide',hide);var f=p.closest('.fold');if(f){var any=[].some.call(f.querySelectorAll('.post'),function(x){return !x.classList.contains('hide')});f.classList.toggle('hide',!any)}})}
 function bdg(el,n){if(!el)return;var d=el.querySelector('.nbd');if(!n){if(d)d.remove();return}if(!d){d=document.createElement('b');d.className='nbd';el.appendChild(d)}d.textContent=n>9?'9+':n}
-function jump(m){var p=m.querySelector('.post.nw:not(.hide)')||m.querySelector('.post:not(.hide)')||m;var f=p.closest&&p.closest('.fold');if(f)f.open=true;setTimeout(function(){p.scrollIntoView({behavior:'smooth',block:'center'})},30);p.classList.add('hl');setTimeout(function(){p.classList.remove('hl')},1600)}
+function jump(m){var p=m.querySelector('.post.nw:not(.hide)')||m.querySelector('.post:not(.hide)')||m;var f=p.closest&&p.closest('.fold');if(f)f.open=true;setTimeout(function(){p.scrollIntoView({behavior:'smooth',block:'center'});try{if(location.hash)history.replaceState(null,'',location.pathname+location.search)}catch(e){}},30);p.classList.add('hl');setTimeout(function(){p.classList.remove('hl')},1600)}
 document.querySelectorAll('.fold').forEach(function(f){f.addEventListener('toggle',nwDraw)});
 document.querySelectorAll('.memToggle').forEach(function(btn){
   btn.addEventListener('click',function(ev){
@@ -345,7 +346,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v30'
+SWV='omoide-v31'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
