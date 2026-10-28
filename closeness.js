@@ -217,6 +217,7 @@ function render(){
     if(r<=3)badge.textContent=['🥇','🥈','🥉'][r-1];
     else{badge.textContent='';badge.innerHTML='<span class="clMedE">🏅</span><span class="clMedN">'+r+'</span>'}
   });
+  setupCouplePhoto(sec);if(sec.querySelector('.clPhoto')&&sec.querySelector('.clPhoto')._sync)sec.querySelector('.clPhoto')._sync();
   drawList(sec.querySelector('.clBox'),scores,total);
   drawMap(sec.querySelector('.clMap'),scores,total);
   window.__OM_CLOSE={scores:scores,total:total,lv:g('om_lv',{}),peak:g('om_pts_peak',{})};

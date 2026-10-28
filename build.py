@@ -57,7 +57,7 @@ def mbar():
 memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=1"></script><script src="backup_om.js?v=1"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=7"></script><script>
+JS=r'''<script src="send.js?v=1"></script><script src="backup_om.js?v=1"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=8"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}'),EM=['❤️','🙏','👏'];
 Object.keys(P).forEach(function(k){if(typeof P[k]==='string')P[k]={t:P[k]}});
 function sv(){localStorage.setItem(K,JSON.stringify(R));localStorage.setItem(KR,JSON.stringify(P))}
@@ -135,7 +135,7 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}</style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v19'
+SWV='omoide-v20'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
