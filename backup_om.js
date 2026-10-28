@@ -12,7 +12,7 @@ window.omSend=function(){
   var nr=Object.keys(R).length,np=Object.keys(P).length;
   var intro=function(note){return 'ゆずへ💌 思い出ノートのリアクションと返事だよ（'+(+t.slice(5,7))+'/'+(+t.slice(8,10))+'）\nリアクション '+nr+'・返事 '+np+(note?'\n'+note:'')};
   var h=g(K.h,[]);h.push(full);while(h.length>30)h.shift();localStorage.setItem(K.h,JSON.stringify(h));
-  yuzuSend({subject:'ゆず・由依・まいへ 思い出ノート omoide-backup-'+ymd,intro:intro,
+  yuzuSend({subject:'ゆずとみんなへ 思い出ノート '+jst().slice(0,10)+' omoide-backup-'+ymd,intro:intro,
     levels:[{data:full,note:''},{data:lite(true),note:'（既読はなし）'},{data:lite(false),note:'（既読・引用文なし、行番号だけ）'}],
     full:full,theme:{bg:'#fff',fg:'#2f3a45',acc:'#d0477a',btn:'linear-gradient(90deg,#ff8fb3,#d0567f)',btnfg:'#fff',sub:'#ffe3ee'}})};
 window.omBackup=function(){
