@@ -42,12 +42,11 @@ function drawList(box,scores,total){
   var h='<div class="clList">';
   ms.forEach(function(m){
     var p=scores[m.name]||0,lv=lvOf(p),nx=nextOf(p),pr=prevOf(p),pct=Math.min(100,Math.round((p-pr)/Math.max(1,nx-pr)*100));
-    var locked=m.name==='星野王子'&&total<1000;
-    var av=locked?'<span class="clSil">？？？</span>':(m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span class="clIc">'+esc(m.ic)+'</span>');
-    var fl=locked?['まだ出会っていない…']:flavors(m.name,p);
+    var av=m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span class="clIc">'+esc(m.ic)+'</span>';
+    var fl=flavors(m.name,p);
     var tag=m.name==='ゆず'?' <span class="clWife">👑 エイジの嫁</span>':'';
-    h+='<a class="clRow'+(m.name==='ゆず'?' yuzu':'')+(locked?' lock':'')+'" href="#'+esc(m.id)+'">'+
-      '<span class="clAv">'+av+'</span><span class="clMeta"><b>'+(locked?'？？？':esc(m.name))+tag+'</b>'+
+    h+='<a class="clRow'+(m.name==='ゆず'?' yuzu':'')+'" href="#'+esc(m.id)+'">'+
+      '<span class="clAv">'+av+'</span><span class="clMeta"><b>'+esc(m.name)+tag+'</b>'+
       '<small>Lv'+lv+' ・ '+p.toLocaleString()+'pt → 次 '+nx.toLocaleString()+'</small>'+
       '<span class="clBar"><i style="width:'+pct+'%"></i></span>'+
       (fl.length?'<span class="clFl">'+fl.map(esc).join(' ・ ')+'</span>':'')+
@@ -60,75 +59,91 @@ function ringByRank(sortedNames,name){
   if(i<5)return 1;if(i<10)return 2;return 3;
 }
 function lineW(pts,max){
-  // log-ish thickness: readable from ~0 to 50000+
   var t=Math.log10((pts||0)+10)/Math.log10((max||0)+10);
   return 1.2+Math.max(0,Math.min(1,t))*2.4;
 }
 function drawMap(svg,scores,total){
-  var W=360,H=360,cx=180,cy=180;
+  var RR=27,GAP=6,NEED=2*RR+GAP; // guaranteed min center distance
   var others=members().filter(function(m){return m.name!=='ゆず'});
   var yuzu=members().find(function(m){return m.name==='ゆず'});
-  var unlocked=!(total<1000);
   var ranked=others.slice().sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)});
   var rankedNames=ranked.map(function(m){return m.name});
   var max=Math.max.apply(null,others.map(function(m){return scores[m.name]||0}).concat([1]));
   var rings={1:[],2:[],3:[]};
-  ranked.forEach(function(m){
-    var locked=m.name==='星野王子'&&!unlocked;
-    rings[locked?3:ringByRank(rankedNames,m.name)].push(m);
-  });
-  // keep rank order inside each ring
+  ranked.forEach(function(m){rings[ringByRank(rankedNames,m.name)].push(m);});
   [1,2,3].forEach(function(ri){rings[ri].sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)})});
-  var h='<defs><radialGradient id="cg" cx="50%" cy="50%"><stop offset="0%" stop-color="#ffe08a"/><stop offset="100%" stop-color="#ffb3c8"/></radialGradient>'+
-    '<filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'+
+  // Radius so circumference/n >= NEED (angular spacing guaranteed)
+  function radFor(n,minR){if(n<=1)return minR;return Math.max(minR,Math.ceil(n*NEED/(2*Math.PI)))}
+  var r1=radFor(rings[1].length,88);
+  var r2=radFor(rings[2].length,Math.max(128,r1+NEED));
+  var r3=radFor(rings[3].length,Math.max(168,r2+NEED));
+  var rads={1:r1,2:r2,3:r3};
+  var pad=RR+22; // label room
+  var Rmax=r3+pad;
+  var W=Math.ceil(2*Rmax+16),H=W,cx=W/2,cy=H/2;
+  // place with staggered angle offsets; then harden with collision
+  var placed=[];
+  function placeRing(ri){
+    var arr=rings[ri],rad=rads[ri],n=arr.length;if(!n)return;
+    var offset=(ri-1)*(Math.PI/n); // stagger so adjacent rings don't line up
+    arr.forEach(function(m,i){
+      var ang=-Math.PI/2+offset+(i+0.5)/n*Math.PI*2;
+      placed.push({m:m,ri:ri,ang:ang,rad:rad,x:cx+Math.cos(ang)*rad,y:cy+Math.sin(ang)*rad,r:RR});
+    });
+  }
+  [1,2,3].forEach(placeRing);
+  // Strong collision: push apart until all pairs >= NEED (or cap iters)
+  for(var iter=0;iter<200;iter++){
+    var moved=false;
+    for(var i=0;i<placed.length;i++){
+      for(var j=i+1;j<placed.length;j++){
+        var a=placed[i],b=placed[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+        if(d<0.01){dx=1;dy=0;d=1}
+        if(d<NEED){
+          var push=(NEED-d)/2;
+          var ux=dx/d,uy=dy/d;
+          a.x-=ux*push;a.y-=uy*push;b.x+=ux*push;b.y+=uy*push;moved=true;
+        }
+      }
+      // keep outside pair halo
+      var p=placed[i],dx0=p.x-cx,dy0=p.y-cy,rd=Math.hypot(dx0,dy0),minIn=58;
+      if(rd<minIn){p.x=cx+dx0/Math.max(rd,1)*minIn;p.y=cy+dy0/Math.max(rd,1)*minIn;moved=true}
+      // keep inside canvas
+      var lim=Rmax-2;rd=Math.hypot(p.x-cx,p.y-cy);
+      if(rd>lim){p.x=cx+(p.x-cx)/rd*lim;p.y=cy+(p.y-cy)/rd*lim;moved=true}
+    }
+    if(!moved)break;
+  }
+  var couple=null;try{couple=localStorage.getItem('yz_avatar_couple')}catch(e){}
+  var coupleSrc=(couple&&couple.indexOf('data:image')===0)?couple:'img/twoshot.svg';
+  var h='<defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'+
     '<clipPath id="pairClip"><circle cx="'+cx+'" cy="'+cy+'" r="38"/></clipPath></defs>';
-  h+='<circle cx="'+cx+'" cy="'+cy+'" r="168" fill="#fff6f9" stroke="#ffd0e0"/><circle cx="'+cx+'" cy="'+cy+'" r="118" fill="none" stroke="#ffe4ee"/><circle cx="'+cx+'" cy="'+cy+'" r="72" fill="none" stroke="#ffe4ee"/>';
-  // Center: Eiji + ゆず pair (twoshot), glamorous gold
+  h+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r3+'" fill="#fff6f9" stroke="#ffd0e0"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r2+'" fill="none" stroke="#ffe4ee"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r1+'" fill="none" stroke="#ffe4ee"/>';
   var yp=scores['ゆず']||0;
   h+='<g class="clPair" data-jump="'+(yuzu?esc(yuzu.id):'')+'" style="cursor:pointer" filter="url(#glow)">'+
     '<circle cx="'+cx+'" cy="'+cy+'" r="42" fill="#fff" stroke="#ffd700" stroke-width="4"/>'+
-    '<image href="img/twoshot.svg" x="'+(cx-38)+'" y="'+(cy-38)+'" width="76" height="76" clip-path="url(#pairClip)"/>'+
+    '<image href="'+coupleSrc.replace(/"/g,'')+'" x="'+(cx-38)+'" y="'+(cy-38)+'" width="76" height="76" clip-path="url(#pairClip)" preserveAspectRatio="xMidYMid slice"/>'+
     '<g class="clSpark"><circle cx="'+(cx-28)+'" cy="'+(cy-30)+'" r="2.2" fill="#ffd700"/><circle cx="'+(cx+30)+'" cy="'+(cy-26)+'" r="1.8" fill="#ff8fb3"/><circle cx="'+(cx+28)+'" cy="'+(cy+28)+'" r="2" fill="#ffd700"/><circle cx="'+(cx-30)+'" cy="'+(cy+24)+'" r="1.5" fill="#ff8fb3"/></g>'+
     '</g>';
-  h+='<text x="'+cx+'" y="'+(cy+52)+'" text-anchor="middle" font-size="10" font-weight="800" fill="#b8860b">👑 エイジの嫁</text>';
-  h+='<text x="'+cx+'" y="'+(cy+64)+'" text-anchor="middle" font-size="9" fill="#a0466a">ゆず '+yp.toLocaleString()+'pt</text>';
-  // 15 others around the pair (icons 1.5x: r=27 min; collision nudge)
-  var placed=[];
-  function nudge(x,y,rr){
-    for(var k=0;k<80;k++){
-      var hit=false;
-      for(var j=0;j<placed.length;j++){
-        var p=placed[j],dx=x-p.x,dy=y-p.y,d=Math.hypot(dx,dy),need=rr+p.r+3;
-        if(d<need&&d>0){var push=(need-d)/d;x+=dx*push*0.7;y+=dy*push*0.7;hit=true}
-        else if(d===0){x+=need*0.4;y+=need*0.2;hit=true}
-      }
-      // keep near canvas
-      var lim=170;var dx0=x-cx,dy0=y-cy,rad=Math.hypot(dx0,dy0);
-      if(rad>lim){x=cx+dx0/rad*lim;y=cy+dy0/rad*lim}
-      if(rad<55){x=cx+dx0/Math.max(rad,1)*55;y=cy+dy0/Math.max(rad,1)*55}
-      if(!hit)break;
-    }
-    placed.push({x:x,y:y,r:rr});return {x:x,y:y};
-  }
-  [1,2,3].forEach(function(ri){
-    var arr=rings[ri],rad=ri===1?92:ri===2?132:172;
-    arr.forEach(function(m,i){
-      var ang=-Math.PI/2+(i+0.5)/Math.max(arr.length,1)*Math.PI*2;
-      var x0=cx+Math.cos(ang)*rad,y0=cy+Math.sin(ang)*rad,p=scores[m.name]||0;
-      var locked=m.name==='星野王子'&&!unlocked;
-      var rr=27; // 1.5x of 18 — fixed minimum, no shrink with points
-      var pos=nudge(x0,y0,rr),x=pos.x,y=pos.y;
-      var thick=locked?1.2:lineW(p,max);
-      h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x+'" y2="'+y+'" stroke="'+(locked?'#ddd':'#ffb3c8')+'" stroke-width="'+thick.toFixed(2)+'" opacity=".85"/>';
-      h+='<g class="clNode" data-jump="'+esc(m.id)+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="'+rr+'" fill="#fff" stroke="'+(locked?'#bbb':'#ff8fb3')+'" stroke-width="2.2"/>';
-      if(locked)h+='<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="11" fill="#888">？？？</text>';
-      else if(m.av)h+='<image href="img/avatars/'+esc(m.av)+'.png?v=1" x="'+(x-22)+'" y="'+(y-22)+'" width="44" height="44" clip-path="circle(22px at 22px 22px)"/>';
-      else h+='<text x="'+x+'" y="'+(y+7)+'" text-anchor="middle" font-size="22">'+esc(m.ic)+'</text>';
-      if(!locked)h+='<text x="'+x+'" y="'+(y+rr+12)+'" text-anchor="middle" font-size="9" fill="#a0466a">'+(p>=1000?(p/1000).toFixed(p>=10000?0:1)+'k':p)+'</text>';
-      h+='</g>';
-    });
+  h+='<text x="'+cx+'" y="'+(cy+54)+'" text-anchor="middle" font-size="10" font-weight="800" fill="#b8860b">👑 エイジの嫁</text>';
+  h+='<text x="'+cx+'" y="'+(cy+66)+'" text-anchor="middle" font-size="9" fill="#a0466a">ゆず '+yp.toLocaleString()+'pt</text>';
+  placed.forEach(function(p){
+    var m=p.m,x=p.x,y=p.y,pts=scores[m.name]||0;
+    var thick=lineW(pts,max);
+    h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x+'" y2="'+y+'" stroke="#ffb3c8" stroke-width="'+thick.toFixed(2)+'" opacity=".85"/>';
+    h+='<g class="clNode" data-jump="'+esc(m.id)+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="'+RR+'" fill="#fff" stroke="#ff8fb3" stroke-width="2.2"/>';
+    if(m.av)h+='<image href="img/avatars/'+esc(m.av)+'.png?v=1" x="'+(x-22)+'" y="'+(y-22)+'" width="44" height="44" clip-path="circle(22px at 22px 22px)"/>';
+    else h+='<text x="'+x+'" y="'+(y+7)+'" text-anchor="middle" font-size="22">'+esc(m.ic)+'</text>';
+    h+='<text x="'+x+'" y="'+(y+RR+12)+'" text-anchor="middle" font-size="9" fill="#a0466a">'+(pts>=1000?(pts/1000).toFixed(pts>=10000?0:1)+'k':pts)+'</text>';
+    h+='</g>';
   });
-  svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.innerHTML=h;
+  // measure helper for tests
+  window.__OM_MAP_MIN=Infinity;
+  for(var i=0;i<placed.length;i++)for(var j=i+1;j<placed.length;j++){
+    var d=Math.hypot(placed[i].x-placed[j].x,placed[i].y-placed[j].y);
+    if(d<window.__OM_MAP_MIN)window.__OM_MAP_MIN=d;
+  }
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.setAttribute('width','100%');svg.innerHTML=h;
   svg.querySelectorAll('[data-jump]').forEach(function(g){g.addEventListener('click',function(){
     var id=g.getAttribute('data-jump');if(!id)return;var el=document.getElementById(id);if(!el)return;
     var f=el.querySelector('.fold');if(f)f.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});
