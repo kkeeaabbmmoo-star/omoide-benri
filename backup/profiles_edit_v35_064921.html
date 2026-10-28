@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>👤 みんなのプロフィール</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffb3c8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<style>
+body{margin:0;background:linear-gradient(180deg,#fff0f5,#fff8e6) fixed;font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;color:#4a3340;line-height:1.55;padding-bottom:calc(env(safe-area-inset-bottom)+40px)}
+header{padding:calc(env(safe-area-inset-top)+14px) 14px 8px;text-align:center}
+h1{font-size:20px;margin:0}
+.sub{color:#9a7b88;font-size:12px;margin-top:4px}
+.topNav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0 4px}
+.topNav a,.topNav button{display:inline-block;text-decoration:none;border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:16px;padding:8px 14px;font-size:14px;font-weight:800}
+main{max-width:620px;margin:auto;padding:8px 12px 24px}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px;justify-content:center}
+.toc a{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 0 0 2px #ffd0e0;font-size:20px}
+.toc a img{width:44px;height:44px;object-fit:cover}
+.note{font-size:12px;color:#9a7b88;background:#fff;border-radius:12px;padding:8px 10px;margin:0 0 12px;border:1px dashed #f3c6d5}
+.pcard{border-radius:18px;padding:14px 14px 12px;margin:0 0 14px;box-shadow:0 2px 12px #0001;border:2px solid #ffd0e0;scroll-margin-top:12px;position:relative;overflow:hidden}
+.pcard.font-maru{font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif}
+.pcard.font-sans{font-family:-apple-system,"Hiragino Sans","Helvetica Neue",sans-serif}
+.pcard.font-serif{font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+.pcard .ph{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.pcard .av{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none;background:#ffe4ee;box-shadow:0 0 0 3px #fff}
+.pcard .avic{width:64px;height:64px;border-radius:50%;flex:none;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 0 3px #fff}
+.pcard h2{margin:0;font-size:18px}
+.pcard .badge{display:inline-block;margin-left:6px;font-size:11px;background:#fff6f9;color:#c0587f;border-radius:8px;padding:1px 6px;font-weight:700;border:1px solid #ffd0e0}
+.pcard .tone{display:block;font-size:12px;color:#9a7b88;margin-top:2px}
+.fields{margin:0;padding:0;list-style:none}
+.fields li{display:grid;grid-template-columns:7.5em 1fr;gap:6px;padding:7px 0;border-bottom:1px dashed rgba(0,0,0,.08);font-size:13.5px}
+.fields li:last-child{border-bottom:0}
+.fields .k{font-weight:800;color:#a0466a;opacity:.9}
+.fields .v{color:#4a3340;word-break:break-word}
+.fields .v.kari{color:#c0587f}
+.fields .v.wait{color:#9a7b88}
+.kariTag{display:inline-block;font-size:10px;font-weight:800;background:#ffe08a;color:#8a5a10;border-radius:6px;padding:0 5px;margin-left:4px;vertical-align:middle}
+.deco{position:absolute;right:8px;top:8px;font-size:22px;opacity:.55;pointer-events:none}
+.rew{margin-top:8px;font-size:12px;color:#c45c26;background:#fff8f0;border-radius:10px;padding:6px 8px;border:1px dashed #ffd0a8}
+#jump{position:fixed;right:calc(env(safe-area-inset-right)+12px);bottom:calc(env(safe-area-inset-bottom)+18px);z-index:9;border:0;border-radius:20px;background:#d0567f;color:#fff;font-weight:800;padding:10px 14px;box-shadow:0 3px 10px #0003;font-size:13px;text-decoration:none}
+.empty{text-align:center;padding:40px;color:#9a7b88}
+.pgH{font-size:13px;font-weight:800;color:#a0466a;margin:10px 0 6px}
+.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pg.wide{grid-template-columns:repeat(5,1fr)}
+.pgSlot{aspect-ratio:1;border-radius:12px;border:1.5px dashed #f3c6d5;background:#fff6f9;overflow:hidden;position:relative;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pgSlot.has{border-style:solid;border-color:#ffb3c8}
+.pgSlot img{width:100%;height:100%;object-fit:cover;display:block}
+.pgSlot .plus{font-size:22px;color:#c0587f;font-weight:800}
+.pgSlot .tag{position:absolute;left:3px;bottom:3px;font-size:9px;font-weight:800;background:#ffe08a;color:#8a5a10;border-radius:6px;padding:1px 4px}
+.pgOv{position:fixed;inset:0;z-index:2147483600;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+.pgOv img{max-width:min(92vw,520px);max-height:70vh;border-radius:14px;object-fit:contain;background:#222}
+.pgOv .b{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pgOv button{border:0;border-radius:16px;padding:10px 16px;font-weight:800;font-size:14px}
+.pgOv .rep{background:#fff;color:#a0466a}
+.pgOv .del{background:#ffe8ee;color:#c0587f}
+.pgOv .x{background:#d0567f;color:#fff}
+#pgCrop{position:fixed;inset:0;z-index:2147483650;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;touch-action:none;padding:16px}
+#pgCrop .t{color:#fff;font-size:14px;text-align:center;padding:0 8px;line-height:1.4}
+#pgCrop .stage{position:relative;width:min(300px,86vw);height:min(300px,86vw);border-radius:14px;overflow:hidden;background:#222;box-shadow:0 0 0 3px #ff9ab8,0 8px 28px #0008;touch-action:none}
+#pgCrop canvas{width:100%;height:100%;display:block;touch-action:none}
+#pgCrop .guide{pointer-events:none;position:absolute;inset:0;border:2px solid #ffb3c8;border-radius:14px;box-shadow:inset 0 0 0 1px #fff6}
+#pgCrop input[type=range]{width:min(260px,80vw);accent-color:#d0567f}
+#pgCrop .b{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+#pgCrop button{font-size:16px;padding:10px 22px;border-radius:20px;border:0;font-weight:800}
+#pgCrop .ok{background:#ff5f8f;color:#fff}
+#pgCrop .ng{background:#eee;color:#555}
+</style>
+</head>
+<body>
+<header>
+  <h1>👤 みんなのプロフィール</h1>
+  <div class="sub">仮置きあり・本人記入で更新するよ</div>
+  <div class="topNav">
+    <a href="./">← 思い出ノートへ</a>
+  </div>
+</header>
+<main>
+  <p class="note">7項目は全員共通だよ。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ。公開前は<span class="kariTag">未送信</span>表示。</p>
+  <div class="toc" id="toc"></div>
+  <div id="list"><p class="empty">読み込み中…</p></div>
+</main>
+<a id="jump" href="./">💞 ノート</a>
+<input type="file" id="pgFile" accept="image/*" style="display:none">
+<script>
+(function(){
+/* スロット上限（tools/photo_limits.py と同じ） */
+var PHOTO_LIMIT={'エイジ':10,'ゆず':10}, PHOTO_DEFAULT=4;
+function photoLimit(name){return PHOTO_LIMIT[name]!=null?PHOTO_LIMIT[name]:PHOTO_DEFAULT}
+var LS='om_pf_photos';
+var DECO={hearts:'💕',beer:'🍺',orange:'🍊',laugh:'😂',soft:'☺️',heart:'💓',cake:'🍰',tears:'🥺',sakura:'🌸',cherry:'🍒',office:'📎',tea:'🍵',leaf:'🌿',gal:'💅',star:'⭐',crown:'👑'};
+function esc(t){var d=document.createElement('div');d.textContent=t==null?'':String(t);return d.innerHTML}
+function isWait(v){return !v||v==='（本人記入待ち）'}
+function fieldClass(v,prov,key){
+  if(isWait(v))return 'wait';
+  if(prov&&prov.indexOf(key)>=0)return 'kari';
+  if(/（仮）/.test(String(v))||/歳（仮）/.test(String(v)))return 'kari';
+  return '';
+}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){return {}}}
+function saveLocal(all){localStorage.setItem(LS,JSON.stringify(all));window.__OM_PF_PHOTOS=all}
+function slotsFor(name){
+  var lim=photoLimit(name), all=loadLocal(), a=all[name];
+  if(!Array.isArray(a))a=[];
+  while(a.length<lim)a.push(null);
+  if(a.length>lim)a=a.slice(0,lim);
+  return a;
+}
+function setSlot(name,i,val){
+  var all=loadLocal(), lim=photoLimit(name), a=slotsFor(name);
+  a[i]=val; all[name]=a.slice(0,lim); saveLocal(all);
+}
+/* square crop: drag + pinch(+slider) → 480 JPEG q0.8 (v33) */
+function openSquareCrop(src,revoke,cb){
+  if(document.getElementById('pgCrop'))return;
+  var img=new Image();
+  img.onload=function(){
+    var old=document.getElementById('pgCrop');if(old)old.remove();
+    var o=document.createElement('div');o.id='pgCrop';
+    o.innerHTML='<div class="t">ゆびで上下左右に動かして、2本ゆび（またはスライダー）で拡大縮小してね♡<br>四角の中がそのまま写真になるよ</div>'+
+      '<div class="stage"><canvas width="600" height="600"></canvas><div class="guide"></div></div>'+
+      '<input type="range" min="1" max="5" step="0.01" value="1" aria-label="拡大">'+
+      '<div class="b"><button type="button" class="ng">やめる</button><button type="button" class="ok">この位置で決定</button></div>';
+    document.body.appendChild(o);
+    var c=o.querySelector('canvas'),g=c.getContext('2d'),rg=o.querySelector('input'),S=600;
+    var base=S/Math.min(img.width,img.height);
+    var z=1,tx=0,ty=0;
+    var clamp=function(){
+      var mx=Math.max(0,(img.width*base*z-S)/2), my=Math.max(0,(img.height*base*z-S)/2);
+      tx=Math.max(-mx,Math.min(mx,tx)); ty=Math.max(-my,Math.min(my,ty));
+    };
+    var draw=function(){
+      clamp();
+      g.fillStyle='#111';g.fillRect(0,0,S,S);
+      var w=img.width*base*z,h=img.height*base*z;
+      g.drawImage(img,(S-w)/2+tx,(S-h)/2+ty,w,h);
+    };
+    var P=new Map(),pd=0,pz=1,k2=S/300;
+    c.addEventListener('pointerdown',function(e){
+      e.preventDefault();c.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+      if(P.size===2){var a=[...P.values()];pd=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1;pz=z}
+    });
+    c.addEventListener('pointermove',function(e){
+      if(!P.has(e.pointerId))return;
+      var pr=P.get(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+      if(P.size===1){tx+=(e.clientX-pr[0])*k2;ty+=(e.clientY-pr[1])*k2}
+      else if(P.size===2&&pd){var a=[...P.values()];z=Math.max(1,Math.min(5,pz*Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])/pd));rg.value=z}
+      draw();
+    });
+    var up=function(e){P.delete(e.pointerId);pd=0};
+    c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+    c.addEventListener('wheel',function(e){e.preventDefault();z=Math.max(1,Math.min(5,z*(e.deltaY<0?1.1:0.9)));rg.value=z;draw()},{passive:false});
+    rg.oninput=function(){z=+rg.value;draw()};
+    draw();
+    var close=function(){o.remove();if(revoke)URL.revokeObjectURL(src)};
+    o.querySelector('.ng').onclick=function(){close();cb&&cb(new Error('cancel'))};
+    o.querySelector('.ok').onclick=function(){
+      draw();
+      var out=document.createElement('canvas');out.width=out.height=480;
+      out.getContext('2d').drawImage(c,0,0,480,480);
+      var data=out.toDataURL('image/jpeg',0.8);
+      close();cb&&cb(null,data);
+    };
+  };
+  img.onerror=function(){if(revoke)URL.revokeObjectURL(src);cb&&cb(new Error('画像を読めなかったよ'))};
+  img.src=src;
+}
+var pickName=null, pickSlot=null, replaceMode=false;
+var fileEl=document.getElementById('pgFile');
+fileEl.addEventListener('change',function(){
+  var f=fileEl.files&&fileEl.files[0]; fileEl.value='';
+  if(!f||pickName==null||pickSlot==null)return;
+  if(!/^image\//.test(f.type||'')){alert('画像ファイルを選んでね');return}
+  var name=pickName, slot=pickSlot;
+  openSquareCrop(URL.createObjectURL(f),true,function(err,data){
+    if(err){if(String(err.message||err)!=='cancel')alert(err.message||err);pickName=null;pickSlot=null;replaceMode=false;return}
+    setSlot(name,slot,{data:data,sent:false,at:Date.now()});
+    pickName=null;pickSlot=null;replaceMode=false;
+    if(window.__PF_DATA)render(window.__PF_DATA);
+  });
+});
+function openPicker(name,slot,replacing){
+  pickName=name;pickSlot=slot;replaceMode=!!replacing;
+  fileEl.click();
+}
+function openViewer(name,slot,src,pending){
+  var old=document.getElementById('pgOv');if(old)old.remove();
+  var ov=document.createElement('div');ov.id='pgOv';ov.className='pgOv';
+  ov.innerHTML='<img alt=""><div class="b">'+
+    '<button type="button" class="rep">入れ替え</button>'+
+    '<button type="button" class="del">削除</button>'+
+    '<button type="button" class="x">とじる</button></div>';
+  ov.querySelector('img').src=src;
+  ov.querySelector('.x').onclick=function(){ov.remove()};
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove()});
+  ov.querySelector('.rep').onclick=function(){ov.remove();openPicker(name,slot,true)};
+  ov.querySelector('.del').onclick=function(){
+    if(!confirm('この写真を消す？'))return;
+    // only remove local pending; published stay until ゆず removes
+    var loc=slotsFor(name)[slot];
+    if(loc&&loc.data){setSlot(name,slot,null)}
+    else{alert('公開済みの写真はゆずに「消して」と伝えてね')}
+    ov.remove(); if(window.__PF_DATA)render(window.__PF_DATA);
+  };
+  document.body.appendChild(ov);
+}
+function photoGridHtml(name, published){
+  var lim=photoLimit(name), loc=slotsFor(name), pub=Array.isArray(published)?published:[];
+  var wide=lim>4?' wide':'';
+  var h='<div class="pgH">📷 写真（最大'+lim+'枚）</div><div class="pg'+wide+'" data-who="'+esc(name)+'">';
+  for(var i=0;i<lim;i++){
+    var L=loc[i], P=pub[i], src=null, pending=false;
+    if(L&&L.data&&!L.sent){src=L.data;pending=true}
+    else if(L&&L.data&&L.sent&&!(P)){src=L.data;pending=true} // sent but not yet on server
+    else if(P){src=P}
+    else if(L&&L.data){src=L.data;pending=true}
+    if(src){
+      h+='<button type="button" class="pgSlot has" data-i="'+i+'"><img src="'+esc(src)+'" alt="">'+(pending?'<span class="tag">未送信</span>':'')+'</button>';
+    }else{
+      h+='<button type="button" class="pgSlot" data-i="'+i+'"><span class="plus">＋</span></button>';
+    }
+  }
+  return h+'</div>';
+}
+function bindPhotoGrid(card,name){
+  card.querySelectorAll('.pgSlot').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=+btn.dataset.i;
+      var loc=slotsFor(name)[i];
+      var pub=(window.__PF_DATA.members[name].photos||[])[i];
+      var src=(loc&&loc.data)?loc.data:pub;
+      if(src)openViewer(name,i,src,!(pub)||(loc&&loc.data&&!loc.sent));
+      else openPicker(name,i,false);
+    });
+  });
+}
+function render(data){
+  window.__PF_DATA=data;
+  var order=data.order||Object.keys(data.members||{});
+  var fo=data.fieldsOrder||['名前','年齢','職業','性格','趣味','最近気になること','嫌いな食べ物'];
+  var toc=document.getElementById('toc');
+  var list=document.getElementById('list');
+  toc.innerHTML='';list.innerHTML='';
+  if(data.updated)document.querySelector('.sub').textContent='更新 '+data.updated+' · 仮置きあり・写真あり';
+  order.forEach(function(id){
+    var m=data.members[id];if(!m)return;
+    var look=m.look||{};
+    var photo=look.photo||'';
+    var icon=look.icon||'💬';
+    var avHtml=photo
+      ?'<img class="av" src="'+esc(photo)+(photo.indexOf('?')>=0?'':'?v=1')+'" alt="" width="64" height="64">'
+      :'<span class="avic">'+esc(icon)+'</span>';
+    toc.insertAdjacentHTML('beforeend','<a href="#p-'+encodeURIComponent(id)+'" title="'+esc(m.display||id)+'">'+(photo?'<img src="'+esc(photo)+'?v=1" alt="">':'<span>'+esc(icon)+'</span>')+'</a>');
+    var prov=m.provisional||[];
+    var rows=fo.map(function(k){
+      var v=(m.fields&&m.fields[k]!=null)?m.fields[k]:'（本人記入待ち）';
+      var cls=fieldClass(v,prov,k);
+      var tag=(cls==='kari')?'<span class="kariTag">仮</span>':'';
+      return '<li><span class="k">'+esc(k)+'</span><span class="v '+cls+'">'+esc(v)+tag+'</span></li>';
+    }).join('');
+    var rew=(look.rewardItems&&look.rewardItems.length)?'<div class="rew">🎒 装備中の月間アイテム：'+esc(look.rewardItems.join(' · '))+'</div>':'';
+    var font='font-'+(look.font||'maru');
+    var deco=DECO[look.decoration]||'✨';
+    var badge='';
+    if(id==='ゆず')badge='<span class="badge">👑 エイジの嫁</span>';
+    if(id==='エイジ')badge='<span class="badge">本人</span>';
+    var cardHtml='<article class="pcard '+font+'" id="p-'+esc(id)+'" style="background:'+esc(look.background||'#fff')+';border-color:'+esc(look.theme||'#ffb3c8')+'">'+
+      '<div class="deco">'+deco+'</div>'+
+      '<div class="ph">'+avHtml+'<div><h2 style="color:'+esc(look.theme||'#c0587f')+'">'+esc(m.display||id)+badge+
+      '</h2><span class="tone">口調：'+esc(look.tone||'—')+'</span></div></div>'+
+      '<ul class="fields">'+rows+'</ul>'+
+      photoGridHtml(id,m.photos||[])+
+      rew+
+      '</article>';
+    list.insertAdjacentHTML('beforeend',cardHtml);
+    bindPhotoGrid(list.lastElementChild,id);
+  });
+  if(location.hash){
+    var el=document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if(el)setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'start'})},100);
+  }
+}
+window.__OM_PF_PHOTOS=loadLocal();
+fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
+  .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+  .then(render)
+  .catch(function(e){document.getElementById('list').innerHTML='<p class="empty">読み込めなかったよ：'+esc(e.message)+'</p>'});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+})();
+</script>
+<script src="nav.js?v=nv4"></script>
+</body>
+</html>

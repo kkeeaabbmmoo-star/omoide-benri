@@ -1,6 +1,6 @@
 /* 送信済みバッジ（sent-status v1）: 送るボタンの上にピル、ヘッダーに✅、同じデータの再送は確認。データは読むだけ（自分の yzss_<app> だけ書く） */
 (function(){
-var MAP={'benri-note':['benri',/^bn_/],'yuzu-health-note':['health',/^(yz_|yuzu_plans)/],'life-plan-note':['lifeplan',/^lp_/],'love-note':['love',/^ln_/],'yotei-note':['yotei',/^yt_/],'omoide-benri':['omoide',/^om_(react|reply)$/]};
+var MAP={'benri-note':['benri',/^bn_/],'yuzu-health-note':['health',/^(yz_|yuzu_plans)/],'life-plan-note':['lifeplan',/^lp_/],'love-note':['love',/^ln_/],'yotei-note':['yotei',/^yt_/],'omoide-benri':['omoide',/^om_(react|reply|pf_photos|pf_fields)$/]};
 var seg=location.pathname.split('/').filter(Boolean)[0]||'';var c=MAP[seg];
 if(!c){var t=document.title||'';c=/思い出/.test(t)?MAP['omoide-benri']:/予定/.test(t)?MAP['yotei-note']:/便利/.test(t)?MAP['benri-note']:/健康/.test(t)?MAP['yuzu-health-note']:/人生/.test(t)?MAP['life-plan-note']:MAP['love-note']}
 var APP=c[0],RX=c[1],SK='yzss_'+APP,SEL='.sendb,[onclick*="yzHealthSend"],#sendBottom,#sendSet,#ytSend,[onclick*="lpYuzuSendAll"],#yzs';
@@ -35,8 +35,12 @@ function apply(){css();var s=state(),T=today();
   if(b.innerHTML!==want)b.innerHTML=want;b.classList.toggle('yzss-done',done)});
  var h=document.querySelector('h1');if(h){var m=h.querySelector('.yzss-h'),txt=s.st==='ok'?'✅':s.st==='pending'?'📨':'';
   if(!txt){if(m)m.remove()}else{if(!m){m=document.createElement('span');m.className='yzss-h';h.appendChild(m)}if(m.textContent!==txt)m.textContent=txt;m.title=s.st==='ok'?'今日の分はゆずが受け取ったよ':'送信したよ（確認待ち）'}}}
-/* 再送の確認（同じデータをもう送ってる時だけ） */
+/* 再送の確認（同じデータをもう送ってる時だけ）。未送信の写真/プロフィール欄があれば止めない */
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest(SEL);if(!b||b.closest('#yzSendOv,#lpSendPick'))return;var s=state();
+ var hasPendPhoto=false,hasPendField=false;
+ try{var ph=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{};Object.keys(ph).forEach(function(n){(ph[n]||[]).forEach(function(x){if(x&&x.data&&!x.sent)hasPendPhoto=true})})}catch(err){}
+ try{var pf=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{};Object.keys(pf).forEach(function(n){var f=pf[n];if(!f)return;Object.keys(f).forEach(function(k){if(k.indexOf('__')!==0&&String(f[k]||'').trim())hasPendField=true})})}catch(err){}
+ if(hasPendPhoto||hasPendField)return; /* 未送信あり → 確認なしで送る */
  if(s.st!=='none'&&!s.changed&&!confirm('もう送ってるよ、また送る？')){e.preventDefault();e.stopImmediatePropagation()}},true);
 /* 送信シートで メール/共有/コピー/📎 を押したら「送信したよ（確認待ち）」 */
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#yzMail,#yzShare,#yzCopy,#yzBkS');if(!b||!b.closest('#yzSendOv'))return;

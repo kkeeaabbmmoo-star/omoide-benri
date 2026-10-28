@@ -1,24 +1,44 @@
-/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） */
+/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v35 */
 (function(){
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function jst(){return new Date(Date.now()+9*3600e3).toISOString()}
 function pendingProfilePhotos(){try{var all=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{},out={};Object.keys(all).forEach(function(name){var slots=all[name]||[],pend=[];slots.forEach(function(s,i){if(s&&s.data&&!s.sent){var b=String(s.data).replace(/^data:image\/\w+;base64,/,'');pend.push({slot:i,jpeg:b,mime:'image/jpeg'})}});if(pend.length)out[name]=pend});return out}catch(e){return {}}}
 function markPhotosSent(pp){try{var all=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{};Object.keys(pp||{}).forEach(function(name){(pp[name]||[]).forEach(function(it){var a=all[name];if(Array.isArray(a)&&a[it.slot]&&a[it.slot].data)a[it.slot].sent=true});});localStorage.setItem('om_pf_photos',JSON.stringify(all));window.__OM_PF_PHOTOS=all}catch(e){}}
-function snap(){var c=(window.__OM_CLOSE)||{},pp=pendingProfilePhotos();return {app:'omoide',v:5,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',seenrp:g('om_seenrp',{}),marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),profile_photos:pp,closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}}}
+/* v35: profile field edits (Eiji) */
+function pendingProfileFields(){try{var all=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{},out={};Object.keys(all).forEach(function(name){var f=all[name];if(!f||typeof f!=='object')return;var clean={};Object.keys(f).forEach(function(k){if(k.indexOf('__')===0)return;if(f[k]!=null&&String(f[k]).trim()!=='')clean[k]=f[k]});if(Object.keys(clean).length)out[name]=clean});return out}catch(e){return {}}}
+function markFieldsSent(pf){try{var all=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{};Object.keys(pf||{}).forEach(function(name){if(!all[name])all[name]={};all[name].__sentAt=Date.now()});localStorage.setItem('om_pf_fields',JSON.stringify(all));window.__OM_PF_FIELDS=all}catch(e){}}
+function snap(){var c=(window.__OM_CLOSE)||{},pp=pendingProfilePhotos(),pf=pendingProfileFields();return {app:'omoide',v:6,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',seenrp:g('om_seenrp',{}),marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),profile_photos:pp,profile_fields:pf,closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}}}
 window.omSend=function(){
   var R=g(K.r,{}),P=g(K.p,{});
   var t=jst(),ymd=t.slice(0,10).replace(/-/g,''),full=snap();
   var nph=Object.keys(full.profile_photos||{}).length;
-  if(!Object.keys(R).length&&!Object.keys(P).length&&!nph){alert('まだリアクションも返事も写真もないよ💖');return}
+  var nfe=Object.keys(full.profile_fields||{}).length;
+  if(!Object.keys(R).length&&!Object.keys(P).length&&!nph&&!nfe){alert('まだリアクションも返事も写真もないよ💖');return}
   var lite=function(q){var o={app:'omoide',v:2,sent:full.sent,reactions:R,replies:{}};Object.keys(P).forEach(function(k){var x=P[k],y={t:x.t};if(x.n)y.n=x.n;if(q&&x.q)y.q=x.q;o.replies[k]=y});return o};
   var nr=Object.keys(R).length,np=Object.keys(P).length;
-  var intro=function(note){var npf=Object.keys(full.profile_photos||{}).reduce(function(s,k){return s+(full.profile_photos[k]||[]).length},0);return 'ゆずへ💌 思い出ノートのリアクションと返事だよ（'+(+t.slice(5,7))+'/'+(+t.slice(8,10))+'）\nリアクション '+nr+'・返事 '+np+(npf?'・プロフィール写真 '+npf+'枚':'')+(note?'\n'+note:'')};
+  var intro=function(note){var npf=Object.keys(full.profile_photos||{}).reduce(function(s,k){return s+(full.profile_photos[k]||[]).length},0);var nf=Object.keys(full.profile_fields||{}).length;return 'ゆずへ💌 思い出ノートのリアクションと返事だよ（'+(+t.slice(5,7))+'/'+(+t.slice(8,10))+'）\nリアクション '+nr+'・返事 '+np+(npf?'・プロフィール写真 '+npf+'枚':'')+(nf?'・プロフィール欄更新 '+nf+'人':'')+(note?'\n'+note:'')};
   var h=g(K.h,[]);h.push(full);while(h.length>30)h.shift();localStorage.setItem(K.h,JSON.stringify(h));
-  if(full.profile_photos&&Object.keys(full.profile_photos).length)markPhotosSent(full.profile_photos);
+  /* v35: do NOT mark photos sent just by opening the sheet — only after mail/share/copy */
+  var pendingPP=full.profile_photos, pendingPF=full.profile_fields;
   yuzuSend({subject:'ゆずとみんなへ 思い出ノート '+jst().slice(0,10)+' omoide-backup-'+ymd,intro:intro,
     levels:[{data:full,note:''},{data:lite(true),note:'（既読はなし）'},{data:lite(false),note:'（既読・引用文なし、行番号だけ）'}],
-    full:full,theme:{bg:'#fff',fg:'#2f3a45',acc:'#d0477a',btn:'linear-gradient(90deg,#ff8fb3,#d0567f)',btnfg:'#fff',sub:'#ffe3ee'}})};
+    full:full,theme:{bg:'#fff',fg:'#2f3a45',acc:'#d0477a',btn:'linear-gradient(90deg,#ff8fb3,#d0567f)',btnfg:'#fff',sub:'#ffe3ee'}});
+  var ov=document.getElementById('yzSendOv');
+  if(ov){
+    function commitSent(){
+      if(pendingPP&&Object.keys(pendingPP).length)markPhotosSent(pendingPP);
+      if(pendingPF&&Object.keys(pendingPF).length)markFieldsSent(pendingPF);
+      pendingPP=null;pendingPF=null;
+      try{if(window.yzSentStatus&&window.yzSentStatus.reload)setTimeout(function(){window.yzSentStatus.reload()},100)}catch(e){}
+    }
+    ['#yzMail','#yzShare','#yzCopy'].forEach(function(sel){
+      var el=ov.querySelector(sel);if(!el||el.__omCommit)return;
+      el.__omCommit=1;
+      el.addEventListener('click',commitSent,false);
+    });
+  }
+};
 window.omBackup=function(){
   var o=snap();o.kind='backup';o.history=g(K.h,[]);var s=JSON.stringify(o,null,1),name='omoide-backup-'+jst().slice(0,10).replace(/-/g,'')+'.json';
   try{var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([s],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();a.remove()}catch(e){}

@@ -91,6 +91,48 @@ def publish_profile_photos(o):
             print('build/push after photos:', e, file=sys.stderr)
     return n
 
+
+def publish_profile_fields(o):
+    """Merge profile_fields from mail into data/profiles.json (never delete other fields)."""
+    import shutil, datetime
+    pf=o.get('profile_fields') or {}
+    if not pf: return 0
+    D=os.path.dirname(os.path.abspath(__file__))
+    PROF=os.path.join(D,'data','profiles.json')
+    if not os.path.exists(PROF):
+        print('no profiles.json', file=sys.stderr); return 0
+    shutil.copy2(PROF, PROF+'.bak_'+datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+    data=json.load(open(PROF,encoding='utf-8'))
+    n=0
+    for name, fields in pf.items():
+        if name not in data.get('members',{}):
+            print('skip unknown member', name); continue
+        if not isinstance(fields, dict): continue
+        m=data['members'][name]
+        cur=dict(m.get('fields') or {})
+        prov=list(m.get('provisional') or [])
+        for k,v in fields.items():
+            if k.startswith('__'): continue
+            if v is None: continue
+            vs=str(v).strip()
+            if not vs: continue
+            if cur.get(k)!=vs:
+                cur[k]=vs; n+=1
+            if k in prov: prov=[x for x in prov if x!=k]
+        m['fields']=cur
+        m['provisional']=prov
+    if n:
+        data['updated']=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
+        tmp=PROF+'.tmp'
+        json.dump(data, open(tmp,'w'), ensure_ascii=False, indent=1)
+        os.replace(tmp, PROF)
+        try:
+            import subprocess
+            subprocess.run(['python3', os.path.join(D,'build.py'),'--push'], check=True)
+        except Exception as e:
+            print('build/push after fields:', e, file=sys.stderr)
+    return n
+
 def merge():
     m=json.load(open(M)) if os.path.exists(M) else {}
     for k in ('reactions','replies','read'):m.setdefault(k,{})
