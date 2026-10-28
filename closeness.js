@@ -55,42 +55,52 @@ function drawList(box,scores,total){
   });
   box.innerHTML=h+'</div>';
 }
-function ring(pts,max){if(max<=0)return 2;var r=1-Math.min(1,pts/Math.max(max,1));return 1+Math.floor(r*2)} // 1 inner, 2 mid, 3 outer
+function ringByRank(sortedNames,name){
+  var i=sortedNames.indexOf(name);if(i<0)return 3;
+  if(i<5)return 1;if(i<10)return 2;return 3;
+}
+function lineW(pts,max){
+  // log-ish thickness: readable from ~0 to 50000+
+  var t=Math.log10((pts||0)+10)/Math.log10((max||0)+10);
+  return 1.2+Math.max(0,Math.min(1,t))*2.4;
+}
 function drawMap(svg,scores,total){
   var W=360,H=360,cx=180,cy=180;
-  var ms=members().filter(function(m){return m.name!=='ゆず'});
+  var others=members().filter(function(m){return m.name!=='ゆず'});
   var yuzu=members().find(function(m){return m.name==='ゆず'});
-  var max=Math.max.apply(null,ms.map(function(m){return scores[m.name]||0}).concat([1]));
   var unlocked=!(total<1000);
-  // group by ring
+  var ranked=others.slice().sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)});
+  var rankedNames=ranked.map(function(m){return m.name});
+  var max=Math.max.apply(null,others.map(function(m){return scores[m.name]||0}).concat([1]));
   var rings={1:[],2:[],3:[]};
-  ms.forEach(function(m){var locked=m.name==='星野王子'&&!unlocked;rings[locked?3:ring(scores[m.name]||0,max)].push(m)});
+  ranked.forEach(function(m){
+    var locked=m.name==='星野王子'&&!unlocked;
+    rings[locked?3:ringByRank(rankedNames,m.name)].push(m);
+  });
+  // keep rank order inside each ring
+  [1,2,3].forEach(function(ri){rings[ri].sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)})});
   var h='<defs><radialGradient id="cg" cx="50%" cy="50%"><stop offset="0%" stop-color="#ffe08a"/><stop offset="100%" stop-color="#ffb3c8"/></radialGradient>'+
-    '<filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>';
+    '<filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'+
+    '<clipPath id="pairClip"><circle cx="'+cx+'" cy="'+cy+'" r="34"/></clipPath></defs>';
   h+='<circle cx="'+cx+'" cy="'+cy+'" r="168" fill="#fff6f9" stroke="#ffd0e0"/><circle cx="'+cx+'" cy="'+cy+'" r="118" fill="none" stroke="#ffe4ee"/><circle cx="'+cx+'" cy="'+cy+'" r="72" fill="none" stroke="#ffe4ee"/>';
-  // Eiji center
-  h+='<circle cx="'+cx+'" cy="'+cy+'" r="28" fill="url(#cg)" stroke="#d0567f" stroke-width="3"/><text x="'+cx+'" y="'+(cy+5)+'" text-anchor="middle" font-size="13" font-weight="800" fill="#a0466a">エイジ</text>';
-  // ゆず special seat to the right
-  if(yuzu){
-    var yx=cx+58,yy=cy-8,yp=scores['ゆず']||0;
-    h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+yx+'" y2="'+yy+'" stroke="#ffd700" stroke-width="4" filter="url(#glow)"/>';
-    h+='<g class="clYuzu" data-jump="'+esc(yuzu.id)+'" style="cursor:pointer"><circle cx="'+yx+'" cy="'+yy+'" r="26" fill="#fff" stroke="#ffd700" stroke-width="3.5" filter="url(#glow)"/>';
-    if(yuzu.av)h+='<image href="img/avatars/'+esc(yuzu.av)+'.png?v=1" x="'+(yx-22)+'" y="'+(yy-22)+'" width="44" height="44" clip-path="circle(22px at 22px 22px)"/>';
-    else h+='<text x="'+yx+'" y="'+(yy+6)+'" text-anchor="middle" font-size="22">💖</text>';
-    h+='<text x="'+yx+'" y="'+(yy+40)+'" text-anchor="middle" font-size="10" font-weight="800" fill="#b8860b">👑 エイジの嫁</text>';
-    h+='<text x="'+yx+'" y="'+(yy+52)+'" text-anchor="middle" font-size="9" fill="#a0466a">'+yp.toLocaleString()+'pt</text>';
-    // sparkles
-    h+='<g class="clSpark"><circle cx="'+(yx-20)+'" cy="'+(yy-22)+'" r="2" fill="#ffd700"/><circle cx="'+(yx+22)+'" cy="'+(yy-18)+'" r="1.6" fill="#ff8fb3"/><circle cx="'+(yx+18)+'" cy="'+(yy+20)+'" r="2" fill="#ffd700"/><circle cx="'+(yx-22)+'" cy="'+(yy+16)+'" r="1.4" fill="#ff8fb3"/></g></g>';
-  }
+  // Center: Eiji + ゆず pair (twoshot), glamorous gold
+  var yp=scores['ゆず']||0;
+  h+='<g class="clPair" data-jump="'+(yuzu?esc(yuzu.id):'')+'" style="cursor:pointer" filter="url(#glow)">'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="38" fill="#fff" stroke="#ffd700" stroke-width="4"/>'+
+    '<image href="img/twoshot.svg" x="'+(cx-34)+'" y="'+(cy-34)+'" width="68" height="68" clip-path="url(#pairClip)"/>'+
+    '<g class="clSpark"><circle cx="'+(cx-28)+'" cy="'+(cy-30)+'" r="2.2" fill="#ffd700"/><circle cx="'+(cx+30)+'" cy="'+(cy-26)+'" r="1.8" fill="#ff8fb3"/><circle cx="'+(cx+28)+'" cy="'+(cy+28)+'" r="2" fill="#ffd700"/><circle cx="'+(cx-30)+'" cy="'+(cy+24)+'" r="1.5" fill="#ff8fb3"/></g>'+
+    '</g>';
+  h+='<text x="'+cx+'" y="'+(cy+52)+'" text-anchor="middle" font-size="10" font-weight="800" fill="#b8860b">👑 エイジの嫁</text>';
+  h+='<text x="'+cx+'" y="'+(cy+64)+'" text-anchor="middle" font-size="9" fill="#a0466a">ゆず '+yp.toLocaleString()+'pt</text>';
+  // 15 others around the pair
   [1,2,3].forEach(function(ri){
-    var arr=rings[ri],rad=ri===1?72:ri===2?118:168,thick=ri===1?3.2:ri===2?2.2:1.4;
+    var arr=rings[ri],rad=ri===1?78:ri===2?122:168;
     arr.forEach(function(m,i){
       var ang=-Math.PI/2+(i+0.5)/Math.max(arr.length,1)*Math.PI*2;
-      // keep right side a bit clear for ゆず on inner ring
-      if(ri===1)ang=-Math.PI/2+(i+0.5)/Math.max(arr.length,1)*Math.PI*1.6-0.2;
       var x=cx+Math.cos(ang)*rad,y=cy+Math.sin(ang)*rad,p=scores[m.name]||0;
       var locked=m.name==='星野王子'&&!unlocked;
-      h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x+'" y2="'+y+'" stroke="'+(locked?'#ddd':'#ffb3c8')+'" stroke-width="'+thick+'" opacity=".85"/>';
+      var thick=locked?1.2:lineW(p,max);
+      h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x+'" y2="'+y+'" stroke="'+(locked?'#ddd':'#ffb3c8')+'" stroke-width="'+thick.toFixed(2)+'" opacity=".85"/>';
       h+='<g class="clNode" data-jump="'+esc(m.id)+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="18" fill="#fff" stroke="'+(locked?'#bbb':'#ff8fb3')+'" stroke-width="2"/>';
       if(locked)h+='<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="9" fill="#888">？？？</text>';
       else if(m.av)h+='<image href="img/avatars/'+esc(m.av)+'.png?v=1" x="'+(x-15)+'" y="'+(y-15)+'" width="30" height="30" clip-path="circle(15px at 15px 15px)"/>';
@@ -101,7 +111,7 @@ function drawMap(svg,scores,total){
   });
   svg.setAttribute('viewBox','0 0 '+W+' '+H);svg.innerHTML=h;
   svg.querySelectorAll('[data-jump]').forEach(function(g){g.addEventListener('click',function(){
-    var id=g.getAttribute('data-jump'),el=document.getElementById(id);if(!el)return;
+    var id=g.getAttribute('data-jump');if(!id)return;var el=document.getElementById(id);if(!el)return;
     var f=el.querySelector('.fold');if(f)f.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});
   })});
 }
