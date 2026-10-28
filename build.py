@@ -45,7 +45,7 @@ def pcard(w):
     inner=''.join(post(d,b) for d,b in es) or '<p class="sub">まだ書き込みはないよ</p>'
     av=(f'<img class="av" src="img/avatars/{AV[w]}.png?v=1" alt="" width="32" height="32">' if w in AV else f'<span class="ic">{ICON.get(w,"💬")}</span>')
     pn=plain(w)
-    return f'<div class="mem" id="m-{E(pn)}" data-last="{E(last(w))}"><div class="nm"><a class="avLink" href="profiles.html#p-{E(pn)}" title="プロフィール"><span class="avw">{av}<small class="ago"></small></span></a><a class="nmLink" href="profiles.html#p-{E(pn)}"><b>{E(pn)}</b></a><span class="md">（最新{len(es)}日分）</span><span class="stall"></span></div>{inner}</div>'
+    return f'<div class="mem" id="m-{E(pn)}" data-last="{E(last(w))}"><div class="nm"><button type="button" class="memToggle" aria-expanded="false" title="思い出を開く／とじる"><span class="avw">{av}<small class="ago"></small></span><b class="memName">{E(pn)}</b></button><a class="pfOne" href="profiles.html#p-{E(pn)}" title="プロフィール" aria-label="{E(pn)}のプロフィール">👤</a><span class="md">（最新{len(es)}日分）</span><span class="stall"></span></div>{inner}</div>'
 def last(w):
     ds=sorted(d for d,_ in people.get(w,[]) if re.match(r'\d{4}-\d\d-\d\d$',d));return ds[-1] if ds else ('old' if people.get(w) else '')
 ROW=['愛🍒','おーさー','みきティ','すーさん','恵','レイ','まい🍊','瀬戸','らん','まちゃ','由依🌸','ゆず💖','しの','由紀','マキ','星野王子']
@@ -248,6 +248,28 @@ function applyFilt(m){m.querySelectorAll('.post').forEach(function(p){var rd=rep
 function bdg(el,n){if(!el)return;var d=el.querySelector('.nbd');if(!n){if(d)d.remove();return}if(!d){d=document.createElement('b');d.className='nbd';el.appendChild(d)}d.textContent=n>9?'9+':n}
 function jump(m){var p=m.querySelector('.post.nw:not(.hide)')||m.querySelector('.post:not(.hide)')||m;var f=p.closest&&p.closest('.fold');if(f)f.open=true;setTimeout(function(){p.scrollIntoView({behavior:'smooth',block:'center'})},30);p.classList.add('hl');setTimeout(function(){p.classList.remove('hl')},1600)}
 document.querySelectorAll('.fold').forEach(function(f){f.addEventListener('toggle',nwDraw)});
+document.querySelectorAll('.memToggle').forEach(function(btn){
+  btn.addEventListener('click',function(ev){
+    ev.preventDefault();ev.stopPropagation();
+    var mem=btn.closest('.mem');if(!mem)return;
+    var folds=[].slice.call(mem.querySelectorAll('details.fold'));
+    if(!folds.length)return;
+    var openAny=folds.some(function(f){return f.open});
+    if(openAny){folds.forEach(function(f){f.open=false});btn.setAttribute('aria-expanded','false')}
+    else{folds.forEach(function(f){f.open=true});btn.setAttribute('aria-expanded','true');
+      setTimeout(function(){folds[0].scrollIntoView({behavior:'smooth',block:'nearest'})},40)}
+    nwDraw();
+  });
+});
+document.querySelectorAll('.mem').forEach(function(mem){
+  var btn=mem.querySelector('.memToggle');if(!btn)return;
+  mem.querySelectorAll('details.fold').forEach(function(f){
+    f.addEventListener('toggle',function(){
+      var any=[].some.call(mem.querySelectorAll('details.fold'),function(x){return x.open});
+      btn.setAttribute('aria-expanded',any?'true':'false');
+    });
+  });
+});
 nwDraw();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');})();
 </script></body></html>'''
@@ -305,7 +327,12 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 @keyframes leafFall{{0%{{transform:translateY(-120%)}}100%{{transform:translateY(220%)}}}}
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}
 #pfBtn{{display:block;width:100%;box-sizing:border-box;text-align:center;min-height:44px;line-height:44px;margin:8px 0 2px;background:#fff;color:#6a4a9a;border:2px solid #c8a0e0;border-radius:22px;font-size:16px;font-weight:800;text-decoration:none}}
-a.avLink,a.nmLink{{color:inherit;text-decoration:none}}a.nmLink b{{border-bottom:1px dotted #f3a0b8}}a.avLink:active .avw,a.nmLink:active{{opacity:.75}}
+button.memToggle{{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}}
+button.memToggle .memName{{font-weight:800;border-bottom:1px dotted #f3a0b8}}
+button.memToggle[aria-expanded="true"] .memName{{color:#c0587f;border-bottom-color:#c0587f}}
+button.memToggle:active{{opacity:.75}}
+a.pfOne{{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:2px;border-radius:50%;background:#fff6f9;border:1px solid #f3c6d5;text-decoration:none;font-size:14px;line-height:1;box-shadow:0 1px 2px #0001}}
+a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 .act button.rxCombo{{background:#ffd6e4;border-color:#d0567f;font-weight:800;letter-spacing:0}}
 .act button.comboPick{{position:relative}}
 .act button .comboOrd{{position:absolute;top:-6px;right:-6px;min-width:14px;height:14px;border-radius:8px;background:#d0567f;color:#fff;font-size:10px;font-style:normal;font-weight:800;line-height:14px;text-align:center;padding:0 3px;box-shadow:0 0 0 1px #fff}}
@@ -318,7 +345,7 @@ a.avLink,a.nmLink{{color:inherit;text-decoration:none}}a.nmLink b{{border-bottom
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v29'
+SWV='omoide-v30'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
