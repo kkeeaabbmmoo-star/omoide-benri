@@ -57,7 +57,7 @@ def mbar():
 memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=12"></script><script>
+JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=12"></script><script src="monthly.js?v=1"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
@@ -244,10 +244,43 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 .ptag{{display:inline-block;margin-left:6px;font-size:11px;font-weight:800;border-radius:8px;padding:0 6px;vertical-align:middle}}.ptag.ok{{background:#e5f6ea;color:#2a8a4a}}.ptag.ng{{background:#ffe8ee;color:#c0587f}}.ackb{{display:inline-block;margin:4px 0;border:1px solid #7ec8a0;background:#eefaf3;color:#2a8a4a;border-radius:12px;font-size:13px;font-weight:700;padding:3px 10px}}.ackb.sm{{font-size:11px;padding:1px 7px;margin-left:6px}}.post.hide,.fold.hide{{display:none!important}}.filt{{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:0 0 6px;font-size:13px;color:#9a7b88}}.filt button{{border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:12px;font-size:12px;padding:3px 10px}}.filt button.on{{background:#d0567f;color:#fff;border-color:#d0567f}}.ubdg{{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;color:#c0587f;background:#ffe8ee;border-radius:8px;padding:0 6px}}.nsh2{{font-size:12px;color:#a0466a;margin:2px 0 4px}}.post.replied{{box-shadow:inset 3px 0 0 #7ec8a0}}.post.unreplied{{box-shadow:inset 3px 0 0 #f3a0b8}}.post{{border-top:1px dashed #f3c6d5;padding:4px 6px;border-radius:10px;transition:background .4s}}.post.rd{{background:#eef7ee}}.post.rd>.md::after{{content:' 👀既読';color:#5a9a5a}}.rp{{font-size:13px;background:#fff6f9;border-radius:10px;padding:2px 8px;margin:3px 0}}
 .mkOv{{position:fixed;inset:0;z-index:2147483100;background:#0007;display:flex;align-items:flex-end;justify-content:center}}.mkBox{{background:#fff;width:100%;max-width:420px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:14px 14px calc(env(safe-area-inset-bottom)+14px)}}.mkH{{font-size:16px;font-weight:800;color:#c0587f}}.mkSub{{font-size:12px;color:#9a7b88;margin:4px 0 8px}}.mkCur{{margin-bottom:8px;font-size:13px}}.mkChip{{border:1px solid #f3c6d5;background:#fff6f9;border-radius:14px;padding:4px 8px;margin:2px;font-size:16px}}.mkG{{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}}.mkE{{width:40px;height:40px;border:1px solid #f3c6d5;background:#fff;border-radius:12px;font-size:22px;padding:0}}.mkE.on{{background:#ffd6e4;border-color:#d0567f}}.mkAdd{{display:flex;gap:6px;margin:8px 0}}.mkIn{{flex:1;border:1px solid #f3c6d5;border-radius:12px;padding:8px;font-size:18px}}.mkAddB,.mkOk{{border:0;background:#d0567f;color:#fff;border-radius:12px;padding:8px 12px;font-weight:800}}.mkDef,.mkX{{border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:12px;padding:8px 12px;margin-top:6px}}.mkAct{{display:flex;gap:8px;margin-top:8px}}.mkAct .mkOk{{flex:1}}.mkGear{{font-size:14px!important;opacity:.85}}.micb{{border:1px solid #f3c6d5;background:#fff;border-radius:14px;font-size:16px;padding:4px 8px;flex:none}}.micb.on{{background:#ffe08a;border-color:#d0567f;animation:micPulse 1s infinite}}.micHint{{width:100%;font-size:12px;color:#a0466a;background:#fff6f9;border-radius:10px;padding:4px 8px;margin-top:2px}}@keyframes micPulse{{0%,100%{{transform:scale(1)}}50%{{transform:scale(1.08)}}}}.act{{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin:4px 0}}.act button{{border:1px solid #f3c6d5;background:#fff;border-radius:14px;font-size:15px;padding:2px 8px}}.act button.on{{background:#ffd6e4;border-color:#d0567f}}
 .act input{{flex:1;min-width:120px;border:1px solid #f3c6d5;border-radius:12px;padding:5px 8px;font-size:16px}}
+
+.mnSec{{margin:8px 0 10px;border:1px solid #ffd0a8;border-radius:14px;background:linear-gradient(180deg,#fff8f0,#fff);padding:0 8px 8px}}
+.mnSec>summary{{cursor:pointer;font-weight:800;color:#c45c26;padding:8px 4px;list-style-position:inside;font-size:15px}}
+.mnWrap{{padding:4px 2px 8px}}.mnHero{{background:#fff3e6;border-radius:12px;padding:10px;margin:8px 0;color:#5a3a45;font-size:14px}}
+.mnCount{{font-size:18px;margin:6px 0;color:#c45c26}}.mnSub{{font-size:12px;color:#9a7b88}}
+.mnRules{{margin:6px 0;border:1px dashed #f0c9a0;border-radius:12px;padding:4px 8px;background:#fff}}
+.mnRules summary{{cursor:pointer;font-weight:800;color:#c45c26;font-size:14px}}.mnRulesB{{font-size:13px;line-height:1.55;color:#5a3a45;padding:6px 2px 8px}}
+.mnRulesB ul{{padding-left:18px;margin:4px 0}}
+.mnList{{list-style:none;margin:0;padding:0;max-height:min(50vh,340px);overflow:auto}}
+.mnList li{{display:flex;align-items:center;gap:6px;padding:5px 2px;border-bottom:1px dashed #ffe4cc;font-size:13px}}
+.mnList i{{flex:none;width:22px;height:22px;border-radius:11px;background:#ff9a5a;color:#fff;font-style:normal;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}}
+.mnList b{{flex:1}}.mnList em{{font-style:normal;color:#c45c26;font-weight:800}}
+.mnTier{{font-size:11px;background:#ffe8d6;color:#c45c26;border-radius:8px;padding:1px 6px;font-weight:700}}
+.mnRew{{margin:8px 0;padding:8px;border-radius:12px;background:#fff8f0;border:1px solid #ffd0a8;font-size:13px}}
+.mnRewH{{font-weight:800;color:#c45c26;margin-bottom:6px}}.mnRewT{{margin:6px 0}}.mnRewT ul{{margin:4px 0;padding-left:18px}}
+.mnBagBar{{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:8px;font-size:12px}}
+.mnBagB{{border:1px solid #ffd0a8;background:#fff;color:#c45c26;border-radius:12px;padding:3px 8px;font-size:12px;font-weight:700}}.mnBagMini{{margin-left:6px;border:1px solid #ffd0a8;background:#fff8f0;border-radius:10px;font-size:12px;padding:1px 6px}}
+.mnOv{{position:fixed;inset:0;z-index:2147483200;background:#0007;display:flex;align-items:flex-end;justify-content:center}}
+.mnBox{{background:#fff;width:100%;max-width:420px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:14px 14px calc(env(safe-area-inset-bottom)+14px)}}
+.mnH{{font-size:16px;font-weight:800;color:#c45c26}}.mnInv{{display:flex;flex-direction:column;gap:6px;margin:8px 0}}
+.mnItem{{text-align:left;border:1px solid #ffd0a8;background:#fff8f0;border-radius:12px;padding:8px 10px}}.mnItem.on{{background:#ffe0c2;border-color:#c45c26}}
+.mnItem b{{display:block;font-size:14px}}.mnItem small{{color:#9a7b88}}
+.mnX{{display:block;width:100%;margin-top:8px;border:0;border-radius:14px;padding:12px;font-weight:800;background:#c45c26;color:#fff}}
+/* cosmetics */
+.mem.rw-bg{{background:linear-gradient(135deg,#fff0e0,#ffd7b5 40%,#ffe8d6)!important;border-radius:12px;padding:4px 6px}}
+.mem.rw-frame .avw,.mem.rw-frame .av{{box-shadow:0 0 0 3px #e67e22,0 0 0 6px #f5d76e55!important;border-radius:50%}}
+.mem.rw-frame .avw{{background:url(img/rewards/momiji-frame.svg) center/contain no-repeat}}
+.mem.rw-icon .avw::after{{content:"";position:absolute;right:-4px;top:-4px;width:16px;height:16px;background:url(img/rewards/momiji-icon.svg) center/contain no-repeat;pointer-events:none}}
+.mem.rw-sticker{{position:relative}}
+.mem.rw-sticker::after{{content:"";position:absolute;right:4px;top:4px;width:28px;height:28px;background:url(img/rewards/momiji-sticker.svg) center/contain no-repeat;opacity:.9;pointer-events:none}}
+.mem.rw-fx{{position:relative;overflow:hidden}}
+.mem.rw-fx::before{{content:"🍁🍂🍁";position:absolute;left:0;right:0;top:0;font-size:12px;opacity:.55;animation:leafFall 6s linear infinite;pointer-events:none;letter-spacing:8px}}
+@keyframes leafFall{{0%{{transform:translateY(-120%)}}100%{{transform:translateY(220%)}}}}
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}</style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v26'
+SWV='omoide-v27'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
@@ -255,6 +288,64 @@ os.makedirs(os.path.join(D,'data'),exist_ok=True);json.dump({'latest':max(dts)[0
 posts={}; 
 for _w,_es in people.items():posts[plain(_w)]=len(_es)
 json.dump({'posts':posts,'updated':now},open(os.path.join(D,'data','posts.json'),'w'),ensure_ascii=False)
+# --- monthly ranking snapshots (post counts by month; live tally adds reactions/replies on device)
+os.makedirs(os.path.join(D,'data','monthly'),exist_ok=True)
+os.makedirs(os.path.join(D,'data','rewards'),exist_ok=True)
+from collections import defaultdict
+by_m=defaultdict(lambda:defaultdict(int))
+for d,w,_ in mem:
+    if not re.match(r'\d{4}-\d{2}-\d{2}$',d):continue
+    who=plain(w)
+    if who=='ゆず':continue
+    by_m[d[:7]][who]+=10  # +10pt per post day-entry (same as client post count *10)
+# competition rank helper
+def comp_rank(score_map):
+    rows=sorted(({'name':n,'pts':p} for n,p in score_map.items()),key=lambda r:(-r['pts'],r['name']))
+    out=[];i=0
+    while i<len(rows):
+        j=i
+        while j<len(rows) and rows[j]['pts']==rows[i]['pts']:j+=1
+        rk=i+1;tier=1 if rk<=3 else (2 if rk<=7 else 0)
+        for k in range(i,j):
+            r=dict(rows[k]);r['rank']=rk;r['tier']=tier;out.append(r)
+        i=j
+    return out
+# ensure Nov stub exists (not finalized until after month end)
+nov='2026-11';nov_path=os.path.join(D,'data','monthly',nov+'.json')
+if not os.path.exists(nov_path):
+    json.dump({'month':nov,'finalized':False,'theme':'紅葉','note':'11月スタート！ライブ集計は端末のリアクション・返事＋公開投稿。確定スナップショットは月末以降にゆずが公開するよ。','ranking':[],'updated':now},open(nov_path,'w'),ensure_ascii=False,indent=1)
+# finalize previous months if any (post-only baseline when missing)
+jst=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+cur_ym=jst.strftime('%Y-%m')
+for ym,sc in sorted(by_m.items()):
+    if ym<'2026-11':continue  # monthly system starts Nov 2026
+    if ym>=cur_ym:continue     # current/future: live only
+    path=os.path.join(D,'data','monthly',ym+'.json')
+    prev=None
+    if os.path.exists(path):
+        try:prev=json.load(open(path))
+        except Exception:prev=None
+    if prev and prev.get('finalized'):continue
+    ranking=comp_rank(sc)
+    # grant rewards into inventory (merge, never delete owned)
+    rew_path=os.path.join(D,'data','rewards',ym+'.json')
+    inv_path=os.path.join(D,'data','inventory.json')
+    inv=json.load(open(inv_path)) if os.path.exists(inv_path) else {'members':{}}
+    inv.setdefault('members',{})
+    rew=json.load(open(rew_path)) if os.path.exists(rew_path) else None
+    if rew:
+        t1=[x['id'] for x in rew.get('tiers',{}).get('1',{}).get('items',[])]
+        t2=[x['id'] for x in rew.get('tiers',{}).get('2',{}).get('items',[])]
+        for r in ranking:
+            ids=t1 if r['tier']==1 else (t2 if r['tier']==2 else [])
+            if not ids:continue
+            m=inv['members'].setdefault(r['name'],{'owned':[],'equip':{}})
+            owned=m.setdefault('owned',[])
+            for i in ids:
+                if i not in owned:owned.append(i)
+        inv['updated']=now
+        json.dump(inv,open(inv_path,'w'),ensure_ascii=False,indent=1)
+    json.dump({'month':ym,'finalized':True,'source':'posts+publish','ranking':ranking,'updated':now},open(path,'w'),ensure_ascii=False,indent=1)
 print('built',len(mem),'memories')
 if '--push' in sys.argv:
     subprocess.run(['git','-C',D,'add','-A']);subprocess.run(['git','-C',D,'commit','-qm','update '+now]);subprocess.run(['git','-C',D,'push','-q'],check=True)
