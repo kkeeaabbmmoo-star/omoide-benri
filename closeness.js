@@ -149,6 +149,47 @@ function drawMap(svg,scores,total){
     var f=el.querySelector('.fold');if(f)f.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});
   })});
 }
+
+function hasCouple(){try{var c=localStorage.getItem('yz_avatar_couple');return !!(c&&c.indexOf('data:image')===0)}catch(e){return false}}
+function cropToJpeg(file,done,fail){
+  var url=URL.createObjectURL(file),im=new Image();
+  im.onload=function(){
+    try{
+      var S=512,side=Math.min(im.width,im.height),sx=(im.width-side)/2,sy=(im.height-side)/2;
+      var c=document.createElement('canvas');c.width=S;c.height=S;
+      var g=c.getContext('2d');g.drawImage(im,sx,sy,side,side,0,0,S,S);
+      var q=0.88,data=c.toDataURL('image/jpeg',q);
+      while(data.length>900000&&q>0.5){q-=0.08;data=c.toDataURL('image/jpeg',q)}
+      URL.revokeObjectURL(url);done(data);
+    }catch(e){URL.revokeObjectURL(url);fail(e)}
+  };
+  im.onerror=function(){URL.revokeObjectURL(url);fail(new Error('画像が読めなかったよ'))};
+  im.src=url;
+}
+function setupCouplePhoto(sec){
+  var box=sec.querySelector('.clPhoto');if(!box||box.dataset.ready)return;box.dataset.ready='1';
+  box.innerHTML='<button type="button" class="clPhSet">📷 写真を入れる</button><button type="button" class="clPhRst" hidden>元に戻す</button><input type="file" accept="image/*" class="clPhIn" hidden>';
+  var inp=box.querySelector('.clPhIn'),setB=box.querySelector('.clPhSet'),rst=box.querySelector('.clPhRst');
+  function sync(){var on=hasCouple();rst.hidden=!on;setB.textContent=on?'📷 写真を変える':'📷 写真を入れる'}
+  sync();box._sync=sync;
+  setB.onclick=function(ev){ev.preventDefault();ev.stopPropagation();inp.click()};
+  rst.onclick=function(ev){
+    ev.preventDefault();ev.stopPropagation();
+    if(!confirm('ふたりの写真をやめて、元のイラストに戻す？'))return;
+    try{localStorage.removeItem('yz_avatar_couple')}catch(e){}
+    sync();render();
+  };
+  inp.onchange=function(){
+    var f=inp.files&&inp.files[0];inp.value='';
+    if(!f)return;
+    if(!/^image\//.test(f.type||'')){alert('画像ファイルを選んでね');return}
+    cropToJpeg(f,function(data){
+      try{localStorage.setItem('yz_avatar_couple',data);sync();render()}
+      catch(e){alert('保存できなかったよ💦 写真が大きすぎるか、容量がいっぱいみたい。別の写真で試してね')}
+    },function(e){alert((e&&e.message)||'読みこめなかったよ')});
+  };
+}
+
 function render(){
   var sec=document.getElementById('clSec');if(!sec)return;
   var scores={},total=0;members().forEach(function(m){scores[m.name]=scoreOne(m.name);total+=scores[m.name]});
@@ -190,7 +231,7 @@ function boot(){
   var host=document.getElementById('nstrip');if(!host||document.getElementById('clSec'))return;
   var sec=document.createElement('details');sec.id='clSec';sec.className='clSec';
   if(g('om_close_open',false))sec.open=true;
-  sec.innerHTML='<summary>💞 親密度と関係図</summary><div class="clWrap"><div class="clTop"></div><svg class="clMap" width="100%" role="img" aria-label="関係図"></svg><div class="clBox"></div></div>';
+  sec.innerHTML='<summary>💞 親密度と関係図</summary><div class="clWrap"><div class="clTop"></div><svg class="clMap" width="100%" role="img" aria-label="関係図"></svg><div class="clPhoto"></div><div class="clBox"></div></div>';
   host.insertAdjacentElement('afterend',sec);
   sec.addEventListener('toggle',function(){try{localStorage.setItem('om_close_open',JSON.stringify(!!sec.open))}catch(e){}});
   // load posts then render
