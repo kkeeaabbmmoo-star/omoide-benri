@@ -5,7 +5,7 @@ def _apply_pf_order(o):
     po = o.get("profile_order") if isinstance(o, dict) else None
     if not isinstance(po, list) or not po:
         return 0
-    D = os.path.dirname(os.path.abspath(__file__))
+    D = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     PROF = os.path.join(D, "data", "profiles.json")
     if not os.path.exists(PROF):
         print("no profiles.json", file=sys.stderr)
