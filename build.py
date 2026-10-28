@@ -128,7 +128,7 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
   if(r0){var r=document.createElement('div');r.className='rp eiji';r.style.width='100%';r.innerHTML=(r0.q?'「'+esc(r0.q.length>30?r0.q.slice(0,30)+'…':r0.q)+'」に':'')+'↩️ <b>エイジ</b>：'+esc(r0.t)+' <a href="#" style="font-size:12px">消す</a>';r.querySelector('a').onclick=function(ev){ev.preventDefault();delete P[id];sv();paintPost(p);draw();nwDraw()};a.appendChild(r)}
   else{if(sel){var q=document.createElement('div');q.className='qt';q.innerHTML='✂️ この一文に返す <a href="#">やめる</a>';q.querySelector('a').onclick=function(ev){ev.preventDefault();ev.stopPropagation();sel.classList.remove('sel');sel=null;draw()};a.appendChild(q)}
    var i=document.createElement('input');i.placeholder=sel?'この一文にひとこと…':'ひとこと返事…';i.maxLength=60;var s=document.createElement('button');s.textContent='送る';
-   s.onclick=function(){var v=i.value.trim();if(v){var o={t:v,at:TD};if(sel){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}P[id]=o;sv();markAck(p,'reply');draw()}};a.appendChild(i);a.appendChild(s)}}
+   s.onclick=function(){var v=i.value.trim();if(v){var o={t:v,at:TD};if(sel){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}P[id]=o;sv();markAck(p,'reply');draw()}};a.appendChild(i);a.appendChild(s)}
   paintPost(p)}
  draw()});
 
