@@ -81,31 +81,50 @@ function drawMap(svg,scores,total){
   [1,2,3].forEach(function(ri){rings[ri].sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)})});
   var h='<defs><radialGradient id="cg" cx="50%" cy="50%"><stop offset="0%" stop-color="#ffe08a"/><stop offset="100%" stop-color="#ffb3c8"/></radialGradient>'+
     '<filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'+
-    '<clipPath id="pairClip"><circle cx="'+cx+'" cy="'+cy+'" r="34"/></clipPath></defs>';
+    '<clipPath id="pairClip"><circle cx="'+cx+'" cy="'+cy+'" r="38"/></clipPath></defs>';
   h+='<circle cx="'+cx+'" cy="'+cy+'" r="168" fill="#fff6f9" stroke="#ffd0e0"/><circle cx="'+cx+'" cy="'+cy+'" r="118" fill="none" stroke="#ffe4ee"/><circle cx="'+cx+'" cy="'+cy+'" r="72" fill="none" stroke="#ffe4ee"/>';
   // Center: Eiji + ゆず pair (twoshot), glamorous gold
   var yp=scores['ゆず']||0;
   h+='<g class="clPair" data-jump="'+(yuzu?esc(yuzu.id):'')+'" style="cursor:pointer" filter="url(#glow)">'+
-    '<circle cx="'+cx+'" cy="'+cy+'" r="38" fill="#fff" stroke="#ffd700" stroke-width="4"/>'+
-    '<image href="img/twoshot.svg" x="'+(cx-34)+'" y="'+(cy-34)+'" width="68" height="68" clip-path="url(#pairClip)"/>'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="42" fill="#fff" stroke="#ffd700" stroke-width="4"/>'+
+    '<image href="img/twoshot.svg" x="'+(cx-38)+'" y="'+(cy-38)+'" width="76" height="76" clip-path="url(#pairClip)"/>'+
     '<g class="clSpark"><circle cx="'+(cx-28)+'" cy="'+(cy-30)+'" r="2.2" fill="#ffd700"/><circle cx="'+(cx+30)+'" cy="'+(cy-26)+'" r="1.8" fill="#ff8fb3"/><circle cx="'+(cx+28)+'" cy="'+(cy+28)+'" r="2" fill="#ffd700"/><circle cx="'+(cx-30)+'" cy="'+(cy+24)+'" r="1.5" fill="#ff8fb3"/></g>'+
     '</g>';
   h+='<text x="'+cx+'" y="'+(cy+52)+'" text-anchor="middle" font-size="10" font-weight="800" fill="#b8860b">👑 エイジの嫁</text>';
   h+='<text x="'+cx+'" y="'+(cy+64)+'" text-anchor="middle" font-size="9" fill="#a0466a">ゆず '+yp.toLocaleString()+'pt</text>';
-  // 15 others around the pair
+  // 15 others around the pair (icons 1.5x: r=27 min; collision nudge)
+  var placed=[];
+  function nudge(x,y,rr){
+    for(var k=0;k<80;k++){
+      var hit=false;
+      for(var j=0;j<placed.length;j++){
+        var p=placed[j],dx=x-p.x,dy=y-p.y,d=Math.hypot(dx,dy),need=rr+p.r+3;
+        if(d<need&&d>0){var push=(need-d)/d;x+=dx*push*0.7;y+=dy*push*0.7;hit=true}
+        else if(d===0){x+=need*0.4;y+=need*0.2;hit=true}
+      }
+      // keep near canvas
+      var lim=170;var dx0=x-cx,dy0=y-cy,rad=Math.hypot(dx0,dy0);
+      if(rad>lim){x=cx+dx0/rad*lim;y=cy+dy0/rad*lim}
+      if(rad<55){x=cx+dx0/Math.max(rad,1)*55;y=cy+dy0/Math.max(rad,1)*55}
+      if(!hit)break;
+    }
+    placed.push({x:x,y:y,r:rr});return {x:x,y:y};
+  }
   [1,2,3].forEach(function(ri){
-    var arr=rings[ri],rad=ri===1?78:ri===2?122:168;
+    var arr=rings[ri],rad=ri===1?92:ri===2?132:172;
     arr.forEach(function(m,i){
       var ang=-Math.PI/2+(i+0.5)/Math.max(arr.length,1)*Math.PI*2;
-      var x=cx+Math.cos(ang)*rad,y=cy+Math.sin(ang)*rad,p=scores[m.name]||0;
+      var x0=cx+Math.cos(ang)*rad,y0=cy+Math.sin(ang)*rad,p=scores[m.name]||0;
       var locked=m.name==='星野王子'&&!unlocked;
+      var rr=27; // 1.5x of 18 — fixed minimum, no shrink with points
+      var pos=nudge(x0,y0,rr),x=pos.x,y=pos.y;
       var thick=locked?1.2:lineW(p,max);
       h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x+'" y2="'+y+'" stroke="'+(locked?'#ddd':'#ffb3c8')+'" stroke-width="'+thick.toFixed(2)+'" opacity=".85"/>';
-      h+='<g class="clNode" data-jump="'+esc(m.id)+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="18" fill="#fff" stroke="'+(locked?'#bbb':'#ff8fb3')+'" stroke-width="2"/>';
-      if(locked)h+='<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="9" fill="#888">？？？</text>';
-      else if(m.av)h+='<image href="img/avatars/'+esc(m.av)+'.png?v=1" x="'+(x-15)+'" y="'+(y-15)+'" width="30" height="30" clip-path="circle(15px at 15px 15px)"/>';
-      else h+='<text x="'+x+'" y="'+(y+5)+'" text-anchor="middle" font-size="16">'+esc(m.ic)+'</text>';
-      if(!locked)h+='<text x="'+x+'" y="'+(y+28)+'" text-anchor="middle" font-size="8" fill="#a0466a">'+(p>=1000?(p/1000).toFixed(p>=10000?0:1)+'k':p)+'</text>';
+      h+='<g class="clNode" data-jump="'+esc(m.id)+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="'+rr+'" fill="#fff" stroke="'+(locked?'#bbb':'#ff8fb3')+'" stroke-width="2.2"/>';
+      if(locked)h+='<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="11" fill="#888">？？？</text>';
+      else if(m.av)h+='<image href="img/avatars/'+esc(m.av)+'.png?v=1" x="'+(x-22)+'" y="'+(y-22)+'" width="44" height="44" clip-path="circle(22px at 22px 22px)"/>';
+      else h+='<text x="'+x+'" y="'+(y+7)+'" text-anchor="middle" font-size="22">'+esc(m.ic)+'</text>';
+      if(!locked)h+='<text x="'+x+'" y="'+(y+rr+12)+'" text-anchor="middle" font-size="9" fill="#a0466a">'+(p>=1000?(p/1000).toFixed(p>=10000?0:1)+'k':p)+'</text>';
       h+='</g>';
     });
   });
