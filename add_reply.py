@@ -21,7 +21,7 @@ fs=[f for f in glob.glob('/workspace/思い出ノート/*.md') if os.path.basena
 if len(fs)!=1:sys.exit(f'名前が見つからない/複数: {fs}')
 w=plain(os.path.basename(fs[0])[:-3]);pid=key if '_' in key else w+'_'+key
 if f'## {pid.split("_",1)[1]}' not in open(fs[0]).read():sys.exit('その日付の投稿がないよ: '+pid)
-ent={'who':w,'text':text[:80]}
+ent={'who':w,'text':text}
 if line:
     t=open(fs[0]).read();sec=re.split(r'^## ',t,flags=re.M)[1:];bl=[s for s in sec if s.split('\n',1)[0].strip()==pid.split('_',1)[1]][0]
     ls=[l.lstrip('- ').strip() for l in bl.strip().split('\n')[1:] if l.strip()]
