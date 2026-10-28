@@ -58,7 +58,7 @@ def mbar():
 memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=13"></script><script src="monthly.js?v=3"></script><script>
+JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=13"></script><script src="monthly.js?v=4"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
@@ -213,6 +213,7 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
    var i=document.createElement('input');i.placeholder=sel?'この一文にひとこと…':'ひとこと返事…';i.maxLength=60;i.style.flex='1';i.style.minWidth='100px';
    var s=document.createElement('button');s.type='button';s.textContent='送る';
    /* v33: sel は行選択（.ln）。コンボ配列は cSel。影付けで送るが TypeError になってたのを修正 */
+   /* v34: 月間ランキング同点→あみだくじ（決定的ハッシュ）。1〜3位同着なし */
    s.onclick=function(){var v=i.value.trim();if(!v){i.focus();return}var o={t:v,at:TD};if(sel&&sel.textContent){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}P[id]=o;sv();markAck(p,'reply');draw();nwDraw()};
    row.appendChild(i);attachMic(i,row);row.appendChild(s);a.appendChild(row)}
   paintPost(p)}
@@ -307,6 +308,13 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 .mnList i{{flex:none;width:22px;height:22px;border-radius:11px;background:#ff9a5a;color:#fff;font-style:normal;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}}
 .mnList b{{flex:1}}.mnList em{{font-style:normal;color:#c45c26;font-weight:800}}
 .mnTier{{font-size:11px;background:#ffe8d6;color:#c45c26;border-radius:8px;padding:1px 6px;font-weight:700}}
+.mnLuck{{font-size:10px;background:#fff3c4;color:#9a6b00;border-radius:8px;padding:1px 5px;font-weight:800;flex:none;animation:mnDice 1.4s ease-in-out 1}}
+.mnLuckNote{{font-size:12px;color:#9a6b00;background:#fff8e0;border:1px dashed #f0d48a;border-radius:10px;padding:6px 8px;margin:6px 0;font-weight:700;display:flex;align-items:center;gap:6px}}
+.mnDice{{display:inline-block;animation:mnDice 1.4s ease-in-out 1}}
+@keyframes mnDice{{0%{{transform:rotate(0) scale(1)}}30%{{transform:rotate(-18deg) scale(1.15)}}60%{{transform:rotate(14deg) scale(1.1)}}100%{{transform:rotate(0) scale(1)}}}}
+.mnList li[data-luck="1"]{{background:linear-gradient(90deg,#fff8e0,#fff0)}}
+.mnDemo{{margin:8px 0;padding:8px;border-radius:12px;background:#fff;border:1px dashed #f0d48a}}
+.mnDemoH{{font-size:13px;font-weight:800;color:#9a6b00;margin-bottom:4px}}
 .mnRew{{margin:8px 0;padding:8px;border-radius:12px;background:#fff8f0;border:1px solid #ffd0a8;font-size:13px}}
 .mnRewH{{font-weight:800;color:#c45c26;margin-bottom:6px}}.mnRewT{{margin:6px 0}}.mnRewT ul{{margin:4px 0;padding-left:18px}}
 .mnBagBar{{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:8px;font-size:12px}}
@@ -347,7 +355,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v33'
+SWV='omoide-v34'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
@@ -365,16 +373,27 @@ for d,w,_ in mem:
     who=plain(w)
     if who=='ゆず':continue
     by_m[d[:7]][who]+=10  # +10pt per post day-entry (same as client post count *10)
-# competition rank helper
-def comp_rank(score_map):
-    rows=sorted(({'name':n,'pts':p} for n,p in score_map.items()),key=lambda r:(-r['pts'],r['name']))
+# あみだくじ同点：決定的ハッシュ（月+名前）。1〜3位は同着なし・連番順位
+def fnv1a(s):
+    h=2166136261
+    for ch in s:
+        h ^= ord(ch)
+        h = (h * 16777619) & 0xFFFFFFFF
+    return h
+def luck_key(ym, name):
+    return fnv1a(f'{ym}\0{name}')
+def comp_rank(score_map, ym='0000-00'):
+    rows=[{'name':n,'pts':p} for n,p in score_map.items()]
+    rows.sort(key=lambda r:(-r['pts'], luck_key(ym,r['name']), r['name']))
     out=[];i=0
     while i<len(rows):
         j=i
         while j<len(rows) and rows[j]['pts']==rows[i]['pts']:j+=1
-        rk=i+1;tier=1 if rk<=3 else (2 if rk<=7 else 0)
+        tied=j-i>1
         for k in range(i,j):
-            r=dict(rows[k]);r['rank']=rk;r['tier']=tier;out.append(r)
+            r=dict(rows[k]);r['rank']=k+1;r['tier']=1 if r['rank']<=3 else (2 if r['rank']<=7 else 0)
+            r['luck']=tied
+            out.append(r)
         i=j
     return out
 # ensure Nov stub exists (not finalized until after month end)
@@ -393,7 +412,7 @@ for ym,sc in sorted(by_m.items()):
         try:prev=json.load(open(path))
         except Exception:prev=None
     if prev and prev.get('finalized'):continue
-    ranking=comp_rank(sc)
+    ranking=comp_rank(sc, ym)
     # grant rewards into inventory (merge, never delete owned)
     rew_path=os.path.join(D,'data','rewards',ym+'.json')
     inv_path=os.path.join(D,'data','inventory.json')

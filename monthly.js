@@ -1,4 +1,4 @@
-/* 🏆 月間ランキング (om_monthly v1) — 点数ルールは closeness scoreOne と同じ式・月で区切る。ゆず除外。 */
+/* 🏆 月間ランキング (om_monthly v2 · あみだ同点) — 点数ルールは closeness scoreOne と同じ式・月で区切る。ゆず除外。 */
 (function(){
 var START='2026-11-01';
 var KM='om_marks', KE='om_equip'; // local equip preview (never deletes server inventory)
@@ -73,16 +73,30 @@ function scoreMonth(name,b){
   var cur=postsN*10+rSum+replyN*15;
   return {postsN:postsN,postsPts:postsN*10,react:react,reactN:rN,reactPts:rSum,replyN:replyN,replyPts:replyN*15,pts:cur};
 }
-/* competition ranking: 1,2,2,4 */
-function rankList(rows){
-  var sorted=rows.slice().sort(function(a,b){return b.pts-a.pts||a.name.localeCompare(b.name,'ja')});
+/* 同点はあみだくじ（決定的ハッシュ）。1〜3位は同着なし。順位は連番。 */
+function fnv1a(s){
+  var h=2166136261>>>0;
+  for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)>>>0}
+  return h>>>0;
+}
+/* seed = 月(YYYY-MM) + 名前。エイジ操作不可・再読込でも同じ結果 */
+function luckKey(ym,name){return fnv1a(String(ym)+'\u0000'+String(name))}
+function rankList(rows,ym){
+  ym=ym||'0000-00';
+  var sorted=rows.slice().sort(function(a,b){
+    if(b.pts!==a.pts)return b.pts-a.pts;
+    var la=luckKey(ym,a.name),lb=luckKey(ym,b.name);
+    if(la!==lb)return la<lb?-1:1;
+    return a.name.localeCompare(b.name,'ja');
+  });
   var out=[],i=0;
   while(i<sorted.length){
     var j=i;while(j<sorted.length&&sorted[j].pts===sorted[i].pts)j++;
-    var rank=i+1;
+    var tied=j-i>1;
     for(var k=i;k<j;k++){
+      var rank=k+1; /* 連番：同点でも1,2,3… */
       var tier=rank<=3?1:rank<=7?2:0;
-      out.push(Object.assign({},sorted[k],{rank:rank,tier:tier}));
+      out.push(Object.assign({},sorted[k],{rank:rank,tier:tier,luck:tied,luckKey:luckKey(ym,sorted[k].name)}));
     }
     i=j;
   }
@@ -179,8 +193,8 @@ function rulesHTML(){
     +'<li>返事1件 → +15pt</li>'
     +'<li>しきい値なし・減衰なし。その月の合計のみ（過去月のピークは使わない）</li>'
     +'</ul>'
-    +'<p><b>順位：</b>同じ点数は同じ順位（競争順位）。例：1位・2位タイ・2位タイ・4位</p>'
-    +'<p><b>報酬：</b>1〜3位＝上位セット、4〜7位＝がんばりセット。同点でその順位に入った人はみんな同じセット。毎月テーマが変わるよ</p>'
+    +'<p><b>順位：</b>点数が多い順。同点のときは🎲あみだくじ（その月の名前から決まる運）で順番を決めるよ。エイジが選ぶことはない。1〜3位は同着なし。例：5人が同点ならあみだで1〜5位を決めて、次の人は6位</p>'
+    +'<p><b>報酬：</b>最終順位の1〜3位＝上位セット、4〜7位＝がんばりセット。毎月テーマが変わるよ</p>'
     +'<p><b>アイテム：</b>一度もらったアイテムはずっと🎒に残る。装備はゆずに希望を伝えてね（エイジはプレビュー装備もできるよ）</p>'
     +'<p><b>11月テーマ：</b>紅葉🍁　落ち葉フレーム・紅葉背景・花びら枠・🍁マーク・ひらひら落ち葉 など</p>'
     +'</div></details>';
@@ -195,10 +209,14 @@ function rewardsPreviewHTML(cfg){
 }
 function tableHTML(ranked,live){
   if(!ranked.length)return '<p class="mnSub">まだ点数がないよ</p>';
-  var h='<ol class="mnList">';
+  var anyLuck=ranked.some(function(r){return r.luck});
+  var h='';
+  if(anyLuck)h+='<p class="mnLuckNote"><span class="mnDice" aria-hidden="true">🎲</span>同点→あみだで決定（月＋名前の運・毎回同じ）</p>';
+  h+='<ol class="mnList">';
   ranked.forEach(function(r){
     var badge=r.tier===1?'🥇上位':r.tier===2?'🥈がんばり':'';
-    h+='<li data-tier="'+r.tier+'"><i>'+r.rank+'</i><b>'+esc(r.name)+'</b><em>'+r.pts.toLocaleString()+'pt</em>'
+    h+='<li data-tier="'+r.tier+'"'+(r.luck?' data-luck="1"':'')+'><i>'+r.rank+'</i><b>'+esc(r.name)+'</b><em>'+r.pts.toLocaleString()+'pt</em>'
+      +(r.luck?'<span class="mnLuck" title="同点のためあみだくじで順位決定">🎲あみだ</span>':'')
       +(badge?'<span class="mnTier">'+badge+'</span>':'')+'</li>';
   });
   return h+'</ol>'+(live?'<p class="mnSub">※いまの端末のリアクション・返事＋公開投稿から集計中（確定は月末）</p>':'');
@@ -213,11 +231,19 @@ function render(){
   if(today<START){
     html+='<div class="mnHero">🍁 <b>11月スタート！</b><div class="mnCount">あと <b>'+Math.max(0,startDays)+'</b> 日（'+START.replace(/-/g,'/')+' 0:00 JST）</div>'
       +'<p>11月1日から、ゆず以外のみんなで月間ポイントを競うよ。報酬は紅葉テーマ🍁</p></div>';
+    /* 同点あみだの見え方デモ（固定データ・本番集計ではない） */
+    var demo=rankList([
+      {name:'瀬戸',pts:50},{name:'らん',pts:50},{name:'レイ',pts:50},{name:'まい',pts:50},{name:'まちゃ',pts:50},
+      {name:'由依',pts:30},{name:'恵',pts:30}
+    ],'2026-11');
+    html+='<div class="mnDemo"><div class="mnDemoH">🎲 同点のときのあみだ例（お試し表示）</div>'
+      +tableHTML(demo,false)
+      +'<p class="mnSub">※これは説明用。本番は11月からリアルタイム集計。同点グループだけあみだで1・2・3…と並べるよ</p></div>';
     html+=rewardsPreviewHTML(cfg);
   }else{
     var b=monthBounds(curYM);
     var rows=membersExYuzu().map(function(m){return Object.assign({name:m.name},scoreMonth(m.name,b))});
-    var ranked=rankList(rows);
+    var ranked=rankList(rows,b.ym);
     var snap=SNAP[curYM];
     html+='<div class="mnHero"><b>'+b.ym.replace('-','年')+'月</b> の月間ランキング'
       +(snap&&snap.finalized?'（確定）':'（集計中）')+'</div>';
