@@ -223,7 +223,7 @@ function boot(){
   /* prefer just under closeness section */
   var cl=document.getElementById('clSec');
   if(cl)cl.insertAdjacentElement('afterend',sec);else after.insertAdjacentElement('afterend',sec);
-  loadData().then(render);
+  loadData().then(function(){render();setTimeout(applyCosmetics,300);});
   window.addEventListener('storage',function(ev){if(/om_react|om_reply|om_equip/.test(ev.key||''))render()});
   var _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.apply(this,arguments);if(/om_react|om_reply|om_equip/.test(k))setTimeout(render,100)};
 }

@@ -57,7 +57,7 @@ def mbar():
 memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=12"></script><script src="monthly.js?v=1"></script><script>
+JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=12"></script><script src="monthly.js?v=2"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
