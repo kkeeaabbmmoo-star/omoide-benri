@@ -116,27 +116,47 @@ function drawMap(svg,scores,total){
   }
   var couple=null;try{couple=localStorage.getItem('yz_avatar_couple')}catch(e){}
   var coupleSrc=(couple&&couple.indexOf('data:image')===0)?couple:'img/twoshot.svg';
+  var PAIR_R=42, LINE_GAP=12, stopR=PAIR_R+LINE_GAP;
   var h='<defs><filter id="glow"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>'+
-    '<clipPath id="pairClip"><circle cx="'+cx+'" cy="'+cy+'" r="38"/></clipPath></defs>';
+    '<clipPath id="pairClip"><circle cx="'+cx+'" cy="'+cy+'" r="38"/></clipPath>';
+  // per-line fade gradients (opaque at node → nearly transparent at center edge)
+  placed.forEach(function(p,i){
+    var x=p.x,y=p.y,dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy)||1;
+    var x1=cx+dx/d*stopR,y1=cy+dy/d*stopR;
+    h+='<linearGradient id="lg'+i+'" gradientUnits="userSpaceOnUse" x1="'+x1+'" y1="'+y1+'" x2="'+x+'" y2="'+y+'">'+
+      '<stop offset="0%" stop-color="#ffb3c8" stop-opacity="0.08"/>'+
+      '<stop offset="40%" stop-color="#ffb3c8" stop-opacity="0.4"/>'+
+      '<stop offset="100%" stop-color="#ffb3c8" stop-opacity="0.92"/>'+
+      '</linearGradient>';
+  });
+  h+='</defs>';
   h+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r3+'" fill="#fff6f9" stroke="#ffd0e0"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r2+'" fill="none" stroke="#ffe4ee"/><circle cx="'+cx+'" cy="'+cy+'" r="'+r1+'" fill="none" stroke="#ffe4ee"/>';
-  var yp=scores['ゆず']||0;
-  h+='<g class="clPair" data-jump="'+(yuzu?esc(yuzu.id):'')+'" style="cursor:pointer" filter="url(#glow)">'+
-    '<circle cx="'+cx+'" cy="'+cy+'" r="42" fill="#fff" stroke="#ffd700" stroke-width="4"/>'+
-    '<image href="'+coupleSrc.replace(/"/g,'')+'" x="'+(cx-38)+'" y="'+(cy-38)+'" width="76" height="76" clip-path="url(#pairClip)" preserveAspectRatio="xMidYMid slice"/>'+
-    '<g class="clSpark"><circle cx="'+(cx-28)+'" cy="'+(cy-30)+'" r="2.2" fill="#ffd700"/><circle cx="'+(cx+30)+'" cy="'+(cy-26)+'" r="1.8" fill="#ff8fb3"/><circle cx="'+(cx+28)+'" cy="'+(cy+28)+'" r="2" fill="#ffd700"/><circle cx="'+(cx-30)+'" cy="'+(cy+24)+'" r="1.5" fill="#ff8fb3"/></g>'+
-    '</g>';
-  h+='<text x="'+cx+'" y="'+(cy+54)+'" text-anchor="middle" font-size="10" font-weight="800" fill="#b8860b">👑 エイジの嫁</text>';
-  h+='<text x="'+cx+'" y="'+(cy+66)+'" text-anchor="middle" font-size="9" fill="#a0466a">ゆず '+yp.toLocaleString()+'pt</text>';
+  // 1) lines first — stop outside the pair + gap ring (never through the photo)
+  placed.forEach(function(p,i){
+    var x=p.x,y=p.y,pts=scores[p.m.name]||0,dx=x-cx,dy=y-cy,d=Math.hypot(dx,dy)||1;
+    var x1=cx+dx/d*stopR,y1=cy+dy/d*stopR;
+    var thick=lineW(pts,max);
+    h+='<line x1="'+x1+'" y1="'+y1+'" x2="'+x+'" y2="'+y+'" stroke="url(#lg'+i+')" stroke-width="'+thick.toFixed(2)+'" stroke-linecap="round"/>';
+  });
+  // 2) member nodes
   placed.forEach(function(p){
     var m=p.m,x=p.x,y=p.y,pts=scores[m.name]||0;
-    var thick=lineW(pts,max);
-    h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+x+'" y2="'+y+'" stroke="#ffb3c8" stroke-width="'+thick.toFixed(2)+'" opacity=".85"/>';
     h+='<g class="clNode" data-jump="'+esc(m.id)+'" style="cursor:pointer"><circle cx="'+x+'" cy="'+y+'" r="'+RR+'" fill="#fff" stroke="#ff8fb3" stroke-width="2.2"/>';
     if(m.av)h+='<image href="img/avatars/'+esc(m.av)+'.png?v=1" x="'+(x-22)+'" y="'+(y-22)+'" width="44" height="44" clip-path="circle(22px at 22px 22px)"/>';
     else h+='<text x="'+x+'" y="'+(y+7)+'" text-anchor="middle" font-size="22">'+esc(m.ic)+'</text>';
     h+='<text x="'+x+'" y="'+(y+RR+12)+'" text-anchor="middle" font-size="9" fill="#a0466a">'+(pts>=1000?(pts/1000).toFixed(pts>=10000?0:1)+'k':pts)+'</text>';
     h+='</g>';
   });
+  // 3) center pair LAST + opaque disc so photo is fully clear
+  var yp=scores['ゆず']||0;
+  h+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(PAIR_R+LINE_GAP-2)+'" fill="#fff6f9"/>'; // gap fill (hides any leftover)
+  h+='<g class="clPair" data-jump="'+(yuzu?esc(yuzu.id):'')+'" style="cursor:pointer" filter="url(#glow)">'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+PAIR_R+'" fill="#fff" stroke="#ffd700" stroke-width="4"/>'+
+    '<image href="'+coupleSrc.replace(/"/g,'')+'" x="'+(cx-38)+'" y="'+(cy-38)+'" width="76" height="76" clip-path="url(#pairClip)" preserveAspectRatio="xMidYMid slice"/>'+
+    '<g class="clSpark"><circle cx="'+(cx-28)+'" cy="'+(cy-30)+'" r="2.2" fill="#ffd700"/><circle cx="'+(cx+30)+'" cy="'+(cy-26)+'" r="1.8" fill="#ff8fb3"/><circle cx="'+(cx+28)+'" cy="'+(cy+28)+'" r="2" fill="#ffd700"/><circle cx="'+(cx-30)+'" cy="'+(cy+24)+'" r="1.5" fill="#ff8fb3"/></g>'+
+    '</g>';
+  h+='<text x="'+cx+'" y="'+(cy+54)+'" text-anchor="middle" font-size="10" font-weight="800" fill="#b8860b">👑 エイジの嫁</text>';
+  h+='<text x="'+cx+'" y="'+(cy+66)+'" text-anchor="middle" font-size="9" fill="#a0466a">ゆず '+yp.toLocaleString()+'pt</text>';
   // measure helper for tests
   window.__OM_MAP_MIN=Infinity;
   for(var i=0;i<placed.length;i++)for(var j=i+1;j<placed.length;j++){
@@ -151,28 +171,49 @@ function drawMap(svg,scores,total){
 }
 
 function hasCouple(){try{var c=localStorage.getItem('yz_avatar_couple');return !!(c&&c.indexOf('data:image')===0)}catch(e){return false}}
-function cropToJpeg(file,done,fail){
-  var url=URL.createObjectURL(file),im=new Image();
-  im.onload=function(){
-    try{
-      var S=512,side=Math.min(im.width,im.height),sx=(im.width-side)/2,sy=(im.height-side)/2;
-      var c=document.createElement('canvas');c.width=S;c.height=S;
-      var g=c.getContext('2d');g.drawImage(im,sx,sy,side,side,0,0,S,S);
-      var q=0.88,data=c.toDataURL('image/jpeg',q);
-      while(data.length>900000&&q>0.5){q-=0.08;data=c.toDataURL('image/jpeg',q)}
-      URL.revokeObjectURL(url);done(data);
-    }catch(e){URL.revokeObjectURL(url);fail(e)}
+/* Round crop editor (same idea as health note extras.js): drag + pinch zoom + 決定 → 512px JPEG to yz_avatar_couple */
+function openCoupleCrop(src,revoke){
+  if(document.getElementById('omCrop'))return;
+  var img=new Image();
+  img.onload=function(){
+    var o=document.createElement('div');o.id='omCrop';
+    o.innerHTML='<div class="t">ゆびで動かす・2本ゆびで拡大縮小してね♡</div><canvas width="600" height="600"></canvas><input type="range" min="1" max="5" step="0.01" value="1" style="width:260px"><div class="b"><button type="button" class="ng">やめる</button><button type="button" class="ok">決定</button></div>';
+    document.body.appendChild(o);
+    var c=o.querySelector('canvas'),g=c.getContext('2d'),rg=o.querySelector('input'),S=600,base=S/Math.min(img.width,img.height);
+    var z=1,tx=0,ty=0;
+    var clamp=function(){var mx=(img.width*base*z-S)/2,my=(img.height*base*z-S)/2;tx=Math.max(-mx,Math.min(mx,tx));ty=Math.max(-my,Math.min(my,ty))};
+    var draw=function(mask){if(mask==null)mask=true;clamp();g.fillStyle='#fff';g.fillRect(0,0,S,S);var w=img.width*base*z,h=img.height*base*z;g.drawImage(img,(S-w)/2+tx,(S-h)/2+ty,w,h);
+      if(mask){g.save();g.fillStyle='#000a';g.beginPath();g.rect(0,0,S,S);g.arc(S/2,S/2,S/2-6,0,Math.PI*2,true);g.fill('evenodd');g.strokeStyle='#ff9ab8';g.lineWidth=6;g.beginPath();g.arc(S/2,S/2,S/2-6,0,Math.PI*2);g.stroke();g.restore()}};
+    var P=new Map(),pd=0,pz=1,k2=S/300;
+    c.addEventListener('pointerdown',function(e){c.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);if(P.size==2){var a=[...P.values()];pd=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);pz=z}});
+    c.addEventListener('pointermove',function(e){if(!P.has(e.pointerId))return;var pr=P.get(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+      if(P.size==1){tx+=(e.clientX-pr[0])*k2;ty+=(e.clientY-pr[1])*k2}
+      else if(P.size==2&&pd){var a=[...P.values()];z=Math.max(1,Math.min(5,pz*Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])/pd));rg.value=z}
+      draw()});
+    var up=function(e){P.delete(e.pointerId);pd=0};c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+    c.addEventListener('wheel',function(e){e.preventDefault();z=Math.max(1,Math.min(5,z*(e.deltaY<0?1.1:0.9)));rg.value=z;draw()},{passive:false});
+    rg.oninput=function(){z=+rg.value;draw()};draw();
+    var close=function(){o.remove();if(revoke)URL.revokeObjectURL(src)};
+    o.querySelector('.ng').onclick=close;
+    o.querySelector('.ok').onclick=function(){
+      draw(false);
+      var out=document.createElement('canvas');out.width=out.height=512;out.getContext('2d').drawImage(c,0,0,512,512);
+      try{localStorage.setItem('yz_avatar_couple',out.toDataURL('image/jpeg',0.88))}
+      catch(e){alert('保存できなかったよ💦 写真が大きすぎるか、容量がいっぱいみたい。別の写真で試してね');close();return}
+      close();render();
+    };
   };
-  im.onerror=function(){URL.revokeObjectURL(url);fail(new Error('画像が読めなかったよ'))};
-  im.src=url;
+  img.onerror=function(){if(revoke)URL.revokeObjectURL(src);alert('画像が読めなかったよ')};
+  img.src=src;
 }
 function setupCouplePhoto(sec){
   var box=sec.querySelector('.clPhoto');if(!box||box.dataset.ready)return;box.dataset.ready='1';
-  box.innerHTML='<button type="button" class="clPhSet">📷 写真を入れる</button><button type="button" class="clPhRst" hidden>元に戻す</button><input type="file" accept="image/*" class="clPhIn" hidden>';
-  var inp=box.querySelector('.clPhIn'),setB=box.querySelector('.clPhSet'),rst=box.querySelector('.clPhRst');
-  function sync(){var on=hasCouple();rst.hidden=!on;setB.textContent=on?'📷 写真を変える':'📷 写真を入れる'}
+  box.innerHTML='<button type="button" class="clPhSet">📷 写真を入れる</button><button type="button" class="clPhAdj" hidden>🎯 位置を調整</button><button type="button" class="clPhRst" hidden>元に戻す</button><input type="file" accept="image/*" class="clPhIn" hidden>';
+  var inp=box.querySelector('.clPhIn'),setB=box.querySelector('.clPhSet'),adj=box.querySelector('.clPhAdj'),rst=box.querySelector('.clPhRst');
+  function sync(){var on=hasCouple();rst.hidden=!on;adj.hidden=!on;setB.textContent=on?'📷 写真を変える':'📷 写真を入れる'}
   sync();box._sync=sync;
   setB.onclick=function(ev){ev.preventDefault();ev.stopPropagation();inp.click()};
+  adj.onclick=function(ev){ev.preventDefault();ev.stopPropagation();var c=localStorage.getItem('yz_avatar_couple');if(c)openCoupleCrop(c,false)};
   rst.onclick=function(ev){
     ev.preventDefault();ev.stopPropagation();
     if(!confirm('ふたりの写真をやめて、元のイラストに戻す？'))return;
@@ -183,10 +224,7 @@ function setupCouplePhoto(sec){
     var f=inp.files&&inp.files[0];inp.value='';
     if(!f)return;
     if(!/^image\//.test(f.type||'')){alert('画像ファイルを選んでね');return}
-    cropToJpeg(f,function(data){
-      try{localStorage.setItem('yz_avatar_couple',data);sync();render()}
-      catch(e){alert('保存できなかったよ💦 写真が大きすぎるか、容量がいっぱいみたい。別の写真で試してね')}
-    },function(e){alert((e&&e.message)||'読みこめなかったよ')});
+    openCoupleCrop(URL.createObjectURL(f),true);
   };
 }
 
