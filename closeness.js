@@ -153,7 +153,16 @@ function render(){
   var sec=document.getElementById('clSec');if(!sec)return;
   var scores={},total=0;members().forEach(function(m){scores[m.name]=scoreOne(m.name);total+=scores[m.name]});
   checkLv(scores);
-  sec.querySelector('.clTot').textContent='みんな合計 '+total.toLocaleString()+'pt';
+  var top=sec.querySelector('.clTop');
+  if(top){
+    var rank=members().filter(function(m){return m.name!=='ゆず'}).sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)}).slice(0,5);
+    var th='<div class="clTopH">💞 エイジとの親密度 TOP5</div><ol class="clTopL">';
+    rank.forEach(function(m,i){
+      var av=m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span>'+esc(m.ic||'💬')+'</span>';
+      th+='<li><i>'+(i+1)+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em>'+(scores[m.name]||0).toLocaleString()+'pt</em></li>';
+    });
+    top.innerHTML=th+'</ol>';
+  }
   drawList(sec.querySelector('.clBox'),scores,total);
   drawMap(sec.querySelector('.clMap'),scores,total);
   window.__OM_CLOSE={scores:scores,total:total,lv:g('om_lv',{}),peak:g('om_pts_peak',{})};
@@ -168,7 +177,7 @@ function boot(){
   var host=document.getElementById('nstrip');if(!host||document.getElementById('clSec'))return;
   var sec=document.createElement('details');sec.id='clSec';sec.className='clSec';
   if(g('om_close_open',false))sec.open=true;
-  sec.innerHTML='<summary>💞 親密度と関係図 <span class="clTot"></span></summary><div class="clWrap"><svg class="clMap" width="100%" role="img" aria-label="関係図"></svg><div class="clBox"></div></div>';
+  sec.innerHTML='<summary>💞 親密度と関係図</summary><div class="clWrap"><div class="clTop"></div><svg class="clMap" width="100%" role="img" aria-label="関係図"></svg><div class="clBox"></div></div>';
   host.insertAdjacentElement('afterend',sec);
   sec.addEventListener('toggle',function(){try{localStorage.setItem('om_close_open',JSON.stringify(!!sec.open))}catch(e){}});
   // load posts then render
