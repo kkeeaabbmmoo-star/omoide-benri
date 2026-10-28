@@ -233,17 +233,20 @@ function render(){
   var scores={},total=0;members().forEach(function(m){scores[m.name]=scoreOne(m.name);total+=scores[m.name]});
   checkLv(scores);
   var top=sec.querySelector('.clTop');
-  var rank=members().filter(function(m){return m.name!=='ゆず'}).sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)}).slice(0,5);
+  var rankAll=members().filter(function(m){return m.name!=='ゆず'}).sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)});
+  var rankTop5=rankAll.slice(0,5);
   if(top){
-    var th='<div class="clTopH">💞 エイジとの親密度 TOP5</div><ol class="clTopL">';
-    rank.forEach(function(m,i){
+    var th='<div class="clTopH">💞 エイジとの親密度ランキング（全員）</div><ol class="clTopL">';
+    rankAll.forEach(function(m,i){
       var av=m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span>'+esc(m.ic||'💬')+'</span>';
-      th+='<li><i>'+(i+1)+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em>'+(scores[m.name]||0).toLocaleString()+'pt</em></li>';
+      var med=i===0?'🥇':i===1?'🥈':i===2?'🥉':i===3||i===4?'🏅':'';
+      var ri=med?('<span class="clTopMed">'+med+'</span><span class="clTopN">'+(i+1)+'</span>'):String(i+1);
+      th+='<li data-r="'+(i+1)+'"><i>'+ri+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em>'+(scores[m.name]||0).toLocaleString()+'pt</em></li>';
     });
     top.innerHTML=th+'</ol>';
   }
-  // TOP5 medals on main .mem avatars (ゆず never)
-  var rankOf={};rank.forEach(function(m,i){rankOf[m.name]=i});
+  // medals on main .mem avatars for TOP5 only (ゆず never)
+  var rankOf={};rankTop5.forEach(function(m,i){rankOf[m.name]=i});
   members().forEach(function(m){
     var wrap=m.el.querySelector('.avw');if(!wrap)return;
     var badge=wrap.querySelector('.clMed');
