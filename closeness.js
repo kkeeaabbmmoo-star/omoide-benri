@@ -20,7 +20,7 @@ function posts(){return window.__OM_POSTS||{}}
 function scoreOne(name){
   var R=g('om_react',{}),P=g('om_reply',{}),n=0,postsN=+posts()[name]||0;
   n+=postsN*10;
-  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=(PV[R[k]]||0)});
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=(PV[R[k]]!=null?PV[R[k]]:2)});
   Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)n+=15});
   var peak=g('om_pts_peak',{});if((peak[name]||0)<n){peak[name]=n;try{localStorage.setItem('om_pts_peak',JSON.stringify(peak))}catch(e){}}
   return Math.max(n,peak[name]||0);
@@ -29,7 +29,7 @@ function scoreOne(name){
 function scoreBreak(name){
   var R=g('om_react',{}),P=g('om_reply',{}),postsN=+posts()[name]||0;
   var react={};var rSum=0,rN=0;
-  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')!==0)return;var e=R[k],v=PV[e]||0;react[e]=(react[e]||0)+1;rSum+=v;rN++});
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')!==0)return;var e=R[k],v=(PV[e]!=null?PV[e]:2);react[e]=(react[e]||0)+1;rSum+=v;rN++});
   var replyN=0;Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)replyN++});
   var cur=postsN*10+rSum+replyN*15;
   var peak=(g('om_pts_peak',{})[name]||0);
@@ -37,8 +37,8 @@ function scoreBreak(name){
   return {postsN:postsN,postsPts:postsN*10,react:react,reactN:rN,reactPts:rSum,replyN:replyN,replyPts:replyN*15,cur:cur,peak:peak,shown:shown};
 }
 function openPts(name){
-  var b=scoreBreak(name),pv=[{e:RP,l:'ハート❤️',v:3},{e:TH,l:'いいね🙏',v:1},{e:CL,l:'拍手👏',v:2}];
-  var reactLines=pv.map(function(x){var c=b.react[x.e]||0;return c? (x.l+' ×'+c+'（'+x.v+'pt×'+c+'='+(x.v*c)+'）'):''}).filter(Boolean);
+  var b=scoreBreak(name);
+  var reactLines=Object.keys(b.react).map(function(e){var c=b.react[e],v=(PV[e]!=null?PV[e]:2);return e+' ×'+c+'（'+v+'pt×'+c+'='+(v*c)+'）'});
   if(!reactLines.length)reactLines=['（まだリアクションなし）'];
   var html='<div class="clPtsOv" id="clPtsOv"><div class="clPtsBox" role="dialog" aria-label="親密度の内訳">'+
     '<div class="clPtsH">💞 '+esc(name)+' の親密度 <b>'+b.shown.toLocaleString()+'pt</b></div>'+
@@ -51,7 +51,7 @@ function openPts(name){
     '</ul>'+
     '<div class="clPtsRule"><b>ルール（実際の計算）</b><ul>'+
       '<li>投稿1件 → <b>+10pt</b>（公開ページの件数）</li>'+
-      '<li>リアクション：❤️+3　🙏+1　👏+2（その人の投稿につけた分だけ）</li>'+
+      '<li>リアクション：❤️+3　🙏+1　👏+2　その他の絵文字+2（その人の投稿につけた分だけ）</li>'+
       '<li>返事1件 → <b>+15pt</b>（その人の投稿への返事）</li>'+
       '<li>減衰・上限なし。一度ついたピークptは下がらない（om_pts_peak）</li>'+
       '<li>ゆずも同じ式。ランキング表はゆず以外</li>'+
