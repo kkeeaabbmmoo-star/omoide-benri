@@ -29,6 +29,68 @@ def save(o,mid):
     f=f'{B}/omoide_{d}_{mid}.json'
     if os.path.exists(f):print('skip（保存済み）',f);return False
     json.dump(o,open(f,'w'),ensure_ascii=False,indent=1);print('saved',f);return True
+def publish_profile_photos(o):
+    """Write pending profile_photos from mail payload into data/profile_photos + profiles.json (merge, never delete)."""
+    import base64, shutil
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tools'))
+    try:
+        from photo_limits import photo_limit
+    except Exception:
+        def photo_limit(n): return 10 if n in ('エイジ','ゆず') else 4
+    pp=o.get('profile_photos') or {}
+    if not pp: return 0
+    D=os.path.dirname(os.path.abspath(__file__))
+    PROF=os.path.join(D,'data','profiles.json')
+    OUT=os.path.join(D,'data','profile_photos')
+    os.makedirs(OUT, exist_ok=True)
+    if not os.path.exists(PROF):
+        print('no profiles.json', file=sys.stderr); return 0
+    # backup profiles.json
+    shutil.copy2(PROF, PROF+'.bak_'+__import__('datetime').datetime.now().strftime('%Y%m%d_%H%M%S'))
+    data=json.load(open(PROF,encoding='utf-8'))
+    n=0
+    for name, items in pp.items():
+        if name not in data.get('members',{}):
+            print('skip unknown member', name); continue
+        lim=photo_limit(name)
+        photos=list(data['members'][name].get('photos') or [])
+        while len(photos)<lim: photos.append('')
+        photos=photos[:lim]
+        safe=re.sub(r'[^\w・ー\-]','_', name)
+        for it in (items or []):
+            try:
+                slot=int(it.get('slot',0))
+            except Exception:
+                continue
+            if not (0<=slot<lim): continue
+            b64=it.get('jpeg') or it.get('data') or ''
+            if not b64: continue
+            if isinstance(b64,str) and b64.startswith('data:'):
+                b64=b64.split(',',1)[-1]
+            try:
+                raw=base64.b64decode(b64)
+            except Exception as e:
+                print('b64 fail', name, slot, e); continue
+            rel=f'data/profile_photos/{safe}_{slot}.jpg'
+            dest=os.path.join(D, rel)
+            open(dest,'wb').write(raw)
+            photos[slot]=rel
+            n+=1
+            print('photo', rel, len(raw), 'bytes')
+        data['members'][name]['photos']=photos
+    if n:
+        data['updated']=__import__('datetime').datetime.now(__import__('datetime').timezone(__import__('datetime').timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
+        tmp=PROF+'.tmp'
+        json.dump(data, open(tmp,'w'), ensure_ascii=False, indent=1)
+        os.replace(tmp, PROF)
+        # rebuild+push so everyone sees them
+        try:
+            import subprocess
+            subprocess.run(['python3', os.path.join(D,'build.py'),'--push'], check=True)
+        except Exception as e:
+            print('build/push after photos:', e, file=sys.stderr)
+    return n
+
 def merge():
     m=json.load(open(M)) if os.path.exists(M) else {}
     for k in ('reactions','replies','read'):m.setdefault(k,{})
@@ -55,5 +117,9 @@ n=0
 for txt,m in src:
     ps=payloads(txt)
     if not ps:print('思い出ノートのYUZU-DATAが見つからない（短いお知らせ版なら、エイジに貼り付け/共有で送ってもらってね）',file=sys.stderr)
-    for k,o in enumerate(ps):n+=save(o,m if len(ps)==1 or not m else f'{m}-{k}')
+    for k,o in enumerate(ps):
+        mid=m if len(ps)==1 or not m else f'{m}-{k}'
+        n+=save(o,mid)
+        try: publish_profile_photos(o)
+        except Exception as e: print('profile_photos:',e,file=sys.stderr)
 merge();print('new',n)

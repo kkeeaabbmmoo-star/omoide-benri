@@ -1,6 +1,6 @@
 {
- "updated": "2026-10-28 13:49",
- "note": "プロフィールは仮置き。本人記入で上書き。look.rewardItems は月間報酬装備の予定枠。",
+ "updated": "2026-10-28 17:01",
+ "note": "プロフィールは仮置き。本人記入で上書き。look.rewardItems は月間報酬装備の予定枠。 photos[] = published profile photo paths.",
  "fieldsOrder": [
   "名前",
   "年齢",
@@ -12,6 +12,7 @@
  ],
  "order": [
   "ゆず",
+  "エイジ",
   "すーさん",
   "まい",
   "まちゃ",
@@ -55,7 +56,8 @@
     "photo": "img/avatars/yuzu.png",
     "tone": "甘くて元気な口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "すーさん": {
    "display": "すーさん",
@@ -81,7 +83,8 @@
     "icon": "🍺",
     "tone": "くだけた口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "まい": {
    "display": "まい",
@@ -106,7 +109,8 @@
     "photo": "img/avatars/mai.png",
     "tone": "明るいオレンジっぽい口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "まちゃ": {
    "display": "まちゃ",
@@ -130,7 +134,8 @@
     "photo": "img/avatars/macha.png",
     "tone": "ゆるくて笑える口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "らん": {
    "display": "らん",
@@ -154,7 +159,8 @@
     "photo": "img/avatars/ran.png",
     "tone": "やさしい口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "レイ": {
    "display": "レイ",
@@ -178,7 +184,8 @@
     "photo": "img/avatars/rei.png",
     "tone": "甘めのロマンチック口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "恵": {
    "display": "恵",
@@ -205,7 +212,8 @@
     "photo": "img/avatars/megumi.png",
     "tone": "やわらかいお姉さん口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "瀬戸": {
    "display": "瀬戸",
@@ -230,7 +238,8 @@
     "photo": "img/avatars/seto.png",
     "tone": "すこし甘えた口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "由依": {
    "display": "由依",
@@ -254,7 +263,8 @@
     "photo": "img/avatars/yui.png",
     "tone": "やわらかい清楚口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "愛": {
    "display": "愛",
@@ -278,7 +288,8 @@
     "photo": "img/avatars/ai.png",
     "tone": "大人っぽい口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "おーさー": {
    "display": "おーさー",
@@ -303,7 +314,8 @@
     "photo": "img/avatars/osa.png",
     "tone": "落ち着いた口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "みきティ": {
    "display": "みきティ",
@@ -325,7 +337,8 @@
     "photo": "img/avatars/mikity.png",
     "tone": "ていねいめの口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "しの": {
    "display": "しの",
@@ -349,7 +362,8 @@
     "photo": "img/avatars/shino.png",
     "tone": "やさしくて静かな口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "由紀": {
    "display": "由紀",
@@ -375,7 +389,8 @@
     "photo": "img/avatars/yuki.png",
     "tone": "ギャルっぽい甘い口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "マキ": {
    "display": "マキ",
@@ -397,7 +412,8 @@
     "photo": "img/avatars/maki.png",
     "tone": "さっぱりめの口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
   },
   "星野王子": {
    "display": "星野王子",
@@ -422,7 +438,32 @@
     "icon": "🤩",
     "tone": "王子っぽいキラキラ口調",
     "rewardItems": []
-   }
+   },
+   "photos": []
+  },
+  "エイジ": {
+   "display": "エイジ",
+   "fields": {
+    "名前": "エイジ",
+    "年齢": "（本人記入待ち）",
+    "職業": "（本人記入待ち）",
+    "性格": "（本人記入待ち）",
+    "趣味": "（本人記入待ち）",
+    "最近気になること": "（本人記入待ち）",
+    "嫌いな食べ物": "（本人記入待ち）"
+   },
+   "provisional": [],
+   "look": {
+    "theme": "#4a6fa5",
+    "background": "linear-gradient(160deg,#f0f4ff,#e0e8f8)",
+    "font": "sans",
+    "decoration": "star",
+    "photo": "",
+    "icon": "🧑",
+    "tone": "本人の口調",
+    "rewardItems": []
+   },
+   "photos": []
   }
  }
 }

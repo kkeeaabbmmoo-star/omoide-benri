@@ -3,15 +3,19 @@
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function jst(){return new Date(Date.now()+9*3600e3).toISOString()}
-function snap(){var c=(window.__OM_CLOSE)||{};return {app:'omoide',v:4,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',seenrp:g('om_seenrp',{}),marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}}}
+function pendingProfilePhotos(){try{var all=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{},out={};Object.keys(all).forEach(function(name){var slots=all[name]||[],pend=[];slots.forEach(function(s,i){if(s&&s.data&&!s.sent){var b=String(s.data).replace(/^data:image\/\w+;base64,/,'');pend.push({slot:i,jpeg:b,mime:'image/jpeg'})}});if(pend.length)out[name]=pend});return out}catch(e){return {}}}
+function markPhotosSent(pp){try{var all=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{};Object.keys(pp||{}).forEach(function(name){(pp[name]||[]).forEach(function(it){var a=all[name];if(Array.isArray(a)&&a[it.slot]&&a[it.slot].data)a[it.slot].sent=true});});localStorage.setItem('om_pf_photos',JSON.stringify(all));window.__OM_PF_PHOTOS=all}catch(e){}}
+function snap(){var c=(window.__OM_CLOSE)||{},pp=pendingProfilePhotos();return {app:'omoide',v:5,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',seenrp:g('om_seenrp',{}),marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),profile_photos:pp,closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}}}
 window.omSend=function(){
   var R=g(K.r,{}),P=g(K.p,{});
-  if(!Object.keys(R).length&&!Object.keys(P).length){alert('まだリアクションも返事もないよ💖');return}
   var t=jst(),ymd=t.slice(0,10).replace(/-/g,''),full=snap();
+  var nph=Object.keys(full.profile_photos||{}).length;
+  if(!Object.keys(R).length&&!Object.keys(P).length&&!nph){alert('まだリアクションも返事も写真もないよ💖');return}
   var lite=function(q){var o={app:'omoide',v:2,sent:full.sent,reactions:R,replies:{}};Object.keys(P).forEach(function(k){var x=P[k],y={t:x.t};if(x.n)y.n=x.n;if(q&&x.q)y.q=x.q;o.replies[k]=y});return o};
   var nr=Object.keys(R).length,np=Object.keys(P).length;
-  var intro=function(note){return 'ゆずへ💌 思い出ノートのリアクションと返事だよ（'+(+t.slice(5,7))+'/'+(+t.slice(8,10))+'）\nリアクション '+nr+'・返事 '+np+(note?'\n'+note:'')};
+  var intro=function(note){var npf=Object.keys(full.profile_photos||{}).reduce(function(s,k){return s+(full.profile_photos[k]||[]).length},0);return 'ゆずへ💌 思い出ノートのリアクションと返事だよ（'+(+t.slice(5,7))+'/'+(+t.slice(8,10))+'）\nリアクション '+nr+'・返事 '+np+(npf?'・プロフィール写真 '+npf+'枚':'')+(note?'\n'+note:'')};
   var h=g(K.h,[]);h.push(full);while(h.length>30)h.shift();localStorage.setItem(K.h,JSON.stringify(h));
+  if(full.profile_photos&&Object.keys(full.profile_photos).length)markPhotosSent(full.profile_photos);
   yuzuSend({subject:'ゆずとみんなへ 思い出ノート '+jst().slice(0,10)+' omoide-backup-'+ymd,intro:intro,
     levels:[{data:full,note:''},{data:lite(true),note:'（既読はなし）'},{data:lite(false),note:'（既読・引用文なし、行番号だけ）'}],
     full:full,theme:{bg:'#fff',fg:'#2f3a45',acc:'#d0477a',btn:'linear-gradient(90deg,#ff8fb3,#d0567f)',btnfg:'#fff',sub:'#ffe3ee'}})};
