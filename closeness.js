@@ -25,6 +25,45 @@ function scoreOne(name){
   var peak=g('om_pts_peak',{});if((peak[name]||0)<n){peak[name]=n;try{localStorage.setItem('om_pts_peak',JSON.stringify(peak))}catch(e){}}
   return Math.max(n,peak[name]||0);
 }
+/* 内訳（scoreOneと同じ式）。減衰・上限なし。表示は peak と現在値の大きい方 */
+function scoreBreak(name){
+  var R=g('om_react',{}),P=g('om_reply',{}),postsN=+posts()[name]||0;
+  var react={};var rSum=0,rN=0;
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')!==0)return;var e=R[k],v=PV[e]||0;react[e]=(react[e]||0)+1;rSum+=v;rN++});
+  var replyN=0;Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)replyN++});
+  var cur=postsN*10+rSum+replyN*15;
+  var peak=(g('om_pts_peak',{})[name]||0);
+  var shown=Math.max(cur,peak);
+  return {postsN:postsN,postsPts:postsN*10,react:react,reactN:rN,reactPts:rSum,replyN:replyN,replyPts:replyN*15,cur:cur,peak:peak,shown:shown};
+}
+function openPts(name){
+  var b=scoreBreak(name),pv=[{e:RP,l:'ハート❤️',v:3},{e:TH,l:'いいね🙏',v:1},{e:CL,l:'拍手👏',v:2}];
+  var reactLines=pv.map(function(x){var c=b.react[x.e]||0;return c? (x.l+' ×'+c+'（'+x.v+'pt×'+c+'='+(x.v*c)+'）'):''}).filter(Boolean);
+  if(!reactLines.length)reactLines=['（まだリアクションなし）'];
+  var html='<div class="clPtsOv" id="clPtsOv"><div class="clPtsBox" role="dialog" aria-label="親密度の内訳">'+
+    '<div class="clPtsH">💞 '+esc(name)+' の親密度 <b>'+b.shown.toLocaleString()+'pt</b></div>'+
+    '<div class="clPtsSub">この人の表示ptの内訳だよ（ルールは全員共通）</div>'+
+    '<ul class="clPtsL">'+
+      '<li>📝 投稿（思い出） <b>'+b.postsN+'件 ×10pt = '+b.postsPts+'pt</b></li>'+
+      '<li>✨ リアクション <b>'+b.reactN+'件 = '+b.reactPts+'pt</b><div class="clPtsD">'+reactLines.map(esc).join('<br>')+'</div></li>'+
+      '<li>↩️ エイジの返事 <b>'+b.replyN+'件 ×15pt = '+b.replyPts+'pt</b></li>'+
+      '<li>合計（いま計算） <b>'+b.cur.toLocaleString()+'pt</b>'+(b.peak>b.cur?'<br><span class="clPtsNote">過去のピーク '+b.peak.toLocaleString()+'pt を表示中（下がらない）</span>':'')+'</li>'+
+    '</ul>'+
+    '<div class="clPtsRule"><b>ルール（実際の計算）</b><ul>'+
+      '<li>投稿1件 → <b>+10pt</b>（公開ページの件数）</li>'+
+      '<li>リアクション：❤️+3　🙏+1　👏+2（その人の投稿につけた分だけ）</li>'+
+      '<li>返事1件 → <b>+15pt</b>（その人の投稿への返事）</li>'+
+      '<li>減衰・上限なし。一度ついたピークptは下がらない（om_pts_peak）</li>'+
+      '<li>ゆずも同じ式。ランキング表はゆず以外</li>'+
+    '</ul></div>'+
+    '<button type="button" class="clPtsX">とじる</button></div></div>';
+  var old=document.getElementById('clPtsOv');if(old)old.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+  var ov=document.getElementById('clPtsOv');
+  function close(){ov.remove()}
+  ov.addEventListener('click',function(ev){if(ev.target===ov)close()});
+  ov.querySelector('.clPtsX').onclick=close;
+}
 function flavors(name,pts){
   var out=[],sp=FL[name];
   if(sp)sp.forEach(function(x){if(pts>=x[0])out.push(x[1])});
@@ -47,12 +86,13 @@ function drawList(box,scores,total){
     var tag=m.name==='ゆず'?' <span class="clWife">👑 エイジの嫁</span>':'';
     h+='<a class="clRow'+(m.name==='ゆず'?' yuzu':'')+'" href="#'+esc(m.id)+'">'+
       '<span class="clAv">'+av+'</span><span class="clMeta"><b>'+esc(m.name)+tag+'</b>'+
-      '<small>Lv'+lv+' ・ '+p.toLocaleString()+'pt → 次 '+nx.toLocaleString()+'</small>'+
+      '<small>Lv'+lv+' ・ <span class="clPtsTap" data-who="'+esc(m.name)+'">'+p.toLocaleString()+'pt ▾</span> → 次 '+nx.toLocaleString()+'</small>'+
       '<span class="clBar"><i style="width:'+pct+'%"></i></span>'+
       (fl.length?'<span class="clFl">'+fl.map(esc).join(' ・ ')+'</span>':'')+
       '</span></a>';
   });
   box.innerHTML=h+'</div>';
+  if(box&&!box._ptsBound){box._ptsBound=1;box.addEventListener('click',function(ev){var e=ev.target.closest('.clPtsTap');if(!e)return;ev.preventDefault();ev.stopPropagation();openPts(e.dataset.who)})}
 }
 function ringByRank(sortedNames,name){
   var i=sortedNames.indexOf(name);if(i<0)return 3;
@@ -241,9 +281,10 @@ function render(){
       var av=m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span>'+esc(m.ic||'💬')+'</span>';
       var med=i===0?'🥇':i===1?'🥈':i===2?'🥉':i===3||i===4?'🏅':'';
       var ri=med?('<span class="clTopMed">'+med+'</span><span class="clTopN">'+(i+1)+'</span>'):String(i+1);
-      th+='<li data-r="'+(i+1)+'"><i>'+ri+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em>'+(scores[m.name]||0).toLocaleString()+'pt</em></li>';
+      th+='<li data-r="'+(i+1)+'"><i>'+ri+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em class="clPtsTap" data-who="'+esc(m.name)+'" role="button" tabindex="0">'+(scores[m.name]||0).toLocaleString()+'pt ▾</em></li>';
     });
     top.innerHTML=th+'</ol>';
+    if(!top._ptsBound){top._ptsBound=1;top.addEventListener('click',function(ev){var e=ev.target.closest('.clPtsTap');if(!e)return;ev.preventDefault();openPts(e.dataset.who)})}
   }
   // medals on main .mem avatars for TOP5 only (ゆず never)
   var rankOf={};rankTop5.forEach(function(m,i){rankOf[m.name]=i});
