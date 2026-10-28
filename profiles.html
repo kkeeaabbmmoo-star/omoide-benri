@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title>
+<title>👤 みんなのプロフィール</title><!--v36-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -76,18 +76,44 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 .pfSaveRow button{border:0;border-radius:14px;padding:8px 14px;font-weight:800;font-size:14px;background:#4a6fa5;color:#fff}
 .pfSaveRow .hint{font-size:12px;color:#9a7b88}
 .pfDirty{color:#c0587f;font-weight:800}
+
+.sortBar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.sortBar button{border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:16px;padding:8px 14px;font-size:14px;font-weight:800}
+.sortBar button.on{background:#d0567f;color:#fff;border-color:#d0567f}
+.sortHint{font-size:12px;color:#9a7b88;background:#fff;border-radius:12px;padding:8px 10px;margin:0 0 10px;border:1px dashed #f3c6d5;display:none}
+.sortHint.on{display:block}
+.sortList{list-style:none;margin:0 0 14px;padding:0;display:none}
+.sortList.on{display:block}
+.sortList li{display:flex;align-items:center;gap:8px;padding:10px 8px;margin:0 0 6px;background:#fff;border:1.5px solid #ffd0e0;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
+.sortList li.drag{opacity:.85;box-shadow:0 6px 18px #0003;background:#fff6f9}
+.sortList .handle{flex:none;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;color:#c0587f;cursor:grab}
+.sortList .nm{flex:1;font-weight:800;color:#5a3a45;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sortList .pos{flex:none;width:44px;height:32px;border:1.5px solid #f3c6d5;border-radius:10px;text-align:center;font-weight:800;font-size:14px;color:#a0466a}
+.sortList .mv{flex:none;display:flex;flex-direction:column;gap:2px}
+.sortList .mv button{border:1px solid #f3c6d5;background:#fff6f9;color:#a0466a;border-radius:8px;width:32px;height:26px;font-size:12px;font-weight:800;padding:0;line-height:1}
+body.sortMode .toc,body.sortMode #list,body.sortMode .note{display:none}
+body.sortMode .sortHint,body.sortMode .sortList{display:block}
+
 </style>
 </head>
-<body>
+<body data-seq="111,109,95,112,102,95,115,101,113">
 <header>
   <h1>👤 みんなのプロフィール</h1>
   <div class="sub">仮置きあり・本人記入で更新するよ</div>
   <div class="topNav">
     <a href="./">← 思い出ノートへ</a>
+    <button type="button" id="sortToggle">↕️ 並び替え</button>
   </div>
+  <div class="sortBar" id="sortBar" hidden>
+    <button type="button" id="sortDone">✅ 完了（保存）</button>
+    <button type="button" id="sortCancel">やめる</button>
+    <button type="button" id="sortReset">元の順に戻す</button>
+  </div>
+  <p class="sortHint" id="sortHint">左の ≡ をドラッグ、または ▲▼・番号で順番を変えられるよ。完了を押すと端末に保存され、💌 でゆずに届くよ。</p>
+  <ul class="sortList" id="sortList"></ul>
 </header>
 <main>
-  <p class="note">7項目は全員共通だよ。エイジの欄はここで編集できるよ。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ。公開前は<span class="kariTag">未送信</span>表示。</p>
+  <p class="note">7項目は全員共通だよ。エイジの欄はここで編集できるよ。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ。公開前は<span class="kariTag">未送信</span>表示。上の「↕️ 並び替え」で全員の表示順を変えられるよ（ドラッグ / ▲▼ / 番号）。</p>
   <div class="toc" id="toc"></div>
   <div id="list"><p class="empty">読み込み中…</p></div>
 </main>
@@ -100,6 +126,11 @@ var PHOTO_LIMIT={'エイジ':10,'ゆず':10}, PHOTO_DEFAULT=4;
 function photoLimit(name){return PHOTO_LIMIT[name]!=null?PHOTO_LIMIT[name]:PHOTO_DEFAULT}
 var LS='om_pf_photos';
 var LS_FIELDS='om_pf_fields';
+/* arrange mode helpers below */
+function loadSeq(){var all=loadFields();var o=all&&all.__order;return (Array.isArray(o)&&o.length)?o.filter(function(x){return typeof x==="string"&&x}):null}
+function mergeSeq(base, members){var local=loadSeq(), seen={}, out=[];function add(n){if(n&&members[n]&&!seen[n]){out.push(n);seen[n]=1}}(local||[]).forEach(add);(base||[]).forEach(add);Object.keys(members||{}).forEach(add);return out}
+function putSeq(arr){var all=loadFields();all.__order=arr.slice();saveFields(all)}
+
 var EDITABLE_WHO={'エイジ':1}; /* 本人だけ端末で編集可 */
 function loadFields(){try{return JSON.parse(localStorage.getItem(LS_FIELDS)||'{}')||{}}catch(e){return {}}}
 function saveFields(all){localStorage.setItem(LS_FIELDS,JSON.stringify(all));window.__OM_PF_FIELDS=all}
@@ -254,7 +285,7 @@ function bindPhotoGrid(card,name){
 }
 function render(data){
   window.__PF_DATA=data;
-  var order=data.order||Object.keys(data.members||{});
+  var order=mergeSeq(data.order||Object.keys(data.members||{}), data.members||{});
   var fo=data.fieldsOrder||['名前','年齢','職業','性格','趣味','最近気になること','嫌いな食べ物'];
   var toc=document.getElementById('toc');
   var list=document.getElementById('list');
@@ -327,6 +358,89 @@ function render(data){
     if(el)setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'start'})},100);
   }
 }
+
+/* v36 arrange mode */
+var arrangeOn=false, arrangeDraft=null, dragIdx=-1;
+function paintArrange(){
+  var ul=document.getElementById("sortList"); if(!ul||!window.__PF_DATA)return;
+  var members=window.__PF_DATA.members||{};
+  ul.innerHTML="";
+  arrangeDraft.forEach(function(id,i){
+    var m=members[id]||{};
+    var li=document.createElement("li");
+    li.dataset.id=id; li.dataset.i=String(i);
+    li.innerHTML="<span class="handle" aria-hidden="true">≡</span><span class="nm">"+esc(m.display||id)+"</span>"+
+      "<input class="pos" type="number" min="1" max=""+arrangeDraft.length+"" value=""+(i+1)+"" aria-label="順番">"+
+      "<span class="mv"><button type="button" data-dir="-1" aria-label="上へ">▲</button><button type="button" data-dir="1" aria-label="下へ">▼</button></span>";
+    ul.appendChild(li);
+  });
+  ul.querySelectorAll(".mv button").forEach(function(b){
+    b.onclick=function(){
+      var li=b.closest("li"); var i=+li.dataset.i; var d=+b.dataset.dir; var j=i+d;
+      if(j<0||j>=arrangeDraft.length)return;
+      var tmp=arrangeDraft[i]; arrangeDraft[i]=arrangeDraft[j]; arrangeDraft[j]=tmp; paintArrange();
+    };
+  });
+  ul.querySelectorAll(".pos").forEach(function(inp){
+    inp.onchange=function(){
+      var li=inp.closest("li"); var i=+li.dataset.i; var to=Math.max(1,Math.min(arrangeDraft.length,+inp.value||1))-1;
+      if(to===i)return;
+      var id=arrangeDraft.splice(i,1)[0]; arrangeDraft.splice(to,0,id); paintArrange();
+    };
+  });
+  // pointer drag (touch-friendly)
+  ul.querySelectorAll("li").forEach(function(li){
+    var h=li.querySelector(".handle");
+    h.addEventListener("pointerdown",function(ev){
+      ev.preventDefault(); dragIdx=+li.dataset.i; li.classList.add("drag");
+      try{h.setPointerCapture(ev.pointerId)}catch(e){}
+    });
+  });
+  if(!ul._dragBound){
+    ul._dragBound=1;
+    ul.addEventListener("pointermove",function(ev){
+      if(dragIdx<0)return;
+      var y=ev.clientY; var items=[].slice.call(ul.querySelectorAll("li"));
+      for(var i=0;i<items.length;i++){
+        var r=items[i].getBoundingClientRect();
+        if(y>=r.top && y<=r.bottom && i!==dragIdx){
+          var tmp=arrangeDraft[dragIdx]; arrangeDraft.splice(dragIdx,1); arrangeDraft.splice(i,0,tmp); dragIdx=i; paintArrange();
+          var nh=ul.querySelectorAll(".handle")[dragIdx];
+          if(nh){try{nh.setPointerCapture(ev.pointerId)}catch(e){}}
+          break;
+        }
+      }
+    });
+    ul.addEventListener("pointerup",function(){dragIdx=-1; ul.querySelectorAll("li.drag").forEach(function(x){x.classList.remove("drag")})});
+    ul.addEventListener("pointercancel",function(){dragIdx=-1; ul.querySelectorAll("li.drag").forEach(function(x){x.classList.remove("drag")})});
+  }
+}
+function enterArrange(){
+  if(!window.__PF_DATA)return;
+  arrangeOn=true;
+  arrangeDraft=mergeSeq(window.__PF_DATA.order||Object.keys(window.__PF_DATA.members||{}), window.__PF_DATA.members||{}).slice();
+  document.body.classList.add("sortMode");
+  document.getElementById("sortBar").hidden=false;
+  document.getElementById("sortToggle").classList.add("on");
+  paintArrange();
+}
+function leaveArrange(apply){
+  if(apply && arrangeDraft){putSeq(arrangeDraft.slice()); if(window.__PF_DATA)render(window.__PF_DATA)}
+  arrangeOn=false; arrangeDraft=null; dragIdx=-1;
+  document.body.classList.remove("sortMode");
+  document.getElementById("sortBar").hidden=true;
+  document.getElementById("sortToggle").classList.remove("on");
+  document.getElementById("sortList").innerHTML="";
+}
+document.getElementById("sortToggle").onclick=function(){ if(arrangeOn) leaveArrange(false); else enterArrange(); };
+document.getElementById("sortDone").onclick=function(){ leaveArrange(true); alert("順番を保存したよ💖 💌 ゆずとみんなに送る でゆずに届くよ"); };
+document.getElementById("sortCancel").onclick=function(){ leaveArrange(false); };
+document.getElementById("sortReset").onclick=function(){
+  if(!window.__PF_DATA)return;
+  arrangeDraft=(window.__PF_DATA.order||Object.keys(window.__PF_DATA.members||{})).slice();
+  paintArrange();
+};
+
 window.__OM_PF_PHOTOS=loadLocal();
 window.__OM_PF_FIELDS=loadFields();
 fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})

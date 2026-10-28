@@ -1,28 +1,76 @@
 {
-  "month": "2026-11",
-  "theme": "紅葉",
-  "themeEmoji": "🍁",
-  "title": "11月・紅葉シーズン",
-  "tiers": {
-    "1": {
-      "label": "上位報酬（1〜3位）",
-      "ranks": [1, 3],
-      "items": [
-        {"id": "momiji-frame", "name": "落ち葉フレーム", "slot": "frame", "desc": "アバターに紅葉の枠がつくよ"},
-        {"id": "momiji-bg", "name": "紅葉色ノート背景", "slot": "bg", "desc": "メンバーカードが紅葉色になるよ"},
-        {"id": "momiji-icon", "name": "花びらアイコン枠", "slot": "icon", "desc": "名前の横に花びら枠"},
-        {"id": "momiji-mark", "name": "紅葉アクションマーク", "slot": "mark", "desc": "🍁 をリアクションに使えるよ", "emoji": "🍁"},
-        {"id": "momiji-fx", "name": "ひらひら落ち葉", "slot": "fx", "desc": "カードに落ち葉がひらひら"}
-      ]
+ "month": "2026-11",
+ "theme": "紅葉",
+ "themeEmoji": "🍁",
+ "title": "11月・紅葉シーズン",
+ "tiers": {
+  "1": {
+   "label": "上位報酬（1〜3位）",
+   "ranks": [
+    1,
+    3
+   ],
+   "items": [
+    {
+     "id": "momiji-frame",
+     "name": "落ち葉フレーム",
+     "slot": "frame",
+     "desc": "アバターに紅葉の枠がつくよ"
     },
-    "2": {
-      "label": "がんばり報酬（4〜7位）",
-      "ranks": [4, 7],
-      "items": [
-        {"id": "momiji-frame", "name": "落ち葉フレーム", "slot": "frame", "desc": "アバターに紅葉の枠がつくよ"},
-        {"id": "momiji-mark", "name": "紅葉アクションマーク", "slot": "mark", "desc": "🍁 をリアクションに使えるよ", "emoji": "🍁"},
-        {"id": "momiji-sticker", "name": "紅葉ステッカー", "slot": "sticker", "desc": "カードに紅葉ステッカー"}
-      ]
+    {
+     "id": "momiji-bg",
+     "name": "紅葉色ノート背景",
+     "slot": "bg",
+     "desc": "メンバーカードが紅葉色になるよ"
+    },
+    {
+     "id": "momiji-icon",
+     "name": "花びらアイコン枠",
+     "slot": "icon",
+     "desc": "名前の横に花びら枠"
+    },
+    {
+     "id": "momiji-mark",
+     "name": "紅葉アクションマーク",
+     "slot": "mark",
+     "desc": "🍁 をリアクションに使えるよ",
+     "emoji": "🍁"
+    },
+    {
+     "id": "momiji-fx",
+     "name": "ひらひら落ち葉",
+     "slot": "fx",
+     "desc": "カードに落ち葉がひらひら"
     }
+   ]
+  },
+  "2": {
+   "label": "がんばり報酬（4位〜・人数の半分の少なめ）",
+   "ranks": [
+    4,
+    7
+   ],
+   "items": [
+    {
+     "id": "momiji-frame",
+     "name": "落ち葉フレーム",
+     "slot": "frame",
+     "desc": "アバターに紅葉の枠がつくよ"
+    },
+    {
+     "id": "momiji-mark",
+     "name": "紅葉アクションマーク",
+     "slot": "mark",
+     "desc": "🍁 をリアクションに使えるよ",
+     "emoji": "🍁"
+    },
+    {
+     "id": "momiji-sticker",
+     "name": "紅葉ステッカー",
+     "slot": "sticker",
+     "desc": "カードに紅葉ステッカー"
+    }
+   ]
   }
+ }
 }

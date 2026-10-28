@@ -1,4 +1,4 @@
-/* 💞 親密度と関係図 (om_close v1) — 計算は既存データのみ。ピーク値は om_pts_peak、レベルは om_lv、開閉は om_close_open */
+/* 💞 親密度と関係図 (om_close v36) — 計算は既存データのみ。ピーク値は om_pts_peak、レベルは om_lv、開閉は om_close_open */
 (function(){
 var RP='❤️',TH='🙏',CL='👏',PV={}; // ハート3 いいね1 拍手2
 PV[RP]=3;PV[TH]=1;PV[CL]=2;
@@ -302,21 +302,25 @@ function render(){
   var scores={},total=0;members().forEach(function(m){scores[m.name]=scoreOne(m.name);total+=scores[m.name]});
   checkLv(scores);
   var top=sec.querySelector('.clTop');
+  var nAll=members().length; /* 参加人数（ノート登録） */
   var rankAll=members().filter(function(m){return m.name!=='ゆず'}).sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)});
-  var rankTop5=rankAll.slice(0,5);
+  /* 報酬枠：半分の少なめ = floor((n-1)/2)。n=ランキング対象（ゆず除外）。最低3（メダル分） */
+  var rewardN=Math.max(3,Math.floor((rankAll.length-1)/2));
+  var rankRew=rankAll.slice(0,rewardN);
   if(top){
-    var th='<div class="clTopH">💞 エイジとの親密度ランキング（全員）</div><ol class="clTopL">';
+    var th='<div class="clTopH">💞 エイジとの親密度ランキング（'+nAll+'人）</div><ol class="clTopL">';
     rankAll.forEach(function(m,i){
+      var r=i+1;
       var av=m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span>'+esc(m.ic||'💬')+'</span>';
-      var med=i===0?'🥇':i===1?'🥈':i===2?'🥉':i===3||i===4?'🏅':'';
-      var ri=med?('<span class="clTopMed">'+med+'</span><span class="clTopN">'+(i+1)+'</span>'):String(i+1);
-      th+='<li data-r="'+(i+1)+'"><i>'+ri+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em class="clPtsTap" data-who="'+esc(m.name)+'" role="button" tabindex="0">'+(scores[m.name]||0).toLocaleString()+'pt ▾</em></li>';
+      var med=r===1?'🥇':r===2?'🥈':r===3?'🥉':(r<=rewardN?'🎀':'');
+      var ri=med?('<span class="clTopMed">'+med+'</span><span class="clTopN">'+r+'</span>'):String(r);
+      th+='<li data-r="'+r+'"'+(r<=rewardN?' class="rw"':'')+'><i>'+ri+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em class="clPtsTap" data-who="'+esc(m.name)+'" role="button" tabindex="0">'+(scores[m.name]||0).toLocaleString()+'pt ▾</em></li>';
     });
     top.innerHTML=th+'</ol>';
     if(!top._ptsBound){top._ptsBound=1;top.addEventListener('click',function(ev){var e=ev.target.closest('.clPtsTap');if(!e)return;ev.preventDefault();openPts(e.dataset.who)})}
   }
-  // medals on main .mem avatars for TOP5 only (ゆず never)
-  var rankOf={};rankTop5.forEach(function(m,i){rankOf[m.name]=i});
+  // medals / 🎀 on main .mem avatars for reward slots (ゆず never)
+  var rankOf={};rankRew.forEach(function(m,i){rankOf[m.name]=i});
   members().forEach(function(m){
     var wrap=m.el.querySelector('.avw');if(!wrap)return;
     var badge=wrap.querySelector('.clMed');
@@ -326,7 +330,7 @@ function render(){
     badge.setAttribute('data-r',String(r));
     badge.title='親密度 '+r+'位';
     if(r<=3)badge.textContent=['🥇','🥈','🥉'][r-1];
-    else{badge.textContent='';badge.innerHTML='<span class="clMedE">🏅</span><span class="clMedN">'+r+'</span>'}
+    else{badge.textContent='';badge.innerHTML='<span class="clMedE">🎀</span><span class="clMedN">'+r+'</span>'}
   });
   setupCouplePhoto(sec);if(sec.querySelector('.clPhoto')&&sec.querySelector('.clPhoto')._sync)sec.querySelector('.clPhoto')._sync();
   drawList(sec.querySelector('.clBox'),scores,total);

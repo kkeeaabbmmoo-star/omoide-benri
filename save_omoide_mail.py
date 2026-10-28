@@ -133,6 +133,12 @@ def publish_profile_fields(o):
             print('build/push after fields:', e, file=sys.stderr)
     return n
 
+def publish_profile_order(o):
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools"))
+    from pf_order_apply import _apply_pf_order
+    return _apply_pf_order(o)
+
+
 def merge():
     m=json.load(open(M)) if os.path.exists(M) else {}
     for k in ('reactions','replies','read'):m.setdefault(k,{})
@@ -164,4 +170,8 @@ for txt,m in src:
         n+=save(o,mid)
         try: publish_profile_photos(o)
         except Exception as e: print('profile_photos:',e,file=sys.stderr)
+        try: publish_profile_fields(o)
+        except Exception as e: print('profile_fields:',e,file=sys.stderr)
+        try: publish_profile_order(o)
+        except Exception as e: print('profile_order:',e,file=sys.stderr)
 merge();print('new',n)

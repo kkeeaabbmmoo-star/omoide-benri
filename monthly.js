@@ -1,4 +1,4 @@
-/* 🏆 月間ランキング (om_monthly v2 · あみだ同点) — 点数ルールは closeness scoreOne と同じ式・月で区切る。ゆず除外。 */
+/* 🏆 月間ランキング (om_monthly v36 · あみだ同点・報酬枠 floor((n-1)/2)) — 点数ルールは closeness scoreOne と同じ式・月で区切る。ゆず除外。 */
 (function(){
 var START='2026-11-01';
 var KM='om_marks', KE='om_equip'; // local equip preview (never deletes server inventory)
@@ -93,10 +93,11 @@ function rankList(rows,ym){
   while(i<sorted.length){
     var j=i;while(j<sorted.length&&sorted[j].pts===sorted[i].pts)j++;
     var tied=j-i>1;
+    var slots=Math.max(3,Math.floor((sorted.length-1)/2)); /* 半分の少なめ */
     for(var k=i;k<j;k++){
       var rank=k+1; /* 連番：同点でも1,2,3… */
-      var tier=rank<=3?1:rank<=7?2:0;
-      out.push(Object.assign({},sorted[k],{rank:rank,tier:tier,luck:tied,luckKey:luckKey(ym,sorted[k].name)}));
+      var tier=rank<=3?1:rank<=slots?2:0;
+      out.push(Object.assign({},sorted[k],{rank:rank,tier:tier,luck:tied,luckKey:luckKey(ym,sorted[k].name),rewardSlots:slots}));
     }
     i=j;
   }
@@ -194,7 +195,7 @@ function rulesHTML(){
     +'<li>しきい値なし・減衰なし。その月の合計のみ（過去月のピークは使わない）</li>'
     +'</ul>'
     +'<p><b>順位：</b>点数が多い順。同点のときは🎲あみだくじ（その月の名前から決まる運）で順番を決めるよ。エイジが選ぶことはない。1〜3位は同着なし。例：5人が同点ならあみだで1〜5位を決めて、次の人は6位</p>'
-    +'<p><b>報酬：</b>最終順位の1〜3位＝上位セット、4〜7位＝がんばりセット。毎月テーマが変わるよ</p>'
+    +'<p><b>報酬：</b>1〜3位＝上位セット（🥇🥈🥉）、4位〜（参加人数の半分の少なめ＝floor((人数-1)/2)位）＝がんばりセット（🎀）。人数が増えても報酬枠は半分より少なめ。毎月テーマが変わるよ</p>'
     +'<p><b>アイテム：</b>一度もらったアイテムはずっと🎒に残る。装備はゆずに希望を伝えてね（エイジはプレビュー装備もできるよ）</p>'
     +'<p><b>11月テーマ：</b>紅葉🍁　落ち葉フレーム・紅葉背景・花びら枠・🍁マーク・ひらひら落ち葉 など</p>'
     +'</div></details>';
@@ -214,7 +215,7 @@ function tableHTML(ranked,live){
   if(anyLuck)h+='<p class="mnLuckNote"><span class="mnDice" aria-hidden="true">🎲</span>同点→あみだで決定（月＋名前の運・毎回同じ）</p>';
   h+='<ol class="mnList">';
   ranked.forEach(function(r){
-    var badge=r.tier===1?'🥇上位':r.tier===2?'🥈がんばり':'';
+    var badge=r.tier===1?(r.rank===1?'🥇上位':r.rank===2?'🥈上位':r.rank===3?'🥉上位':'🥇上位'):r.tier===2?'🎀がんばり':'';
     h+='<li data-tier="'+r.tier+'"'+(r.luck?' data-luck="1"':'')+'><i>'+r.rank+'</i><b>'+esc(r.name)+'</b><em>'+r.pts.toLocaleString()+'pt</em>'
       +(r.luck?'<span class="mnLuck" title="同点のためあみだくじで順位決定">🎲あみだ</span>':'')
       +(badge?'<span class="mnTier">'+badge+'</span>':'')+'</li>';
