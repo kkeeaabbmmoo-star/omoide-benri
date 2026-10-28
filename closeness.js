@@ -154,8 +154,8 @@ function render(){
   var scores={},total=0;members().forEach(function(m){scores[m.name]=scoreOne(m.name);total+=scores[m.name]});
   checkLv(scores);
   var top=sec.querySelector('.clTop');
+  var rank=members().filter(function(m){return m.name!=='ゆず'}).sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)}).slice(0,5);
   if(top){
-    var rank=members().filter(function(m){return m.name!=='ゆず'}).sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)}).slice(0,5);
     var th='<div class="clTopH">💞 エイジとの親密度 TOP5</div><ol class="clTopL">';
     rank.forEach(function(m,i){
       var av=m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span>'+esc(m.ic||'💬')+'</span>';
@@ -163,6 +163,19 @@ function render(){
     });
     top.innerHTML=th+'</ol>';
   }
+  // TOP5 medals on main .mem avatars (ゆず never)
+  var rankOf={};rank.forEach(function(m,i){rankOf[m.name]=i});
+  members().forEach(function(m){
+    var wrap=m.el.querySelector('.avw');if(!wrap)return;
+    var badge=wrap.querySelector('.clMed');
+    if(m.name==='ゆず'||rankOf[m.name]==null){if(badge)badge.remove();return}
+    if(!badge){badge=document.createElement('span');badge.className='clMed';wrap.appendChild(badge)}
+    var r=rankOf[m.name]+1;
+    badge.setAttribute('data-r',String(r));
+    badge.title='親密度 '+r+'位';
+    if(r<=3)badge.textContent=['🥇','🥈','🥉'][r-1];
+    else{badge.textContent='';badge.innerHTML='<span class="clMedE">🏅</span><span class="clMedN">'+r+'</span>'}
+  });
   drawList(sec.querySelector('.clBox'),scores,total);
   drawMap(sec.querySelector('.clMap'),scores,total);
   window.__OM_CLOSE={scores:scores,total:total,lv:g('om_lv',{}),peak:g('om_pts_peak',{})};
