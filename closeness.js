@@ -17,10 +17,38 @@ function nextOf(p){var m=miles();for(var i=0;i<m.length;i++)if(p<m[i])return m[i
 function prevOf(p){var m=miles(),pr=0;for(var i=0;i<m.length;i++){if(p>=m[i])pr=m[i];else break}return pr}
 function members(){return [].map.call(document.querySelectorAll('.mem[id^="m-"]'),function(el){return {id:el.id,name:el.id.slice(2),el:el,av:el.dataset.av||'',ic:el.dataset.ic||'💬'}})}
 function posts(){return window.__OM_POSTS||{}}
+/* コンボ（例 😉✨）は1リアクション。点数はその中の最高pt（❤️3 👏2 他2 🙏1） */
+function splitReaction(s){
+  if(!s)return [];
+  if(typeof s!=='string')s=String(s);
+  var known={};Object.keys(PV).forEach(function(e){known[e]=1});
+  try{var marks=JSON.parse(localStorage.getItem('om_marks')||'null');if(Array.isArray(marks))marks.forEach(function(e){if(e)known[e]=1})}catch(e){}
+  var keys=Object.keys(known).sort(function(a,b){return b.length-a.length});
+  var out=[],i=0;
+  while(i<s.length){
+    var hit=null;
+    for(var k=0;k<keys.length;k++){if(s.indexOf(keys[k],i)===i){hit=keys[k];break}}
+    if(hit){out.push(hit);i+=hit.length;continue}
+    var rest=s.slice(i),g;
+    if(typeof Intl!=='undefined'&&Intl.Segmenter){
+      g=Array.from(new Intl.Segmenter('ja',{granularity:'grapheme'}).segment(rest))[0].segment;
+    }else{g=Array.from(rest)[0]}
+    out.push(g);i+=g.length;
+  }
+  return out;
+}
+function ptsOfReaction(s){
+  if(s==null||s==='')return 0;
+  if(PV[s]!=null)return PV[s];
+  var parts=splitReaction(s);
+  if(parts.length<=1)return 2; // その他の単発絵文字
+  var mx=0;parts.forEach(function(p){var v=PV[p]!=null?PV[p]:2;if(v>mx)mx=v});
+  return mx;
+}
 function scoreOne(name){
   var R=g('om_react',{}),P=g('om_reply',{}),n=0,postsN=+posts()[name]||0;
   n+=postsN*10;
-  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=(PV[R[k]]!=null?PV[R[k]]:2)});
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=ptsOfReaction(R[k])});
   Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)n+=15});
   var peak=g('om_pts_peak',{});if((peak[name]||0)<n){peak[name]=n;try{localStorage.setItem('om_pts_peak',JSON.stringify(peak))}catch(e){}}
   return Math.max(n,peak[name]||0);
@@ -29,7 +57,7 @@ function scoreOne(name){
 function scoreBreak(name){
   var R=g('om_react',{}),P=g('om_reply',{}),postsN=+posts()[name]||0;
   var react={};var rSum=0,rN=0;
-  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')!==0)return;var e=R[k],v=(PV[e]!=null?PV[e]:2);react[e]=(react[e]||0)+1;rSum+=v;rN++});
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')!==0)return;var e=R[k],v=ptsOfReaction(e);react[e]=(react[e]||0)+1;rSum+=v;rN++});
   var replyN=0;Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)replyN++});
   var cur=postsN*10+rSum+replyN*15;
   var peak=(g('om_pts_peak',{})[name]||0);
@@ -38,7 +66,7 @@ function scoreBreak(name){
 }
 function openPts(name){
   var b=scoreBreak(name);
-  var reactLines=Object.keys(b.react).map(function(e){var c=b.react[e],v=(PV[e]!=null?PV[e]:2);return e+' ×'+c+'（'+v+'pt×'+c+'='+(v*c)+'）'});
+  var reactLines=Object.keys(b.react).map(function(e){var c=b.react[e],v=ptsOfReaction(e);return e+' ×'+c+'（'+v+'pt×'+c+'='+(v*c)+'）'});
   if(!reactLines.length)reactLines=['（まだリアクションなし）'];
   var html='<div class="clPtsOv" id="clPtsOv"><div class="clPtsBox" role="dialog" aria-label="親密度の内訳">'+
     '<div class="clPtsH">💞 '+esc(name)+' の親密度 <b>'+b.shown.toLocaleString()+'pt</b></div>'+
@@ -52,6 +80,7 @@ function openPts(name){
     '<div class="clPtsRule"><b>ルール（実際の計算）</b><ul>'+
       '<li>投稿1件 → <b>+10pt</b>（公開ページの件数）</li>'+
       '<li>リアクション：❤️+3　🙏+1　👏+2　その他の絵文字+2（その人の投稿につけた分だけ）</li>'+
+      '<li>組み合わせ（例😉✨）は<strong>1件</strong>のリアクション。点数は中のマークの<strong>最高pt</strong>（❤️があれば3pt）</li>'+
       '<li>返事1件 → <b>+15pt</b>（その人の投稿への返事）</li>'+
       '<li>減衰・上限なし。一度ついたピークptは下がらない（om_pts_peak）</li>'+
       '<li>ゆずも同じ式。ランキング表はゆず以外</li>'+

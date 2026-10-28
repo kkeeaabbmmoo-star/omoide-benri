@@ -22,8 +22,35 @@ function membersExYuzu(){
     return {name:el.id.slice(2),el:el};
   }).filter(function(m){return m.name!=='ゆず'});
 }
-function ptsOfEmoji(e){return PV[e]!=null?PV[e]:2}
-/* 既存ルールを月でフィルタ：投稿+10 / ❤️+3 🙏+1 👏+2 他+2 / 返事+15。ピーク・減衰なし（その月の合計のみ） */
+function splitReaction(s){
+  if(!s)return [];
+  if(typeof s!=='string')s=String(s);
+  var known={};Object.keys(PV).forEach(function(e){known[e]=1});
+  try{var marks=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(marks))marks.forEach(function(e){if(e)known[e]=1})}catch(e){}
+  var keys=Object.keys(known).sort(function(a,b){return b.length-a.length});
+  var out=[],i=0;
+  while(i<s.length){
+    var hit=null;
+    for(var k=0;k<keys.length;k++){if(s.indexOf(keys[k],i)===i){hit=keys[k];break}}
+    if(hit){out.push(hit);i+=hit.length;continue}
+    var rest=s.slice(i),g;
+    if(typeof Intl!=='undefined'&&Intl.Segmenter){
+      g=Array.from(new Intl.Segmenter('ja',{granularity:'grapheme'}).segment(rest))[0].segment;
+    }else{g=Array.from(rest)[0]}
+    out.push(g);i+=g.length;
+  }
+  return out;
+}
+function ptsOfReaction(s){
+  if(s==null||s==='')return 0;
+  if(PV[s]!=null)return PV[s];
+  var parts=splitReaction(s);
+  if(parts.length<=1)return 2;
+  var mx=0;parts.forEach(function(p){var v=PV[p]!=null?PV[p]:2;if(v>mx)mx=v});
+  return mx;
+}
+function ptsOfEmoji(e){return ptsOfReaction(e)}
+/* 既存ルールを月でフィルタ：投稿+10 / ❤️+3 🙏+1 👏+2 他+2 / 返事+15。コンボは1件・最高pt。ピーク・減衰なし */
 function scoreMonth(name,b){
   var R=g('om_react',{}),P=g('om_reply',{});
   var postsN=0;
@@ -35,7 +62,7 @@ function scoreMonth(name,b){
   Object.keys(R).forEach(function(k){
     if(k.indexOf(name+'_')!==0)return;
     if(!inMonth(keyDate(k),b))return;
-    var e=R[k],v=ptsOfEmoji(e);react[e]=(react[e]||0)+1;rSum+=v;rN++;
+    var e=R[k],v=ptsOfReaction(e);react[e]=(react[e]||0)+1;rSum+=v;rN++;
   });
   var replyN=0;
   Object.keys(P).forEach(function(k){
@@ -148,6 +175,7 @@ function rulesHTML(){
     +'<ul>'
     +'<li>投稿1件 → +10pt</li>'
     +'<li>リアクション：❤️+3　🙏+1　👏+2　その他の絵文字+2</li>'
+    +'<li>組み合わせ（例😉✨）は1件。点数は中のマークの最高pt</li>'
     +'<li>返事1件 → +15pt</li>'
     +'<li>しきい値なし・減衰なし。その月の合計のみ（過去月のピークは使わない）</li>'
     +'</ul>'

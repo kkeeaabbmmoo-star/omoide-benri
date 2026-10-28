@@ -58,7 +58,7 @@ def mbar():
 memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=12"></script><script src="monthly.js?v=2"></script><script>
+JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=4"></script><script src="sent-status.js?v=ss1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=13"></script><script src="monthly.js?v=3"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
@@ -174,12 +174,37 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
  p.querySelectorAll('.ln').forEach(function(l){l.addEventListener('click',function(ev){if(ev.target.closest('a,button'))return;if(P[id])return;
   p.querySelectorAll('.ln.sel').forEach(function(x){x.classList.remove('sel')});
   if(sel===l){sel=null}else{sel=l;l.classList.add('sel')}draw()})});
+ function splitRx(s){if(!s)return[];var known={};EM.forEach(function(e){known[e]=1});['❤️','🙏','👏'].forEach(function(e){known[e]=1});
+   var keys=Object.keys(known).sort(function(a,b){return b.length-a.length}),out=[],i=0;
+   while(i<s.length){var hit=null;for(var k=0;k<keys.length;k++){if(s.indexOf(keys[k],i)===i){hit=keys[k];break}}
+    if(hit){out.push(hit);i+=hit.length;continue}
+    var rest=s.slice(i),g;(typeof Intl!=='undefined'&&Intl.Segmenter)?(g=Array.from(new Intl.Segmenter('ja',{granularity:'grapheme'}).segment(rest))[0].segment):(g=Array.from(rest)[0]);
+    out.push(g);i+=g.length}return out}
  function draw(){a.innerHTML='';EM=loadEM();
-  EM.forEach(function(e){var b=document.createElement('button');b.type='button';b.textContent=e;if(R[id]===e)b.className='on';
-   /* show orphan custom mark if current reaction not in EM */
-   b.onclick=function(){if(R[id]===e)delete R[id];else R[id]=e;sv();draw()};a.appendChild(b)});
-  if(R[id]&&EM.indexOf(R[id])<0){var ob=document.createElement('button');ob.type='button';ob.textContent=R[id];ob.className='on';ob.title='セット外のマーク（そのまま残ってるよ）';ob.onclick=function(){delete R[id];sv();draw()};a.appendChild(ob)}
+  var mode=!!p._comboMode,sel=p._comboSel||[];
+  /* existing combo / orphan as one pill */
+  if(R[id]&&EM.indexOf(R[id])<0){var ob=document.createElement('button');ob.type='button';ob.className='on rxCombo';ob.textContent=R[id];ob.title=splitRx(R[id]).length>=2?'組み合わせリアクション（1件）':'セット外のマーク';
+   ob.onclick=function(){if(mode)return;delete R[id];sv();draw()};a.appendChild(ob)}
+  EM.forEach(function(e){var b=document.createElement('button');b.type='button';b.textContent=e;
+   var ix=sel.indexOf(e);
+   if(mode){if(ix>=0){b.className='on comboPick';var n=document.createElement('i');n.className='comboOrd';n.textContent=String(ix+1);b.appendChild(n)}
+    b.onclick=function(ev){ev.stopPropagation();var i2=sel.indexOf(e);if(i2>=0)sel.splice(i2,1);else sel.push(e);p._comboSel=sel;draw()}}
+   else{if(R[id]===e)b.className='on';
+    b.onclick=function(){if(R[id]===e)delete R[id];else R[id]=e;sv();draw()}}
+   a.appendChild(b)});
   var gear=document.createElement('button');gear.type='button';gear.className='mkGear';gear.textContent='⚙️';gear.title='マークを選ぶ';gear.onclick=function(ev){ev.stopPropagation();openMarks()};a.appendChild(gear);
+  var cb=document.createElement('button');cb.type='button';cb.className='comboBtn'+(mode?' on':'');cb.textContent=mode?'🧩中':'🧩';cb.title='組み合わせ';
+  cb.onclick=function(ev){ev.stopPropagation();if(mode){p._comboMode=0;p._comboSel=[];draw();return}
+   p._comboMode=1;p._comboSel=(R[id]&&EM.indexOf(R[id])<0)?splitRx(R[id]).filter(function(x){return EM.indexOf(x)>=0}):[];draw()};a.appendChild(cb);
+  if(mode){var bar=document.createElement('div');bar.className='comboBar';
+   var prev=document.createElement('span');prev.className='comboPrev';prev.textContent=sel.length?('プレビュー：'+sel.join('')):'マークを2つ以上タップしてね';
+   bar.appendChild(prev);
+   var ok=document.createElement('button');ok.type='button';ok.className='comboOk';ok.textContent='この組み合わせで送る';ok.disabled=sel.length<2;
+   ok.onclick=function(ev){ev.stopPropagation();if(sel.length<2)return;R[id]=sel.join('');p._comboMode=0;p._comboSel=[];sv();draw()};
+   var ng=document.createElement('button');ng.type='button';ng.className='comboNg';ng.textContent='やめる';
+   ng.onclick=function(ev){ev.stopPropagation();p._comboMode=0;p._comboSel=[];draw()};
+   bar.appendChild(ok);bar.appendChild(ng);a.appendChild(bar)}
+
   var r0=P[id];
   if(r0){var r=document.createElement('div');r.className='rp eiji';r.style.width='100%';r.innerHTML=(r0.q?'「'+esc(r0.q.length>30?r0.q.slice(0,30)+'…':r0.q)+'」に':'')+'↩️ <b>エイジ</b>：'+esc(r0.t)+' <a href="#" style="font-size:12px">消す</a>';r.querySelector('a').onclick=function(ev){ev.preventDefault();delete P[id];sv();paintPost(p);draw();nwDraw()};a.appendChild(r)}
   else{if(sel){var q=document.createElement('div');q.className='qt';q.innerHTML='✂️ この一文に返す <a href="#">やめる</a>';q.querySelector('a').onclick=function(ev){ev.preventDefault();ev.stopPropagation();sel.classList.remove('sel');sel=null;draw()};a.appendChild(q)}
@@ -281,10 +306,19 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}
 #pfBtn{{display:block;width:100%;box-sizing:border-box;text-align:center;min-height:44px;line-height:44px;margin:8px 0 2px;background:#fff;color:#6a4a9a;border:2px solid #c8a0e0;border-radius:22px;font-size:16px;font-weight:800;text-decoration:none}}
 a.avLink,a.nmLink{{color:inherit;text-decoration:none}}a.nmLink b{{border-bottom:1px dotted #f3a0b8}}a.avLink:active .avw,a.nmLink:active{{opacity:.75}}
+.act button.rxCombo{{background:#ffd6e4;border-color:#d0567f;font-weight:800;letter-spacing:0}}
+.act button.comboPick{{position:relative}}
+.act button .comboOrd{{position:absolute;top:-6px;right:-6px;min-width:14px;height:14px;border-radius:8px;background:#d0567f;color:#fff;font-size:10px;font-style:normal;font-weight:800;line-height:14px;text-align:center;padding:0 3px;box-shadow:0 0 0 1px #fff}}
+.act .comboBtn{{font-size:14px;opacity:.9}}.act .comboBtn.on{{background:#ffe08a;border-color:#d0567f}}
+.comboBar{{width:100%;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;padding:8px;background:#fff6f9;border-radius:12px;border:1px dashed #f3c6d5}}
+.comboPrev{{flex:1 1 100%;font-size:13px;color:#a0466a;font-weight:700}}
+.comboOk{{border:0!important;background:#d0567f!important;color:#fff!important;border-radius:14px!important;padding:8px 12px!important;font-weight:800!important;font-size:14px!important}}
+.comboOk:disabled{{opacity:.4}}
+.comboNg{{border:1px solid #f3c6d5!important;background:#fff!important;color:#a0466a!important;border-radius:14px!important;padding:8px 12px!important;font-size:13px!important}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v28'
+SWV='omoide-v29'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
