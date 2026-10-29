@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v49-mark-->
+<title>👤 みんなのプロフィール</title><!--v50-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -75,6 +75,8 @@ header{position:relative;z-index:2;background:#fff0f5}
 .pgOv .rep{background:#fff;color:#a0466a}
 .pgOv .del{background:#ffe8ee;color:#c0587f}
 .pgOv .x{background:#d0567f;color:#fff}
+.pgOvHint{color:#fff;font-size:13px;font-weight:700;text-align:center;max-width:min(92vw,420px);line-height:1.4;padding:0 8px}
+.pgOv .mov{background:#4a6fa5;color:#fff}
 #pgCrop{position:fixed;inset:0;z-index:2147483650;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;touch-action:none;padding:16px}
 #pgCrop .t{color:#fff;font-size:14px;text-align:center;padding:0 8px;line-height:1.4}
 #pgCrop .stage{position:relative;width:min(300px,86vw);height:min(300px,86vw);border-radius:14px;overflow:hidden;background:#222;box-shadow:0 0 0 3px #ff9ab8,0 8px 28px #0008;touch-action:none}
@@ -147,7 +149,7 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
 <a id="jump" href="./">💞 ノート</a>
 <input type="file" id="pgFile" accept="image/*" style="display:none">
 <script src="pf_store.js?v=1"></script>
-<script src="closeness.js?v=49"></script>
+<script src="closeness.js?v=50"></script>
 <script>
 (function(){
 /* スロット上限（tools/photo_limits.py と同じ） */
@@ -340,10 +342,35 @@ function openPicker(name,slot,replacing){
   pickName=name;pickSlot=slot;replaceMode=!!replacing;
   fileEl.click();
 }
+/* v50: 公開スロットがあれば未送信にしない／端末写真を別人へ移せる */
+function reconcileLocalPhotos(data){
+  var all=loadLocal(), ch=0;
+  Object.keys((data&&data.members)||{}).forEach(function(nm){
+    var pub=data.members[nm].photos||[], a=all[nm];
+    if(!Array.isArray(a))return;
+    for(var i=0;i<a.length;i++){
+      if(a[i]&&a[i].data&&pub[i]&&!a[i].sent){ a[i].sent=true; a[i].sentAt=Date.now(); ch=1 }
+    }
+  });
+  if(ch){ saveLocal(all); try{updatePendSt()}catch(e){} }
+}
+function firstEmptySlot(who){
+  var lim=photoLimit(who), loc=slotsFor(who), pub=((window.__PF_DATA.members[who]||{}).photos)||[];
+  for(var i=0;i<lim;i++){
+    var hasLoc=loc[i]&&loc[i].data, hasPub=!!pub[i];
+    if(!hasLoc&&!hasPub) return i;
+  }
+  return -1;
+}
 function openViewer(name,slot,src,pending){
   var old=document.getElementById('pgOv');if(old)old.remove();
+  var loc=slotsFor(name)[slot];
+  var hasLocal=!!(loc&&loc.data);
   var ov=document.createElement('div');ov.id='pgOv';ov.className='pgOv';
-  ov.innerHTML='<img alt=""><div class="b">'+
+  ov.innerHTML='<img alt="">'+
+    (pending&&hasLocal?'<div class="pgOvHint">端末だけの写真だよ。公開側に無い／別人の枠なら「別の人へ移す」か消して入れ直してね</div>':'')+
+    '<div class="b">'+
+    (hasLocal?'<button type="button" class="mov">別の人へ移す</button>':'')+
     '<button type="button" class="rep">入れ替え</button>'+
     '<button type="button" class="del">削除</button>'+
     '<button type="button" class="x">とじる</button></div>';
@@ -353,11 +380,30 @@ function openViewer(name,slot,src,pending){
   ov.querySelector('.rep').onclick=function(){ov.remove();openPicker(name,slot,true)};
   ov.querySelector('.del').onclick=function(){
     if(!confirm('この写真を消す？'))return;
-    // only remove local pending; published stay until ゆず removes
-    var loc=slotsFor(name)[slot];
-    if(loc&&loc.data){setSlot(name,slot,null)}
+    var loc2=slotsFor(name)[slot];
+    if(loc2&&loc2.data){setSlot(name,slot,null)}
     else{alert('公開済みの写真はゆずに「消して」と伝えてね')}
     ov.remove(); if(window.__PF_DATA)render(window.__PF_DATA);
+  };
+  var mov=ov.querySelector('.mov');
+  if(mov)mov.onclick=function(){
+    var members=window.__PF_DATA&&window.__PF_DATA.members||{};
+    var names=Object.keys(members).filter(function(n){return n!==name});
+    var to=prompt('移す先の名前を入れてね（例: マキ）\n候補: '+names.slice(0,12).join('・')+(names.length>12?'…':''), 'マキ');
+    if(to==null)return;
+    to=String(to).trim();
+    if(!members[to]){alert('「'+to+'」はいないよ');return}
+    var cur=slotsFor(name)[slot];
+    if(!cur||!cur.data){alert('端末に残ってる写真だけ移せるよ');return}
+    var di=firstEmptySlot(to);
+    if(di<0){alert(to+' の空きスロットが無いよ（公開or端末で埋まってる）');return}
+    var payload={data:cur.data,sent:false,at:Date.now()};
+    setSlot(to,di,payload);
+    setSlot(name,slot,null);
+    ov.remove();
+    if(window.__PF_DATA)render(window.__PF_DATA);
+    try{updatePendSt()}catch(e){}
+    alert(to+' の写真枠 '+(di+1)+' に移したよ📷\n下の💌でゆずに送ると公開されるよ');
   };
   document.body.appendChild(ov);
 }
@@ -367,10 +413,9 @@ function photoGridHtml(name, published){
   var h='<div class="pgH">📷 写真（最大'+lim+'枚）</div><div class="pg'+wide+'" data-who="'+esc(name)+'">';
   for(var i=0;i<lim;i++){
     var L=loc[i], P=pub[i], src=null, pending=false;
-    if(L&&L.data&&!L.sent){src=L.data;pending=true}
-    else if(L&&L.data&&L.sent&&!(P)){src=L.data;pending=true} // sent but not yet on server
-    else if(P){src=P}
-    else if(L&&L.data){src=L.data;pending=true}
+    /* 公開があればそれを優先（バイト一致不要）。未送信バッジは付けない */
+    if(P){ src=P; pending=false; }
+    else if(L&&L.data){ src=L.data; pending=true; }
     if(src){
       h+='<button type="button" class="pgSlot has" data-i="'+i+'"><img src="'+esc(src)+'" alt="">'+(pending?'<span class="tag">未送信</span>':'')+'</button>';
     }else{
@@ -385,14 +430,16 @@ function bindPhotoGrid(card,name){
       var i=+btn.dataset.i;
       var loc=slotsFor(name)[i];
       var pub=(window.__PF_DATA.members[name].photos||[])[i];
-      var src=(loc&&loc.data)?loc.data:pub;
-      if(src)openViewer(name,i,src,!(pub)||(loc&&loc.data&&!loc.sent));
+      var src=pub||(loc&&loc.data)||null;
+      var pending=!(pub)&&!!(loc&&loc.data);
+      if(src)openViewer(name,i,src,pending);
       else openPicker(name,i,false);
     });
   });
 }
 function render(data){
   window.__PF_DATA=data;
+  try{reconcileLocalPhotos(data)}catch(e){}
   var order=buildOrder(data);
   var fo=data.fieldsOrder||['名前','年齢','職業','性格','趣味','最近気になること','嫌いな食べ物'];
   var toc=document.getElementById('toc');
