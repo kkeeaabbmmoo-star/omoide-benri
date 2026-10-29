@@ -381,6 +381,14 @@ function render(){
   drawMap(sec.querySelector('.clMap'),scores,total);
   window.__OM_CLOSE={scores:scores,total:total,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),levels:LEVELS};
 }
+function loadPosts(){
+  if(window.__OM_POSTS) return Promise.resolve(window.__OM_POSTS);
+  if(window.__OM_POSTS_P) return window.__OM_POSTS_P;
+  window.__OM_POSTS_P=fetch('data/posts.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}}).then(function(j){window.__OM_POSTS=j.posts||j||{};return window.__OM_POSTS}).catch(function(){window.__OM_POSTS={};return window.__OM_POSTS});
+  return window.__OM_POSTS_P;
+}
+function loadLevels(){return fetch('data/levels.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&Array.isArray(j.segments)){LEVELS=j;if(!LEVELS.lockedLabel)LEVELS.lockedLabel='？？？ お楽しみ'}}).catch(function(){})}
+function ensureScoreReady(){return Promise.all([loadPosts(),loadLevels()])}
 function boot(){
   // attach av/ic data from DOM
   document.querySelectorAll('.mem[id^="m-"]').forEach(function(el){
@@ -388,19 +396,21 @@ function boot(){
     if(img){var m=img.src.match(/avatars\/([^.\/]+)\./);if(m)el.dataset.av=m[1]}
     if(ic)el.dataset.ic=ic.textContent;
   });
-  var host=document.getElementById('nstrip');if(!host||document.getElementById('clSec'))return;
+  var host=document.getElementById('nstrip');
+  /* profiles pageなど nstrip 無しでも posts を読み、scoreOne を使えるようにする */
+  if(!host||document.getElementById('clSec')){
+    ensureScoreReady();
+    return;
+  }
   var sec=document.createElement('details');sec.id='clSec';sec.className='clSec';
   if(g('om_close_open',false))sec.open=true;
   sec.innerHTML='<summary>💞 親密度と関係図</summary><div class="clWrap"><div class="clTop"></div><svg class="clMap" width="100%" role="img" aria-label="関係図"></svg><div class="clPhoto"></div><div class="clBox"></div></div>';
   host.insertAdjacentElement('afterend',sec);
   sec.addEventListener('toggle',function(){try{localStorage.setItem('om_close_open',JSON.stringify(!!sec.open))}catch(e){}});
-  // load posts then render
-  function loadPosts(){return fetch('data/posts.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}}).then(function(j){window.__OM_POSTS=j.posts||j||{}}).catch(function(){window.__OM_POSTS={}})}
-  function loadLevels(){return fetch('data/levels.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&Array.isArray(j.segments)){LEVELS=j;if(!LEVELS.lockedLabel)LEVELS.lockedLabel='？？？ お楽しみ'}}).catch(function(){})}
-  Promise.all([loadPosts(),loadLevels()]).then(function(){render()});
+  ensureScoreReady().then(function(){render()});
   // re-render after reactions/replies change
   var _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.apply(this,arguments);if(/om_react|om_reply|om_pts_peak/.test(k))setTimeout(render,80)};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-window.omCloseness={render:render,scoreOne:scoreOne,lvOf:lvOf,nextOf:nextOf,prevOf:prevOf,levels:function(){return LEVELS}};
+window.omCloseness={render:render,scoreOne:scoreOne,scoreBreak:scoreBreak,ensureScoreReady:ensureScoreReady,lvOf:lvOf,nextOf:nextOf,prevOf:prevOf,levels:function(){return LEVELS}};
 })();

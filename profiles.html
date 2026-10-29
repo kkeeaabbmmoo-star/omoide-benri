@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v46-mark-->
+<title>👤 みんなのプロフィール</title><!--v47-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -27,8 +27,11 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 .pcard .ph{display:flex;gap:12px;align-items:center;margin-bottom:10px}
 .pcard .av{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none;background:#ffe4ee;box-shadow:0 0 0 3px #fff}
 .pcard .avic{width:64px;height:64px;border-radius:50%;flex:none;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 0 3px #fff}
-.pcard h2{margin:0;font-size:18px}
+.pcard h2{margin:0;font-size:18px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;line-height:1.35;max-width:100%}
 .pcard .badge{display:inline-block;margin-left:6px;font-size:11px;background:#fff6f9;color:#c0587f;border-radius:8px;padding:1px 6px;font-weight:700;border:1px solid #ffd0e0}
+.pcard .pfPts{display:inline-block;margin-left:6px;font-size:12px;font-weight:800;color:#d0567f;background:#fff0f5;border:1px solid #ffd0e0;border-radius:999px;padding:1px 8px;vertical-align:middle;white-space:nowrap}
+.topNav button.on{background:#d0567f;color:#fff;border-color:#d0567f}
+.orderHint{font-size:11px;color:#9a7b88;text-align:center;margin:4px 0 0}
 .pcard .tone{display:block;font-size:12px;color:#9a7b88;margin-top:2px}
 .fields{margin:0;padding:0;list-style:none}
 .fields li{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:6px;padding:7px 0;border-bottom:1px dashed rgba(0,0,0,.08);font-size:13.5px;align-items:start}
@@ -119,8 +122,10 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
   <div class="sub">仮置きあり・本人記入で更新するよ</div>
   <div class="topNav">
     <a href="./">← 思い出ノートへ</a>
-    <button type="button" id="sortToggle">↕️ 並び替え</button>
+    <button type="button" id="orderPts" class="on" aria-pressed="true">💞 ポイント順</button>
+    <button type="button" id="sortToggle" aria-pressed="false">↕️ 自分で並べ替え</button>
   </div>
+  <p class="orderHint" id="orderHint">いまは親密度ポイント順（高い人から）。同点はこれまでどおりの順だよ</p>
   <div class="sortBar" id="sortBar" hidden>
     <button type="button" id="sortDone">✅ 完了（保存）</button>
     <button type="button" id="sortCancel">やめる</button>
@@ -130,7 +135,7 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
   <ul class="sortList" id="sortList"></ul>
 </header>
 <main>
-  <p class="note">7項目は全員共通だよ。エイジはこのページで全員の欄を編集・調整できるよ（基本は本人記入が優先）。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真・保存した欄は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ（ノートのアイコンには使わないよ）。公開前は<span class="kariTag">未送信</span>表示。上の「↕️ 並び替え」で全員の表示順を変えられるよ（ドラッグ / ▲▼ / 番号）。</p>
+  <p class="note">7項目は全員共通だよ。エイジはこのページで全員の欄を編集・調整できるよ（基本は本人記入が優先）。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真・保存した欄は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ（ノートのアイコンには使わないよ）。公開前は<span class="kariTag">未送信</span>表示。初期表示は親密度ポイント順。上の「↕️ 自分で並べ替え」で好きな順にもできるよ（ドラッグ / ▲▼ / 番号）。「💞 ポイント順」でいつでも戻せるよ。</p>
   <div class="toc" id="toc"></div>
   <div id="list"><p class="empty">読み込み中…</p></div>
 </main>
@@ -138,6 +143,7 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
 <a id="jump" href="./">💞 ノート</a>
 <input type="file" id="pgFile" accept="image/*" style="display:none">
 <script src="pf_store.js?v=1"></script>
+<script src="closeness.js?v=47"></script>
 <script>
 (function(){
 /* スロット上限（tools/photo_limits.py と同じ） */
@@ -149,6 +155,40 @@ var LS_FIELDS='om_pf_fields';
 function loadSeq(){var all=loadFields();var o=all&&all.__order;return (Array.isArray(o)&&o.length)?o.filter(function(x){return typeof x==="string"&&x}):null}
 function mergeSeq(base, members){var local=loadSeq(), seen={}, out=[];function add(n){if(n&&members[n]&&!seen[n]){out.push(n);seen[n]=1}}(local||[]).forEach(add);(base||[]).forEach(add);Object.keys(members||{}).forEach(add);return out}
 function putSeq(arr){var all=loadFields();all.__order=arr.slice();saveFields(all)}
+
+/* v47: 親密度pt（closeness.js scoreOne と同じ・om_pts_peak） */
+var ORDER_MODE_KEY='om_pf_order_mode';
+function orderMode(){try{var m=localStorage.getItem(ORDER_MODE_KEY);return (m==='custom')?'custom':'pts'}catch(e){return 'pts'}}
+function setOrderMode(m){try{localStorage.setItem(ORDER_MODE_KEY,m==='custom'?'custom':'pts')}catch(e){}}
+function pfScore(name){
+  try{
+    if(window.omCloseness&&typeof window.omCloseness.scoreOne==='function'){
+      var n=window.omCloseness.scoreOne(name);
+      return (n==null||isNaN(n))?0:+n;
+    }
+  }catch(e){}
+  try{var peak=JSON.parse(localStorage.getItem('om_pts_peak')||'{}')||{};return +(peak[name]||0)}catch(e){return 0}
+}
+function buildOrder(data){
+  var members=data.members||{};
+  var base=mergeSeq(data.order||Object.keys(members), members);
+  if(orderMode()==='custom') return base;
+  /* ポイント高い順。同点は base の順を維持（安定ソート） */
+  var rows=base.map(function(id,i){return {id:id,pts:pfScore(id),i:i}});
+  rows.sort(function(a,b){ if(b.pts!==a.pts) return b.pts-a.pts; return a.i-b.i });
+  return rows.map(function(r){return r.id});
+}
+function syncOrderButtons(){
+  var pts=orderMode()==='pts';
+  var bp=document.getElementById('orderPts'), bs=document.getElementById('sortToggle'), hint=document.getElementById('orderHint');
+  if(bp){bp.classList.toggle('on',pts);bp.setAttribute('aria-pressed',pts?'true':'false')}
+  if(bs){bs.classList.toggle('on',!pts&&!arrangeOn);bs.setAttribute('aria-pressed',(!pts)?'true':'false')}
+  if(hint){
+    hint.textContent=pts
+      ? 'いまは親密度ポイント順（高い人から）。同点はこれまでどおりの順だよ'
+      : 'いまは自分で並べた順だよ。「💞 ポイント順」でポイント順に戻せるよ';
+  }
+}
 
 var EDITABLE_WHO=null; /* v38: エイジが全員の欄を編集可（本人記入がデフォルト、端末編集は上書き） */
 function loadFields(){try{return JSON.parse(localStorage.getItem(LS_FIELDS)||'{}')||{}}catch(e){return {}}}
@@ -321,12 +361,13 @@ function bindPhotoGrid(card,name){
 }
 function render(data){
   window.__PF_DATA=data;
-  var order=mergeSeq(data.order||Object.keys(data.members||{}), data.members||{});
+  var order=buildOrder(data);
   var fo=data.fieldsOrder||['名前','年齢','職業','性格','趣味','最近気になること','嫌いな食べ物'];
   var toc=document.getElementById('toc');
   var list=document.getElementById('list');
   toc.innerHTML='';list.innerHTML='';
   if(data.updated)document.querySelector('.sub').textContent='更新 '+data.updated+' · 仮置きあり・写真あり';
+  syncOrderButtons();
   order.forEach(function(id){
     var m=data.members[id];if(!m)return;
     var look=m.look||{};
@@ -361,7 +402,7 @@ function render(data){
     if(id==='エイジ')badge='<span class="badge">本人</span>';
     var cardHtml='<article class="pcard '+font+'" id="p-'+esc(id)+'" style="background:'+esc(look.background||'#fff')+';border-color:'+esc(look.theme||'#ffb3c8')+'">'+
       '<div class="deco">'+deco+'</div>'+
-      '<div class="ph">'+avHtml+'<div><h2 style="color:'+esc(look.theme||'#c0587f')+'">'+esc(m.display||id)+badge+
+      '<div class="ph">'+avHtml+'<div><h2 style="color:'+esc(look.theme||'#c0587f')+'"><span class="pfName">'+esc(m.display||id)+'</span><span class="pfPts" title="親密度ポイント（ランキングと同じ・ピーク維持）">'+esc(String(pfScore(id)))+'ポイント</span>'+badge+
       '</h2><span class="tone">口調：'+esc(look.tone||'—')+'</span></div></div>'+
       editBar+
       '<ul class="fields">'+rows+'</ul>'+
@@ -456,22 +497,34 @@ function paintArrange(){
 function enterArrange(){
   if(!window.__PF_DATA)return;
   arrangeOn=true;
-  arrangeDraft=mergeSeq(window.__PF_DATA.order||Object.keys(window.__PF_DATA.members||{}), window.__PF_DATA.members||{}).slice();
+  /* いま画面に出ている順（ポイント順 or カスタム）から編集開始 */
+  arrangeDraft=buildOrder(window.__PF_DATA).slice();
   document.body.classList.add("sortMode");
   document.getElementById("sortBar").hidden=false;
   document.getElementById("sortToggle").classList.add("on");
   paintArrange();
 }
 function leaveArrange(apply){
-  if(apply && arrangeDraft){putSeq(arrangeDraft.slice()); if(window.__PF_DATA)render(window.__PF_DATA)}
+  if(apply && arrangeDraft){
+    putSeq(arrangeDraft.slice());
+    setOrderMode('custom');
+    if(window.__PF_DATA)render(window.__PF_DATA);
+  }
   arrangeOn=false; arrangeDraft=null; dragIdx=-1;
   document.body.classList.remove("sortMode");
   document.getElementById("sortBar").hidden=true;
   document.getElementById("sortToggle").classList.remove("on");
   document.getElementById("sortList").innerHTML="";
+  syncOrderButtons();
 }
+document.getElementById("orderPts").onclick=function(){
+  if(arrangeOn) leaveArrange(false);
+  setOrderMode('pts');
+  if(window.__PF_DATA)render(window.__PF_DATA);
+  else syncOrderButtons();
+};
 document.getElementById("sortToggle").onclick=function(){ if(arrangeOn) leaveArrange(false); else enterArrange(); };
-document.getElementById("sortDone").onclick=function(){ leaveArrange(true); alert("順番を保存したよ💖 💌 ゆずとみんなに送る でゆずに届くよ"); };
+document.getElementById("sortDone").onclick=function(){ leaveArrange(true); alert("順番を保存したよ💖 💌 ゆずとみんなに送る でゆずに届くよ。いまは「自分で並べ替え」順だよ"); };
 document.getElementById("sortCancel").onclick=function(){ leaveArrange(false); };
 document.getElementById("sortReset").onclick=function(){
   if(!window.__PF_DATA)return;
@@ -493,10 +546,15 @@ function updatePendSt(){
 window.__OM_PF_FIELDS=loadFields();
 window.updatePendSt=updatePendSt;
 function bootProfiles(){
-  fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
-    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
-    .then(function(d){render(d);try{updatePendSt()}catch(e){}})
-    .catch(function(e){document.getElementById('list').innerHTML='<p class="empty">読み込めなかったよ：'+esc(e.message)+'</p>'});
+  var ready=(window.omCloseness&&window.omCloseness.ensureScoreReady)
+    ? window.omCloseness.ensureScoreReady()
+    : fetch('data/posts.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}}).then(function(j){window.__OM_POSTS=j.posts||j||{}}).catch(function(){window.__OM_POSTS={}});
+  Promise.all([
+    fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error(r.status);return r.json()}),
+    ready
+  ]).then(function(all){
+    render(all[0]); try{updatePendSt()}catch(e){}
+  }).catch(function(e){document.getElementById('list').innerHTML='<p class="empty">読み込めなかったよ：'+esc(e.message||e)+'</p>'});
 }
 (async function(){
   try{
