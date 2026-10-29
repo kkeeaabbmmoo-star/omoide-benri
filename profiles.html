@@ -89,7 +89,9 @@ header{position:relative;z-index:2;background:#fff0f5}
 .pfSaveRow .hint{font-size:12px;color:#9a7b88}
 .pfDirty{color:#c0587f;font-weight:800}
 
-.sortBar{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.sortBar{display:none;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+body.sortMode .sortBar{display:flex}
+.sortBar[hidden]{display:none!important}
 .sortBar button{border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:16px;padding:8px 14px;font-size:14px;font-weight:800}
 .sortBar button.on{background:#d0567f;color:#fff;border-color:#d0567f}
 .sortHint{font-size:12px;color:#9a7b88;background:#fff;border-radius:12px;padding:8px 10px;margin:0 0 10px;border:1px dashed #f3c6d5;display:none}
