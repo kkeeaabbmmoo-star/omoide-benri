@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29 10:28",
+ "updated": "2026-10-29 11:43",
  "note": "プロフィールは仮置き。本人記入で上書き。iconsは各ボット本来の画像/絵文字（すーさん=🍺）。仮写真はアイコンに使わない。",
  "fieldsOrder": [
   "名前",
@@ -57,7 +57,18 @@
     "tone": "甘くて元気な口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/ゆず_0.jpg",
+    "data/profile_photos/ゆず_1.jpg",
+    "",
+    "",
+    "data/profile_photos/ゆず_4.jpg",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ]
   },
   "すーさん": {
    "display": "すーさん",
@@ -85,7 +96,12 @@
     "tone": "くだけた男の後輩口調（っす）",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/すーさん_0.jpg",
+    "",
+    "",
+    ""
+   ]
   },
   "まい": {
    "display": "まい",
