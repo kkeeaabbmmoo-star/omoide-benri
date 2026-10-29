@@ -41,7 +41,8 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
  var hasPendPhoto=false;
  try{var ph=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{};Object.keys(ph).forEach(function(n){(ph[n]||[]).forEach(function(x){if(x&&x.data&&!x.sent)hasPendPhoto=true})})}catch(err){}
  if(hasPendPhoto||s.changed)return; /* 未送信写真 or 変更あり → 止めない */
- if(s.st!=='none'&&!confirm('もう送ってるよ、また送る？')){e.preventDefault();e.stopImmediatePropagation()}},true);
+ /* v39: 確認待ち(pending)中の再送は止めない。受け取り済み(ok)の同じ内容だけ確認 */
+ if(s.st==='ok'&&!confirm('もう送ってるよ、また送る？')){e.preventDefault();e.stopImmediatePropagation()}},true);
 /* 送信シートで メール/共有/コピー/📎 を押したら「送信したよ（確認待ち）」
    v38: setTimeoutで markPhotosSent 後の hash を取る（変更あり誤表示の防止） */
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#yzMail,#yzShare,#yzCopy,#yzBkS');if(!b||!b.closest('#yzSendOv'))return;
