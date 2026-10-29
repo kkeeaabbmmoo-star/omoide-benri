@@ -1,0 +1,75 @@
+{
+ "updated": "2026-10-29 10:29",
+ "note": "キャラクターレベル報酬。ポイントは親密度pt(om_pts_peak/scoreOne)をそのまま累積利用。閾値・報酬テーマはここを編集。",
+ "pointSource": "closeness",
+ "segments": [
+  1000,
+  1100,
+  1200,
+  1300,
+  1400,
+  1500,
+  1600,
+  1700,
+  1800
+ ],
+ "cumulativeToReach": {
+  "2": 1000,
+  "3": 2100,
+  "4": 3300,
+  "5": 4600,
+  "6": 6000,
+  "7": 7500,
+  "8": 9100,
+  "9": 10800,
+  "10": 12600
+ },
+ "rewards": {
+  "2": {
+   "theme": "称号バッジ",
+   "hint": "🎖 はじめての称号",
+   "milestone": false
+  },
+  "3": {
+   "theme": "アイコンフレーム",
+   "hint": "🖼 特別フレーム",
+   "milestone": false
+  },
+  "4": {
+   "theme": "特別メッセージ",
+   "hint": "💌 メンバーからの特別メッセージ",
+   "milestone": false
+  },
+  "5": {
+   "theme": "名前色/エフェクト",
+   "hint": "✨ 名前の色やエフェクト",
+   "milestone": true
+  },
+  "6": {
+   "theme": "限定テーマ",
+   "hint": "🎨 ページの限定テーマ",
+   "milestone": false
+  },
+  "7": {
+   "theme": "写真アルバム特典",
+   "hint": "📸 思い出写真アルバム特典",
+   "milestone": false
+  },
+  "8": {
+   "theme": "サプライズ",
+   "hint": "🎁 完全おまかせサプライズ",
+   "milestone": false
+  },
+  "9": {
+   "theme": "称号ランクアップ",
+   "hint": "👑 称号ランクアップ",
+   "milestone": false
+  },
+  "10": {
+   "theme": "殿堂入り",
+   "hint": "🏆 殿堂入り・記念ページ",
+   "milestone": true
+  }
+ },
+ "lockedLabel": "？？？ お楽しみ"
+}

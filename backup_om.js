@@ -1,4 +1,4 @@
-/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v38b */
+/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v39 */
 (function(){
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
@@ -18,6 +18,11 @@ function markOrderSent(){try{localStorage.setItem('om_pf_seq_sent',String(Date.n
 function snap(){var c=(window.__OM_CLOSE)||{},pp=pendingProfilePhotos(),pf=pendingProfileFields(),po=pendingProfileOrder();var o={app:'omoide',v:7,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',seenrp:g('om_seenrp',{}),marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),profile_photos:pp,profile_fields:pf,closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}};if(po)o.profile_order=po;return o}
 window.omSend=function(){
   var R=g(K.r,{}),P=g(K.p,{});
+  /* v39: sent=trueのまま残った写真を再送できるように戻す（シートが空で何も起きない対策） */
+  try{var all=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{},need=false,pend=0;
+    Object.keys(all).forEach(function(n){(all[n]||[]).forEach(function(s){if(s&&s.data){if(s.sent)need=true;else pend++}})});
+    if(need&&pend===0){Object.keys(all).forEach(function(n){(all[n]||[]).forEach(function(s){if(s&&s.data)s.sent=false})});localStorage.setItem('om_pf_photos',JSON.stringify(all));window.__OM_PF_PHOTOS=all}
+  }catch(e){}
   var t=jst(),ymd=t.slice(0,10).replace(/-/g,''),full=snap();
   var nph=Object.keys(full.profile_photos||{}).length;
   var nfe=Object.keys(full.profile_fields||{}).length;

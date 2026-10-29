@@ -58,7 +58,7 @@ def mbar():
 memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=3"></script><script src="backup_om.js?v=7"></script><script src="sent-status.js?v=ss3"></script><script src="pf_preview.js?v=1"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=14"></script><script src="monthly.js?v=7"></script><script>
+JS=r'''<script src="send.js?v=3"></script><script src="backup_om.js?v=8"></script><script src="sent-status.js?v=ss4"></script><script src="pf_preview.js?v=2"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=15"></script><script src="monthly.js?v=7"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
@@ -217,7 +217,8 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
    /* v35: プロフィール編集・写真再送・アイコン2倍・名前横書き・返信後スクロール維持 */
    /* v36: 親密度ランキング人数表示・報酬枠 floor((n-1)/2)・プロフィール並び替え */
    /* v37: 月間報酬 11月🎄/12月🎍・紅葉は2027-11温存・2月TBD・profiles並び替え引用符修正 */
-   /* v38: プロフィール全員編集（エイジが各メンバーの欄・写真を調整可） */
+   /* v38: プロフィール全員編集 */
+   /* v39: pf_preview無効化（仮写真でアイコン上書き禁止）・送信hash修正・すーさん🍺男性 */
    s.onclick=function(){var v=i.value.trim();if(!v){i.focus();return}var o={t:v,at:TD};if(sel&&sel.textContent){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}var y=window.scrollY||window.pageYOffset||0;var mem=p.closest('.mem');P[id]=o;sv();markAck(p,'reply');draw();nwDraw();requestAnimationFrame(function(){var next=null;if(mem){var posts=[].slice.call(mem.querySelectorAll('.post:not(.hide)'));for(var ii=0;ii<posts.length;ii++){if(!replied(posts[ii].dataset.id)){next=posts[ii];break}}}if(next){var f=next.closest('.fold');if(f)f.open=true;var top=next.getBoundingClientRect().top+window.scrollY-120;window.scrollTo(0,Math.max(0,top))}else{window.scrollTo(0,y)}})};
    row.appendChild(i);attachMic(i,row);row.appendChild(s);a.appendChild(row)}
   paintPost(p)}
@@ -360,7 +361,7 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}
 #pfBtn{{display:block;width:100%;box-sizing:border-box;text-align:center;min-height:44px;line-height:44px;margin:8px 0 2px;background:#fff;color:#6a4a9a;border:2px solid #c8a0e0;border-radius:22px;font-size:16px;font-weight:800;text-decoration:none}}
 button.memToggle{{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0;margin:0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}}
-button.memToggle .memName{{font-weight:800;border-bottom:1px dotted #f3a0b8;writing-mode:horizontal-tb;text-orientation:mixed;white-space:nowrap;flex:none}}
+button.memToggle .memName{{font-weight:800;border-bottom:1px dotted #f3a0b8;writing-mode:horizontal-tb;text-orientation:mixed;white-space:nowrap;flex:none}}.memLv{{display:inline-block;margin-left:6px;font-size:11px;font-weight:800;color:#a0466a;background:#fff6f9;border:1px solid #ffd0e0;border-radius:999px;padding:1px 8px;vertical-align:middle;white-space:nowrap}}.clLv{{display:inline-block;margin-left:4px;font-size:11px;font-weight:800;color:#d0567f;background:#fff0f5;border-radius:8px;padding:0 6px}}
 button.memToggle[aria-expanded="true"] .memName{{color:#c0587f;border-bottom-color:#c0587f}}
 .ubdg{{writing-mode:horizontal-tb!important;text-orientation:mixed;white-space:nowrap;flex:none;max-width:none}}
 .stall{{writing-mode:horizontal-tb;white-space:nowrap}}
@@ -381,7 +382,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v38'
+SWV='omoide-v39'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]

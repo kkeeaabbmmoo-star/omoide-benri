@@ -1,20 +1,28 @@
-/* 💞 親密度と関係図 (om_close v36) — 計算は既存データのみ。ピーク値は om_pts_peak、レベルは om_lv、開閉は om_close_open */
+/* 💞 親密度と関係図 (om_close v39) — ptは om_pts_peak を維持。レベル閾値/報酬は data/levels.json */
 (function(){
 var RP='❤️',TH='🙏',CL='👏',PV={}; // ハート3 いいね1 拍手2
 PV[RP]=3;PV[TH]=1;PV[CL]=2;
-var MS=[1000,3000,5000,10000,20000,50000,100000],FL={
+var FL={
  'しの':[[1000,'やさしい言葉が増えたよ'],[3000,'エイジって名前で呼んでくれる']],
  'マキ':[[1000,'😳 照れて顔が赤くなる']],
  '由紀':[[3000,'💌 デートのお誘い解放']],
  '星野王子':[]
 };
+/* v39 default = 提案どおり（levels.json が取れれば上書き） */
+var LEVELS={segments:[1000,1100,1200,1300,1400,1500,1600,1700,1800],rewards:{},lockedLabel:'？？？ お楽しみ'};
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function plain(w){return String(w||'').replace(/[^\w・ー]/g,'')||w}
 function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML}
-function miles(){var a=MS.slice();while(a.length<20){var n=a[a.length-1],i=a.length-MS.length;a.push(Math.round(n*(i%2?2.5:2)))}return a}
-function lvOf(p){var m=miles(),lv=1;for(var i=0;i<m.length;i++){if(p>=m[i])lv=i+2;else break}return lv}
-function nextOf(p){var m=miles();for(var i=0;i<m.length;i++)if(p<m[i])return m[i];return m[m.length-1]*2}
-function prevOf(p){var m=miles(),pr=0;for(var i=0;i<m.length;i++){if(p>=m[i])pr=m[i];else break}return pr}
+function cumThresholds(){var a=[],c=0,s=LEVELS.segments||[];for(var i=0;i<s.length;i++){c+=(+s[i]||0);a.push(c)}return a}
+function lvOf(p){var m=cumThresholds(),lv=1;for(var i=0;i<m.length;i++){if(p>=m[i])lv=i+2;else break}return lv}
+function nextOf(p){var m=cumThresholds();for(var i=0;i<m.length;i++)if(p<m[i])return m[i];return (m[m.length-1]||12600)}
+function prevOf(p){var m=cumThresholds(),pr=0;for(var i=0;i<m.length;i++){if(p>=m[i])pr=m[i];else break}return pr}
+function rewardFor(lv){var r=(LEVELS.rewards&&LEVELS.rewards[String(lv)])||null;return r}
+function rewardLabel(lv, unlocked){
+  var r=rewardFor(lv); if(!r)return '';
+  if(!unlocked)return LEVELS.lockedLabel||'？？？ お楽しみ';
+  return (r.hint||r.theme||('Lv'+lv+'報酬'));
+}
 function members(){return [].map.call(document.querySelectorAll('.mem[id^="m-"]'),function(el){return {id:el.id,name:el.id.slice(2),el:el,av:el.dataset.av||'',ic:el.dataset.ic||'💬'}})}
 function posts(){return window.__OM_POSTS||{}}
 /* コンボ（例 😉✨）は1リアクション。点数はその中の最高pt（❤️3 👏2 他2 🙏1） */
@@ -94,16 +102,43 @@ function openPts(name){
   ov.querySelector('.clPtsX').onclick=close;
 }
 function flavors(name,pts){
-  var out=[],sp=FL[name];
+  var out=[],sp=FL[name],lv=lvOf(pts);
   if(sp)sp.forEach(function(x){if(pts>=x[0])out.push(x[1])});
-  else{var lv=lvOf(pts);if(lv>=2)out.push('仲良しLv'+lv);if(lv>=3)out.push('💕 特別な絆');if(lv>=4)out.push('✨ かけがえのない相手')}
+  // v39: show unlocked reward themes + locked next as ？？？
+  for(var L=2;L<=Math.min(lv,10);L++){var lab=rewardLabel(L,true);if(lab)out.push(lab)}
+  if(lv<10){out.push('次: '+rewardLabel(lv+1,false))}
   return out;
 }
 function toast(m){var d=document.createElement('div');d.className='omToast';d.textContent=m;document.body.appendChild(d);setTimeout(function(){d.classList.add('on')},10);setTimeout(function(){d.classList.remove('on');setTimeout(function(){d.remove()},400)},2400)}
 function checkLv(scores){
   var seen=g('om_lv',{}),ch=0;
-  Object.keys(scores).forEach(function(n){var lv=lvOf(scores[n]);if((seen[n]||1)<lv){toast('🎉 '+n+(/^[ぁ-ん]/.test(n)?'ちゃん':'')+'がLv'+lv+'になったよ');seen[n]=lv;ch=1}else if(!seen[n])seen[n]=lv});
+  Object.keys(scores).forEach(function(n){
+    var lv=lvOf(scores[n]), prev=seen[n]||1;
+    if(prev<lv){
+      var rw=rewardLabel(lv,true);
+      celebrate(n,lv,rw);
+      seen[n]=lv;ch=1;
+    }else if(!seen[n])seen[n]=lv;
+  });
   if(ch)try{localStorage.setItem('om_lv',JSON.stringify(seen))}catch(e){}
+}
+function celebrate(name,lv,rw){
+  var msg='🎉 '+name+( /^[ぁ-ん]/.test(name)?'ちゃん':'')+'がレベル'+lv+'になったよ！'+(rw?(' 報酬：'+rw):'');
+  toast(msg);
+  try{
+    var ov=document.createElement('div');ov.id='omLvCeleb';
+    ov.style.cssText='position:fixed;inset:0;z-index:2147483600;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px';
+    ov.innerHTML='<div style="background:#fff;border-radius:20px;padding:22px 18px;max-width:340px;text-align:center;box-shadow:0 8px 28px #0004;font-family:-apple-system,\'Hiragino Sans\',sans-serif">'+
+      '<div style="font-size:40px;line-height:1">🎊</div>'+
+      '<div style="font-size:18px;font-weight:800;color:#c0587f;margin:8px 0 4px">レベルアップ！</div>'+
+      '<div style="font-size:15px;color:#5a3a45;line-height:1.5">'+esc(name)+' が <b>レベル'+lv+'</b> に到達したよ</div>'+
+      (rw?'<div style="margin-top:10px;padding:8px 10px;border-radius:12px;background:#fff6f9;border:1px dashed #ffd0e0;font-size:13px;font-weight:700;color:#a0466a">'+esc(rw)+'</div>':'')+
+      '<button type="button" style="margin-top:14px;border:0;border-radius:14px;padding:10px 18px;background:#d0567f;color:#fff;font-weight:800;font-size:14px">やったね</button></div>';
+    document.body.appendChild(ov);
+    ov.querySelector('button').onclick=function(){ov.remove()};
+    ov.addEventListener('click',function(e){if(e.target===ov)ov.remove()});
+    setTimeout(function(){if(ov.parentNode)ov.remove()},6000);
+  }catch(e){}
 }
 function drawList(box,scores,total){
   var ms=members().slice().sort(function(a,b){return (scores[b.name]||0)-(scores[a.name]||0)});
@@ -114,8 +149,8 @@ function drawList(box,scores,total){
     var fl=flavors(m.name,p);
     var tag=m.name==='ゆず'?' <span class="clWife">👑 エイジの嫁</span>':'';
     h+='<a class="clRow'+(m.name==='ゆず'?' yuzu':'')+'" href="#'+esc(m.id)+'">'+
-      '<span class="clAv">'+av+'</span><span class="clMeta"><b>'+esc(m.name)+tag+'</b>'+
-      '<small>Lv'+lv+' ・ <span class="clPtsTap" data-who="'+esc(m.name)+'">'+p.toLocaleString()+'pt ▾</span> → 次 '+nx.toLocaleString()+'</small>'+
+      '<span class="clAv">'+av+'</span><span class="clMeta"><b>'+esc(m.name)+tag+' <span class="clLv">レベル'+lv+'</span></b>'+
+      '<small><span class="clPtsTap" data-who="'+esc(m.name)+'">'+p.toLocaleString()+'pt ▾</span> / 次レベル '+nx.toLocaleString()+'pt（あと '+Math.max(0,nx-p).toLocaleString()+'）</small>'+
       '<span class="clBar"><i style="width:'+pct+'%"></i></span>'+
       (fl.length?'<span class="clFl">'+fl.map(esc).join(' ・ ')+'</span>':'')+
       '</span></a>';
@@ -332,10 +367,19 @@ function render(){
     if(r<=3)badge.textContent=['🥇','🥈','🥉'][r-1];
     else{badge.textContent='';badge.innerHTML='<span class="clMedE">🎀</span><span class="clMedN">'+r+'</span>'}
   });
+  // v39: みんなの名前の横にレベル＋進捗
+  members().forEach(function(m){
+    var nm=m.el.querySelector('.memName'); if(!nm)return;
+    var p=scores[m.name]||0,lv=lvOf(p),nx=nextOf(p);
+    var lab=nm.parentNode.querySelector('.memLv');
+    if(!lab){lab=document.createElement('span');lab.className='memLv';nm.insertAdjacentElement('afterend',lab)}
+    lab.textContent='レベル'+lv+' · '+p.toLocaleString()+'/'+nx.toLocaleString();
+    lab.title='レベル用pt（親密度ptを累積） / 次のレベルまで';
+  });
   setupCouplePhoto(sec);if(sec.querySelector('.clPhoto')&&sec.querySelector('.clPhoto')._sync)sec.querySelector('.clPhoto')._sync();
   drawList(sec.querySelector('.clBox'),scores,total);
   drawMap(sec.querySelector('.clMap'),scores,total);
-  window.__OM_CLOSE={scores:scores,total:total,lv:g('om_lv',{}),peak:g('om_pts_peak',{})};
+  window.__OM_CLOSE={scores:scores,total:total,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),levels:LEVELS};
 }
 function boot(){
   // attach av/ic data from DOM
@@ -351,10 +395,12 @@ function boot(){
   host.insertAdjacentElement('afterend',sec);
   sec.addEventListener('toggle',function(){try{localStorage.setItem('om_close_open',JSON.stringify(!!sec.open))}catch(e){}});
   // load posts then render
-  fetch('data/posts.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}}).then(function(j){window.__OM_POSTS=j.posts||j||{};render()}).catch(function(){window.__OM_POSTS={};render()});
+  function loadPosts(){return fetch('data/posts.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{}}).then(function(j){window.__OM_POSTS=j.posts||j||{}}).catch(function(){window.__OM_POSTS={}})}
+  function loadLevels(){return fetch('data/levels.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&Array.isArray(j.segments)){LEVELS=j;if(!LEVELS.lockedLabel)LEVELS.lockedLabel='？？？ お楽しみ'}}).catch(function(){})}
+  Promise.all([loadPosts(),loadLevels()]).then(function(){render()});
   // re-render after reactions/replies change
   var _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.apply(this,arguments);if(/om_react|om_reply|om_pts_peak/.test(k))setTimeout(render,80)};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-window.omCloseness={render:render,scoreOne:scoreOne,lvOf:lvOf};
+window.omCloseness={render:render,scoreOne:scoreOne,lvOf:lvOf,nextOf:nextOf,prevOf:prevOf,levels:function(){return LEVELS}};
 })();
