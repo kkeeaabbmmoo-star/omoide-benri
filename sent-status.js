@@ -1,4 +1,4 @@
-/* 送信済みバッジ（sent-status v1）: 送るボタンの上にピル、ヘッダーに✅、同じデータの再送は確認。データは読むだけ（自分の yzss_<app> だけ書く） */
+/* 送信済みバッジ（sent-status v2）: 送るボタンの上にピル、ヘッダーに✅、同じデータの再送は確認。データは読むだけ（自分の yzss_<app> だけ書く） */
 (function(){
 var MAP={'benri-note':['benri',/^bn_/],'yuzu-health-note':['health',/^(yz_|yuzu_plans)/],'life-plan-note':['lifeplan',/^lp_/],'love-note':['love',/^ln_/],'yotei-note':['yotei',/^yt_/],'omoide-benri':['omoide',/^om_(react|reply|pf_photos|pf_fields)$/]};
 var seg=location.pathname.split('/').filter(Boolean)[0]||'';var c=MAP[seg];
@@ -42,14 +42,15 @@ document.addEventListener('click',function(e){var b=e.target.closest&&e.target.c
  try{var pf=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{};Object.keys(pf).forEach(function(n){var f=pf[n];if(!f)return;Object.keys(f).forEach(function(k){if(k.indexOf('__')!==0&&String(f[k]||'').trim())hasPendField=true})})}catch(err){}
  if(hasPendPhoto||hasPendField)return; /* 未送信あり → 確認なしで送る */
  if(s.st!=='none'&&!s.changed&&!confirm('もう送ってるよ、また送る？')){e.preventDefault();e.stopImmediatePropagation()}},true);
-/* 送信シートで メール/共有/コピー/📎 を押したら「送信したよ（確認待ち）」 */
+/* 送信シートで メール/共有/コピー/📎 を押したら「送信したよ（確認待ち）」
+   v38: setTimeoutで markPhotosSent 後の hash を取る（変更あり誤表示の防止） */
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('#yzMail,#yzShare,#yzCopy,#yzBkS');if(!b||!b.closest('#yzSendOv'))return;
- setRec({key:lastKey||today(),at:Date.now(),st:'pending',h:hash()});setTimeout(apply,50)},true);
+ setTimeout(function(){setRec({key:lastKey||today(),at:Date.now(),st:'pending',h:hash()});apply()},40)},true);
 function wrap(){var o=window.yuzuSend;if(!o||o.__ss)return;var w=function(opt){try{lastKey=keyOf(opt&&opt.full)}catch(e){}return o.apply(this,arguments)};for(var k in o)w[k]=o[k];w.__ss=1;window.yuzuSend=w}
 function load(){fetch('data/sent.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&(!j.app||j.app===APP))SENT=j;apply()}).catch(function(){apply()})}
 var tm=null;function soon(){clearTimeout(tm);tm=setTimeout(function(){wrap();apply()},150)}
 function start(){wrap();apply();load();try{new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var n=ms[i].target;if(n.closest&&n.closest('.yzss-pill,'+SEL))continue;soon();return}}).observe(document.body,{childList:true,subtree:true})}catch(e){}
  setInterval(apply,4000);document.addEventListener('visibilitychange',function(){if(!document.hidden)load()});[500,2000].forEach(function(t){setTimeout(wrap,t)})}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
-window.yzSentStatus={state:state,reload:load,app:APP};
+window.yzSentStatus={state:state,reload:load,app:APP,markPending:function(){setRec({key:lastKey||today(),at:Date.now(),st:'pending',h:hash()});apply()}};
 })();

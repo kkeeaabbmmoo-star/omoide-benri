@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v37-mark-->
+<title>👤 みんなのプロフィール</title><!--v38-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -41,6 +41,13 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 .deco{position:absolute;right:8px;top:8px;font-size:22px;opacity:.55;pointer-events:none}
 .rew{margin-top:8px;font-size:12px;color:#c45c26;background:#fff8f0;border-radius:10px;padding:6px 8px;border:1px dashed #ffd0a8}
 #jump{position:fixed;right:calc(env(safe-area-inset-right)+12px);bottom:calc(env(safe-area-inset-bottom)+18px);z-index:9;border:0;border-radius:20px;background:#d0567f;color:#fff;font-weight:800;padding:10px 14px;box-shadow:0 3px 10px #0003;font-size:13px;text-decoration:none}
+#pfSendBar{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:10px 12px calc(env(safe-area-inset-bottom)+10px);background:linear-gradient(180deg,transparent,#fff9 30%,#fff);pointer-events:none}
+#pfSendBar .inner{pointer-events:auto;max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+#pfSendBar .st{font-size:12px;text-align:center;color:#8a5a10;background:#fff6e8;border:1px solid #ffe08a;border-radius:12px;padding:6px 8px;font-weight:700;display:none}
+#pfSendBar .st.on{display:block}
+#pfSendBar #yzs{pointer-events:auto;display:block;width:100%;min-height:48px;border:0;border-radius:22px;background:linear-gradient(90deg,#ff8fb3,#d0567f);color:#fff;font-size:16px;font-weight:800;box-shadow:0 4px 14px #d0567f55}
+#jump{bottom:calc(env(safe-area-inset-bottom)+88px)}
+body{padding-bottom:calc(env(safe-area-inset-bottom)+110px)}
 .empty{text-align:center;padding:40px;color:#9a7b88}
 .pgH{font-size:13px;font-weight:800;color:#a0466a;margin:10px 0 6px}
 .pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -94,6 +101,8 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 body.sortMode .toc,body.sortMode #list,body.sortMode .note{display:none}
 body.sortMode .sortHint,body.sortMode .sortList{display:block}
 
+.omToast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom)+100px);transform:translateX(-50%) translateY(20px);z-index:9999;background:#333;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:.35s;max-width:90vw;text-align:center}
+.omToast.on{opacity:.95;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body data-seq="111,109,95,112,102,95,115,101,113">
@@ -113,10 +122,11 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
   <ul class="sortList" id="sortList"></ul>
 </header>
 <main>
-  <p class="note">7項目は全員共通だよ。エイジの欄はここで編集できるよ。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ。公開前は<span class="kariTag">未送信</span>表示。上の「↕️ 並び替え」で全員の表示順を変えられるよ（ドラッグ / ▲▼ / 番号）。</p>
+  <p class="note">7項目は全員共通だよ。エイジはこのページで全員の欄を編集・調整できるよ（基本は本人記入が優先）。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真・保存した欄は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ。公開前は<span class="kariTag">未送信</span>表示。上の「↕️ 並び替え」で全員の表示順を変えられるよ（ドラッグ / ▲▼ / 番号）。</p>
   <div class="toc" id="toc"></div>
   <div id="list"><p class="empty">読み込み中…</p></div>
 </main>
+<div id="pfSendBar"><div class="inner"><div class="st" id="pfPendSt"></div><button type="button" id="yzs" onclick="typeof omSend==='function'&&omSend()">💌 ゆずに送る／更新（写真・プロフィール）</button></div></div>
 <a id="jump" href="./">💞 ノート</a>
 <input type="file" id="pgFile" accept="image/*" style="display:none">
 <script>
@@ -131,7 +141,7 @@ function loadSeq(){var all=loadFields();var o=all&&all.__order;return (Array.isA
 function mergeSeq(base, members){var local=loadSeq(), seen={}, out=[];function add(n){if(n&&members[n]&&!seen[n]){out.push(n);seen[n]=1}}(local||[]).forEach(add);(base||[]).forEach(add);Object.keys(members||{}).forEach(add);return out}
 function putSeq(arr){var all=loadFields();all.__order=arr.slice();saveFields(all)}
 
-var EDITABLE_WHO={'エイジ':1}; /* 本人だけ端末で編集可 */
+var EDITABLE_WHO=null; /* v38: エイジが全員の欄を編集可（本人記入がデフォルト、端末編集は上書き） */
 function loadFields(){try{return JSON.parse(localStorage.getItem(LS_FIELDS)||'{}')||{}}catch(e){return {}}}
 function saveFields(all){localStorage.setItem(LS_FIELDS,JSON.stringify(all));window.__OM_PF_FIELDS=all}
 function fieldsFor(name){var all=loadFields();return (all&&all[name])||{}}
@@ -226,6 +236,7 @@ fileEl.addEventListener('change',function(){
     setSlot(name,slot,{data:data,sent:false,at:Date.now()});
     pickName=null;pickSlot=null;replaceMode=false;
     if(window.__PF_DATA)render(window.__PF_DATA);
+    try{updatePendSt();var toast=document.createElement('div');toast.className='omToast';toast.textContent='📷 端末に保存したよ。下の💌でゆずに送ると公開されるよ';document.body.appendChild(toast);requestAnimationFrame(function(){toast.classList.add('on')});setTimeout(function(){toast.classList.remove('on');setTimeout(function(){toast.remove()},400)},2600)}catch(e){}
   });
 });
 function openPicker(name,slot,replacing){
@@ -302,7 +313,7 @@ function render(data){
     toc.insertAdjacentHTML('beforeend','<a href="#p-'+encodeURIComponent(id)+'" title="'+esc(m.display||id)+'">'+(photo?'<img src="'+esc(photo)+'?v=1" alt="">':'<span>'+esc(icon)+'</span>')+'</a>');
     var prov=m.provisional||[];
     var localF=fieldsFor(id);
-    var canEdit=!!EDITABLE_WHO[id];
+    var canEdit=(EDITABLE_WHO==null)||!!EDITABLE_WHO[id];
     var rows=fo.map(function(k){
       var base=(m.fields&&m.fields[k]!=null)?m.fields[k]:'（本人記入待ち）';
       var v=(localF[k]!=null&&String(localF[k]).length)?localF[k]:base;
@@ -316,7 +327,7 @@ function render(data){
       }
       return '<li><span class="k">'+esc(k)+'</span><span class="v '+cls+'">'+esc(v)+tag+'</span></li>';
     }).join('');
-    var editBar=canEdit?'<div class="pfEditNote">✏️ エイジのプロフィールはここで編集できるよ。保存したら💌 ゆずとみんなに送る でゆずに届くよ</div><div class="pfSaveRow"><button type="button" class="pfSave">💾 この内容を保存</button><span class="hint" data-hint></span></div>':'';
+    var editBar=canEdit?'<div class="pfEditNote">✏️ '+esc(m.display||id)+'のプロフィールをここで編集・調整できるよ。保存したら💌 ゆずとみんなに送る でゆずに届くよ</div><div class="pfSaveRow"><button type="button" class="pfSave">💾 この内容を保存</button><span class="hint" data-hint></span></div>':'';
     var rew=(look.rewardItems&&look.rewardItems.length)?'<div class="rew">🎒 装備中の月間アイテム：'+esc(look.rewardItems.join(' · '))+'</div>':'';
     var font='font-'+(look.font||'maru');
     var deco=DECO[look.decoration]||'✨';
@@ -349,7 +360,7 @@ function render(data){
           all[id][k]=String(inp.value||'').trim();
         });
         saveFields(all);
-        if(hint){hint.textContent='保存したよ💖 💌でゆずに送ってね';hint.className='hint'}
+        if(hint){hint.textContent='保存したよ💖 💌でゆずに送ってね';hint.className='hint'} try{updatePendSt()}catch(e){}
       };
     }
   });
@@ -359,7 +370,7 @@ function render(data){
   }
 }
 
-/* v37 arrange mode (quote fix) */
+/* v38 arrange mode + all-member edit */
 var arrangeOn=false, arrangeDraft=null, dragIdx=-1;
 function paintArrange(){
   var ul=document.getElementById("sortList"); if(!ul||!window.__PF_DATA)return;
@@ -441,6 +452,17 @@ document.getElementById("sortReset").onclick=function(){
   paintArrange();
 };
 
+
+function updatePendSt(){
+  var el=document.getElementById('pfPendSt'); if(!el)return;
+  var all=loadLocal(), n=0, names=[];
+  Object.keys(all||{}).forEach(function(nm){(all[nm]||[]).forEach(function(s){if(s&&s.data&&!s.sent){n++; if(names.indexOf(nm)<0)names.push(nm)}})});
+  var fields=loadFields(), nf=0;
+  Object.keys(fields||{}).forEach(function(nm){if(String(nm).indexOf('__')===0)return;var f=fields[nm];if(!f||typeof f!=='object')return;Object.keys(f).forEach(function(k){if(k.indexOf('__')!==0&&String(f[k]||'').trim())nf++})});
+  if(n||nf){el.className='st on';el.textContent=(n?('未送信の写真 '+n+'枚'+(names.length?('（'+names.join('・')+'）'):'')+'。'):'')+(nf?'プロフィール欄の変更あり。':'')+'下のボタンでゆずに送ってね♡'}
+  else{el.className='st';el.textContent=''}
+}
+
 window.__OM_PF_PHOTOS=loadLocal();
 window.__OM_PF_FIELDS=loadFields();
 fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
@@ -450,6 +472,9 @@ fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 })();
 </script>
+<script src="send.js?v=3"></script>
+<script src="backup_om.js?v=7"></script>
+<script src="sent-status.js?v=ss3"></script>
 <script src="nav.js?v=nv4"></script>
 </body>
 </html>
