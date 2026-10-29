@@ -210,7 +210,9 @@ function buildOrder(data){
   /* ポイント高い順。同点は base の順を維持（安定ソート） */
   var rows=base.map(function(id,i){return {id:id,pts:pfScore(id),i:i}});
   rows.sort(function(a,b){ if(b.pts!==a.pts) return b.pts-a.pts; return a.i-b.i });
-  return rows.map(function(r){return r.id});
+  /* v53: ゆず1番・エイジ2番は常に固定 */
+  var ids=rows.map(function(r){return r.id}),top=['ゆず','エイジ'].filter(function(x){return ids.indexOf(x)>=0});
+  return top.concat(ids.filter(function(x){return top.indexOf(x)<0}));
 }
 function syncOrderButtons(){
   var pts=orderMode()==='pts';
