@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v42-mark-->
+<title>👤 みんなのプロフィール</title><!--v46-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -31,10 +31,10 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 .pcard .badge{display:inline-block;margin-left:6px;font-size:11px;background:#fff6f9;color:#c0587f;border-radius:8px;padding:1px 6px;font-weight:700;border:1px solid #ffd0e0}
 .pcard .tone{display:block;font-size:12px;color:#9a7b88;margin-top:2px}
 .fields{margin:0;padding:0;list-style:none}
-.fields li{display:grid;grid-template-columns:7.5em 1fr;gap:6px;padding:7px 0;border-bottom:1px dashed rgba(0,0,0,.08);font-size:13.5px}
+.fields li{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:6px;padding:7px 0;border-bottom:1px dashed rgba(0,0,0,.08);font-size:13.5px;align-items:start}
 .fields li:last-child{border-bottom:0}
-.fields .k{font-weight:800;color:#a0466a;opacity:.9}
-.fields .v{color:#4a3340;word-break:break-word}
+.fields .k{font-weight:800;color:#a0466a;opacity:.9;min-width:0}
+.fields .v{color:#4a3340;min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;overflow-y:auto;max-height:9.5em;line-height:1.45;-webkit-overflow-scrolling:touch}
 .fields .v.kari{color:#c0587f}
 .fields .v.wait{color:#9a7b88}
 .kariTag{display:inline-block;font-size:10px;font-weight:800;background:#ffe08a;color:#8a5a10;border-radius:6px;padding:0 5px;margin-left:4px;vertical-align:middle}
@@ -80,8 +80,9 @@ header{position:relative;z-index:2;background:#fff0f5}
 #pgCrop .ok{background:#ff5f8f;color:#fff}
 #pgCrop .ng{background:#eee;color:#555}
 
-.fields .v input,.fields .v textarea{width:100%;box-sizing:border-box;border:1.5px solid #c8d4e8;border-radius:10px;padding:6px 8px;font:inherit;font-size:13.5px;color:#4a3340;background:#fff;min-height:34px}
-.fields .v textarea{min-height:56px;resize:vertical;line-height:1.45}
+.fields .v input,.fields .v textarea{width:100%;max-width:100%;box-sizing:border-box;border:1.5px solid #c8d4e8;border-radius:10px;padding:6px 8px;font:inherit;font-size:13.5px;color:#4a3340;background:#fff;min-height:34px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;overflow-x:hidden;overflow-y:auto}
+.fields .v textarea{min-height:56px;max-height:9.5em;resize:vertical;line-height:1.45;field-sizing:content}
+.fields .v input{display:none} /* v46: all editable fields use textarea (no 1-line clip) */
 .fields .v input:focus,.fields .v textarea:focus{outline:0;border-color:#4a6fa5;box-shadow:0 0 0 3px #4a6fa533}
 .pfEditNote{font-size:12px;color:#4a6fa5;background:#f0f4ff;border:1px dashed #a8bce0;border-radius:10px;padding:6px 8px;margin:0 0 8px;font-weight:700}
 .pfSaveRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 0}
@@ -345,9 +346,9 @@ function render(data){
       var tag=(cls==='kari')?'<span class="kariTag">仮</span>':'';
       if(canEdit && k!=='名前'){
         var vv=isWait(v)?'':String(v).replace(/（仮）/g,'');
-        var multi=(k==='性格'||k==='趣味'||k==='最近気になること');
-        if(multi)return '<li><span class="k">'+esc(k)+'</span><span class="v edit"><textarea data-k="'+esc(k)+'" rows="2" placeholder="ここに書く…">'+esc(vv)+'</textarea></span></li>';
-        return '<li><span class="k">'+esc(k)+'</span><span class="v edit"><input type="text" data-k="'+esc(k)+'" value="'+esc(vv)+'" placeholder="ここに書く…"></span></li>';
+        /* v46: 全欄textarea（職業なども1行inputで切れない）・折り返し＋縦スクロールのみ */
+        var rows=(k==='性格'||k==='趣味'||k==='最近気になること')?3:(String(vv).length>28?2:1);
+        return '<li><span class="k">'+esc(k)+'</span><span class="v edit"><textarea data-k="'+esc(k)+'" rows="'+rows+'" placeholder="ここに書く…">'+esc(vv)+'</textarea></span></li>';
       }
       return '<li><span class="k">'+esc(k)+'</span><span class="v '+cls+'">'+esc(v)+tag+'</span></li>';
     }).join('');
@@ -373,13 +374,15 @@ function render(data){
     if(canEdit){
       var hint=cardEl.querySelector('[data-hint]');
       var markDirty=function(){if(hint){hint.textContent='未保存の変更あり';hint.className='hint pfDirty'}};
-      cardEl.querySelectorAll('.v.edit input,.v.edit textarea').forEach(function(inp){
-        inp.addEventListener('input',markDirty);
+      cardEl.querySelectorAll('.v.edit textarea').forEach(function(inp){
+        var fit=function(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight, Math.round(9.5*13.5*1.45))+ 'px'};
+        fit();
+        inp.addEventListener('input',function(){markDirty();fit()});
       });
       var saveBtn=cardEl.querySelector('.pfSave');
       if(saveBtn)saveBtn.onclick=function(){
         var all=loadFields(); if(!all[id])all[id]={};
-        cardEl.querySelectorAll('.v.edit input,.v.edit textarea').forEach(function(inp){
+        cardEl.querySelectorAll('.v.edit textarea').forEach(function(inp){
           var k=inp.getAttribute('data-k'); if(!k)return;
           all[id][k]=String(inp.value||'').trim();
         });

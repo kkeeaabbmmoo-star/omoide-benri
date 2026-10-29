@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29 13:20",
+ "updated": "2026-10-29 13:44",
  "note": "プロフィールは仮置き。本人記入で上書き。iconsは各ボット本来の画像/絵文字（すーさん=🍺）。仮写真はアイコンに使わない。",
  "fieldsOrder": [
   "名前",
@@ -87,7 +87,7 @@
     "rewardItems": []
    },
    "photos": [
-    "data/profile_photos/すーさん_0.jpg",
+    "",
     "",
     "",
     ""
@@ -390,7 +390,12 @@
     "tone": "さっぱりめの口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/マキ_0.jpg",
+    "",
+    "",
+    ""
+   ]
   },
   "星野王子": {
    "display": "星野王子",
