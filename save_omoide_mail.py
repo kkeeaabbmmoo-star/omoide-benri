@@ -8,7 +8,8 @@ Gmailには直接つながらないので、Gmailコネクタで探して本文�
   python3 save_omoide_mail.py dir/                                      … dir/<msgid>.txt をまとめて（ファイル名=msgid）
   python3 save_omoide_mail.py backup.json                               … 📦バックアップのJSONそのままでもOK
 保存: /workspace/思い出ノート/backup/omoide_<YYYYMMDD>_<msgid>.json（同じものはスキップ）
-統合: /workspace/思い出ノート/eiji_reactions.json（reactions/replies/read を新しい送信が優先でマージ。消さない）"""
+統合: /workspace/思い出ノート/eiji_reactions.json（reactions/replies/read を新しい送信が優先でマージ。消さない）
+分割送信: profile_photos の part/parts/batch_id をマージしてから publish（各パート単体でも publish 可）"""
 import sys,os,re,json,glob,hashlib
 B='/workspace/思い出ノート/backup';M='/workspace/思い出ノート/eiji_reactions.json'
 def payloads(txt):
@@ -139,6 +140,45 @@ def publish_profile_order(o):
     return _apply_pf_order(o)
 
 
+def merge_photo_parts(payloads_list):
+    """If several mails share batch_id, merge profile_photos into one dict (never drop)."""
+    by={}
+    for o in payloads_list:
+        if not isinstance(o,dict): continue
+        bid=o.get('batch_id') or o.get('part_of')
+        if not bid: continue
+        by.setdefault(bid,[]).append(o)
+    merged=[]
+    for bid,arr in by.items():
+        arr=sorted(arr,key=lambda x:int(x.get('part') or 1))
+        base=dict(arr[0])
+        photos={}
+        for o in arr:
+            for name,items in (o.get('profile_photos') or {}).items():
+                photos.setdefault(name,[])
+                # dedupe by slot (later part wins)
+                byslot={int(it.get('slot',0)):it for it in photos[name] if isinstance(it,dict)}
+                for it in (items or []):
+                    if not isinstance(it,dict): continue
+                    try: slot=int(it.get('slot',0))
+                    except Exception: continue
+                    byslot[slot]=it
+                photos[name]=[byslot[k] for k in sorted(byslot)]
+            # first part keeps reactions/fields; later may be empty
+            if o is arr[0]:
+                pass
+            else:
+                for k in ('reactions','replies','read','ack','ackrp','profile_fields','profile_order'):
+                    if o.get(k) and not base.get(k):
+                        base[k]=o[k]
+        base['profile_photos']=photos
+        base['parts_merged']=len(arr)
+        base['batch_id']=bid
+        merged.append(base)
+        print('merged batch',bid,'parts',len(arr),'photos',sum(len(v) for v in photos.values()))
+    return merged
+
+
 def merge():
     m=json.load(open(M)) if os.path.exists(M) else {}
     for k in ('reactions','replies','read'):m.setdefault(k,{})
@@ -167,6 +207,8 @@ for txt,m in src:
     if not ps:print('思い出ノートのYUZU-DATAが見つからない（短いお知らせ版なら、エイジに貼り付け/共有で送ってもらってね）',file=sys.stderr)
     for k,o in enumerate(ps):
         mid=m if len(ps)==1 or not m else f'{m}-{k}'
+        if o.get('part') and o.get('parts'):
+            print('part',o.get('part'),'/',o.get('parts'),'batch',o.get('batch_id'))
         n+=save(o,mid)
         try: publish_profile_photos(o)
         except Exception as e: print('profile_photos:',e,file=sys.stderr)
@@ -174,4 +216,14 @@ for txt,m in src:
         except Exception as e: print('profile_fields:',e,file=sys.stderr)
         try: publish_profile_order(o)
         except Exception as e: print('profile_order:',e,file=sys.stderr)
+    # Also publish a merged view when multiple parts share a batch_id (idempotent overwrite)
+    try:
+        for mo in merge_photo_parts(ps):
+            if mo.get('parts_merged',0)>1:
+                mid2=(m or 'batch')+'-merged-'+str(mo.get('batch_id') or '')
+                save(mo, mid2)
+                try: publish_profile_photos(mo)
+                except Exception as e: print('profile_photos merged:',e,file=sys.stderr)
+    except Exception as e:
+        print('part merge:',e,file=sys.stderr)
 merge();print('new',n)

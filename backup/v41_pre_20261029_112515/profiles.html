@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>👤 みんなのプロフィール</title><!--v40-mark-->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#ffb3c8">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<style>
+body{margin:0;background:#fff5f8;background-image:linear-gradient(180deg,#fff0f5,#fff8e6);background-attachment:scroll;font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;color:#4a3340;line-height:1.55;padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
+header{padding:calc(env(safe-area-inset-top)+14px) 14px 8px;text-align:center}
+h1{font-size:20px;margin:0}
+.sub{color:#9a7b88;font-size:12px;margin-top:4px}
+.topNav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0 4px}
+.topNav a,.topNav button{display:inline-block;text-decoration:none;border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:16px;padding:8px 14px;font-size:14px;font-weight:800}
+main{max-width:620px;margin:auto;padding:8px 12px 24px}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px;justify-content:center}
+.toc a{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;box-shadow:0 0 0 2px #ffd0e0;font-size:20px}
+.toc a img{width:44px;height:44px;object-fit:cover}
+.note{font-size:12px;color:#9a7b88;background:#fff;border-radius:12px;padding:8px 10px;margin:0 0 12px;border:1px dashed #f3c6d5}
+.pcard{border-radius:18px;padding:14px 14px 12px;margin:0 0 14px;box-shadow:0 2px 12px #0001;border:2px solid #ffd0e0;scroll-margin-top:12px;position:relative;overflow:hidden}
+.pcard.font-maru{font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif}
+.pcard.font-sans{font-family:-apple-system,"Hiragino Sans","Helvetica Neue",sans-serif}
+.pcard.font-serif{font-family:"Hiragino Mincho ProN","Yu Mincho",serif}
+.pcard .ph{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+.pcard .av{width:64px;height:64px;border-radius:50%;object-fit:cover;flex:none;background:#ffe4ee;box-shadow:0 0 0 3px #fff}
+.pcard .avic{width:64px;height:64px;border-radius:50%;flex:none;background:#ffe4ee;display:inline-flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 0 3px #fff}
+.pcard h2{margin:0;font-size:18px}
+.pcard .badge{display:inline-block;margin-left:6px;font-size:11px;background:#fff6f9;color:#c0587f;border-radius:8px;padding:1px 6px;font-weight:700;border:1px solid #ffd0e0}
+.pcard .tone{display:block;font-size:12px;color:#9a7b88;margin-top:2px}
+.fields{margin:0;padding:0;list-style:none}
+.fields li{display:grid;grid-template-columns:7.5em 1fr;gap:6px;padding:7px 0;border-bottom:1px dashed rgba(0,0,0,.08);font-size:13.5px}
+.fields li:last-child{border-bottom:0}
+.fields .k{font-weight:800;color:#a0466a;opacity:.9}
+.fields .v{color:#4a3340;word-break:break-word}
+.fields .v.kari{color:#c0587f}
+.fields .v.wait{color:#9a7b88}
+.kariTag{display:inline-block;font-size:10px;font-weight:800;background:#ffe08a;color:#8a5a10;border-radius:6px;padding:0 5px;margin-left:4px;vertical-align:middle}
+.deco{position:absolute;right:8px;top:8px;font-size:22px;opacity:.55;pointer-events:none}
+.rew{margin-top:8px;font-size:12px;color:#c45c26;background:#fff8f0;border-radius:10px;padding:6px 8px;border:1px dashed #ffd0a8}
+#jump{position:fixed;right:calc(env(safe-area-inset-right)+12px);bottom:calc(env(safe-area-inset-bottom)+18px);z-index:9;border:0;border-radius:20px;background:#d0567f;color:#fff;font-weight:800;padding:10px 14px;box-shadow:0 3px 10px #0003;font-size:13px;text-decoration:none}
+#pfSendBar{position:fixed;left:0;right:0;bottom:0;z-index:10050;padding:8px 12px calc(env(safe-area-inset-bottom)+8px);background:#fff;border-top:1px solid #ffd0e0;box-shadow:0 -4px 16px #0001;box-sizing:border-box}
+#pfSendBar .inner{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+#pfSendBar .st{font-size:12px;text-align:center;color:#8a5a10;background:#fff6e8;border:1px solid #ffe08a;border-radius:12px;padding:6px 8px;font-weight:700;display:none}
+#pfSendBar .st.on{display:block}
+#pfSendBar #yzs{display:block;width:100%;min-height:52px;border:0;border-radius:22px;background:linear-gradient(90deg,#ff8fb3,#d0567f);color:#fff;font-size:16px;font-weight:800;box-shadow:0 4px 14px #d0567f55;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer;position:relative;z-index:1}
+#jump{bottom:calc(env(safe-area-inset-bottom)+96px);z-index:20}
+body{padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
+/* v40: header status must stay readable — no fog overlays */
+header{position:relative;z-index:2;background:#fff0f5}
+.sub{color:#5a3a48;font-size:12px;margin-top:4px;font-weight:700;background:#fff;display:inline-block;padding:4px 12px;border-radius:999px;border:1px solid #ffd0e0;box-shadow:0 1px 4px #0001;-webkit-font-smoothing:antialiased}
+.empty{text-align:center;padding:40px;color:#9a7b88}
+.pgH{font-size:13px;font-weight:800;color:#a0466a;margin:10px 0 6px}
+.pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.pg.wide{grid-template-columns:repeat(5,1fr)}
+.pgSlot{aspect-ratio:1;border-radius:12px;border:1.5px dashed #f3c6d5;background:#fff6f9;overflow:hidden;position:relative;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pgSlot.has{border-style:solid;border-color:#ffb3c8}
+.pgSlot img{width:100%;height:100%;object-fit:cover;display:block}
+.pgSlot .plus{font-size:22px;color:#c0587f;font-weight:800;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;height:100%;line-height:1.1}
+.pgSlot .plus .cam{font-size:26px}
+.pgSlot .plus .lab{font-size:9px;font-weight:800;color:#a0466a;opacity:.85}
+.pgSlot .tag{position:absolute;left:3px;bottom:3px;font-size:9px;font-weight:800;background:#ffe08a;color:#8a5a10;border-radius:6px;padding:1px 4px}
+.pgOv{position:fixed;inset:0;z-index:2147483600;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
+.pgOv img{max-width:min(92vw,520px);max-height:70vh;border-radius:14px;object-fit:contain;background:#222}
+.pgOv .b{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.pgOv button{border:0;border-radius:16px;padding:10px 16px;font-weight:800;font-size:14px}
+.pgOv .rep{background:#fff;color:#a0466a}
+.pgOv .del{background:#ffe8ee;color:#c0587f}
+.pgOv .x{background:#d0567f;color:#fff}
+#pgCrop{position:fixed;inset:0;z-index:2147483650;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;touch-action:none;padding:16px}
+#pgCrop .t{color:#fff;font-size:14px;text-align:center;padding:0 8px;line-height:1.4}
+#pgCrop .stage{position:relative;width:min(300px,86vw);height:min(300px,86vw);border-radius:14px;overflow:hidden;background:#222;box-shadow:0 0 0 3px #ff9ab8,0 8px 28px #0008;touch-action:none}
+#pgCrop canvas{width:100%;height:100%;display:block;touch-action:none}
+#pgCrop .guide{pointer-events:none;position:absolute;inset:0;border:2px solid #ffb3c8;border-radius:14px;box-shadow:inset 0 0 0 1px #fff6}
+#pgCrop input[type=range]{width:min(260px,80vw);accent-color:#d0567f}
+#pgCrop .b{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+#pgCrop button{font-size:16px;padding:10px 22px;border-radius:20px;border:0;font-weight:800}
+#pgCrop .ok{background:#ff5f8f;color:#fff}
+#pgCrop .ng{background:#eee;color:#555}
+
+.fields .v input,.fields .v textarea{width:100%;box-sizing:border-box;border:1.5px solid #c8d4e8;border-radius:10px;padding:6px 8px;font:inherit;font-size:13.5px;color:#4a3340;background:#fff;min-height:34px}
+.fields .v textarea{min-height:56px;resize:vertical;line-height:1.45}
+.fields .v input:focus,.fields .v textarea:focus{outline:0;border-color:#4a6fa5;box-shadow:0 0 0 3px #4a6fa533}
+.pfEditNote{font-size:12px;color:#4a6fa5;background:#f0f4ff;border:1px dashed #a8bce0;border-radius:10px;padding:6px 8px;margin:0 0 8px;font-weight:700}
+.pfSaveRow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0 0}
+.pfSaveRow button{border:0;border-radius:14px;padding:8px 14px;font-weight:800;font-size:14px;background:#4a6fa5;color:#fff}
+.pfSaveRow .hint{font-size:12px;color:#9a7b88}
+.pfDirty{color:#c0587f;font-weight:800}
+
+.sortBar{display:none;gap:8px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+body.sortMode .sortBar{display:flex}
+.sortBar[hidden]{display:none!important}
+.sortBar button{border:1px solid #f3c6d5;background:#fff;color:#a0466a;border-radius:16px;padding:8px 14px;font-size:14px;font-weight:800}
+.sortBar button.on{background:#d0567f;color:#fff;border-color:#d0567f}
+.sortHint{font-size:12px;color:#9a7b88;background:#fff;border-radius:12px;padding:8px 10px;margin:0 0 10px;border:1px dashed #f3c6d5;display:none}
+.sortHint.on{display:block}
+.sortList{list-style:none;margin:0 0 14px;padding:0;display:none}
+.sortList.on{display:block}
+.sortList li{display:flex;align-items:center;gap:8px;padding:10px 8px;margin:0 0 6px;background:#fff;border:1.5px solid #ffd0e0;border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none}
+.sortList li.drag{opacity:.85;box-shadow:0 6px 18px #0003;background:#fff6f9}
+.sortList .handle{flex:none;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;color:#c0587f;cursor:grab}
+.sortList .nm{flex:1;font-weight:800;color:#5a3a45;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sortList .pos{flex:none;width:44px;height:32px;border:1.5px solid #f3c6d5;border-radius:10px;text-align:center;font-weight:800;font-size:14px;color:#a0466a}
+.sortList .mv{flex:none;display:flex;flex-direction:column;gap:2px}
+.sortList .mv button{border:1px solid #f3c6d5;background:#fff6f9;color:#a0466a;border-radius:8px;width:32px;height:26px;font-size:12px;font-weight:800;padding:0;line-height:1}
+body.sortMode .toc,body.sortMode #list,body.sortMode .note{display:none}
+body.sortMode .sortHint,body.sortMode .sortList{display:block}
+
+.omToast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom)+100px);transform:translateX(-50%) translateY(20px);z-index:9999;background:#333;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;font-weight:700;opacity:0;transition:.35s;max-width:90vw;text-align:center}
+.omToast.on{opacity:.95;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body data-seq="111,109,95,112,102,95,115,101,113">
+<header>
+  <h1>👤 みんなのプロフィール</h1>
+  <div class="sub">仮置きあり・本人記入で更新するよ</div>
+  <div class="topNav">
+    <a href="./">← 思い出ノートへ</a>
+    <button type="button" id="sortToggle">↕️ 並び替え</button>
+  </div>
+  <div class="sortBar" id="sortBar" hidden>
+    <button type="button" id="sortDone">✅ 完了（保存）</button>
+    <button type="button" id="sortCancel">やめる</button>
+    <button type="button" id="sortReset">元の順に戻す</button>
+  </div>
+  <p class="sortHint" id="sortHint">左の ≡ をドラッグ、または ▲▼・番号で順番を変えられるよ。完了を押すと端末に保存され、💌 でゆずに届くよ。</p>
+  <ul class="sortList" id="sortList"></ul>
+</header>
+<main>
+  <p class="note">7項目は全員共通だよ。エイジはこのページで全員の欄を編集・調整できるよ（基本は本人記入が優先）。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真・保存した欄は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ（ノートのアイコンには使わないよ）。公開前は<span class="kariTag">未送信</span>表示。上の「↕️ 並び替え」で全員の表示順を変えられるよ（ドラッグ / ▲▼ / 番号）。</p>
+  <div class="toc" id="toc"></div>
+  <div id="list"><p class="empty">読み込み中…</p></div>
+</main>
+<div id="pfSendBar"><div class="inner"><div class="st" id="pfPendSt"></div><button type="button" id="yzs">💌 ゆずに送る／更新（写真・プロフィール）</button></div></div>
+<a id="jump" href="./">💞 ノート</a>
+<input type="file" id="pgFile" accept="image/*" style="display:none">
+<script>
+(function(){
+/* スロット上限（tools/photo_limits.py と同じ） */
+var PHOTO_LIMIT={'エイジ':10,'ゆず':10}, PHOTO_DEFAULT=4;
+function photoLimit(name){return PHOTO_LIMIT[name]!=null?PHOTO_LIMIT[name]:PHOTO_DEFAULT}
+var LS='om_pf_photos';
+var LS_FIELDS='om_pf_fields';
+/* arrange mode helpers below */
+function loadSeq(){var all=loadFields();var o=all&&all.__order;return (Array.isArray(o)&&o.length)?o.filter(function(x){return typeof x==="string"&&x}):null}
+function mergeSeq(base, members){var local=loadSeq(), seen={}, out=[];function add(n){if(n&&members[n]&&!seen[n]){out.push(n);seen[n]=1}}(local||[]).forEach(add);(base||[]).forEach(add);Object.keys(members||{}).forEach(add);return out}
+function putSeq(arr){var all=loadFields();all.__order=arr.slice();saveFields(all)}
+
+var EDITABLE_WHO=null; /* v38: エイジが全員の欄を編集可（本人記入がデフォルト、端末編集は上書き） */
+function loadFields(){try{return JSON.parse(localStorage.getItem(LS_FIELDS)||'{}')||{}}catch(e){return {}}}
+function saveFields(all){localStorage.setItem(LS_FIELDS,JSON.stringify(all));window.__OM_PF_FIELDS=all}
+function fieldsFor(name){var all=loadFields();return (all&&all[name])||{}}
+function setField(name,key,val){var all=loadFields();if(!all[name])all[name]={};all[name][key]=val;saveFields(all)}
+
+var DECO={hearts:'💕',beer:'🍺',orange:'🍊',laugh:'😂',soft:'☺️',heart:'💓',cake:'🍰',tears:'🥺',sakura:'🌸',cherry:'🍒',office:'📎',tea:'🍵',leaf:'🌿',gal:'💅',star:'⭐',crown:'👑'};
+function esc(t){var d=document.createElement('div');d.textContent=t==null?'':String(t);return d.innerHTML}
+function isWait(v){return !v||v==='（本人記入待ち）'}
+function fieldClass(v,prov,key){
+  if(isWait(v))return 'wait';
+  if(prov&&prov.indexOf(key)>=0)return 'kari';
+  if(/（仮）/.test(String(v))||/歳（仮）/.test(String(v)))return 'kari';
+  return '';
+}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){return {}}}
+function saveLocal(all){localStorage.setItem(LS,JSON.stringify(all));window.__OM_PF_PHOTOS=all}
+function slotsFor(name){
+  var lim=photoLimit(name), all=loadLocal(), a=all[name];
+  if(!Array.isArray(a))a=[];
+  while(a.length<lim)a.push(null);
+  if(a.length>lim)a=a.slice(0,lim);
+  return a;
+}
+function setSlot(name,i,val){
+  var all=loadLocal(), lim=photoLimit(name), a=slotsFor(name);
+  a[i]=val; all[name]=a.slice(0,lim); saveLocal(all);
+}
+/* square crop: drag + pinch(+slider) → 480 JPEG q0.8 (v33) */
+function openSquareCrop(src,revoke,cb){
+  if(document.getElementById('pgCrop'))return;
+  var img=new Image();
+  img.onload=function(){
+    var old=document.getElementById('pgCrop');if(old)old.remove();
+    var o=document.createElement('div');o.id='pgCrop';
+    o.innerHTML='<div class="t">ゆびで上下左右に動かして、2本ゆび（またはスライダー）で拡大縮小してね♡<br>四角の中がそのまま写真になるよ</div>'+
+      '<div class="stage"><canvas width="600" height="600"></canvas><div class="guide"></div></div>'+
+      '<input type="range" min="1" max="5" step="0.01" value="1" aria-label="拡大">'+
+      '<div class="b"><button type="button" class="ng">やめる</button><button type="button" class="ok">この位置で決定</button></div>';
+    document.body.appendChild(o);
+    var c=o.querySelector('canvas'),g=c.getContext('2d'),rg=o.querySelector('input'),S=600;
+    var base=S/Math.min(img.width,img.height);
+    var z=1,tx=0,ty=0;
+    var clamp=function(){
+      var mx=Math.max(0,(img.width*base*z-S)/2), my=Math.max(0,(img.height*base*z-S)/2);
+      tx=Math.max(-mx,Math.min(mx,tx)); ty=Math.max(-my,Math.min(my,ty));
+    };
+    var draw=function(){
+      clamp();
+      g.fillStyle='#111';g.fillRect(0,0,S,S);
+      var w=img.width*base*z,h=img.height*base*z;
+      g.drawImage(img,(S-w)/2+tx,(S-h)/2+ty,w,h);
+    };
+    var P=new Map(),pd=0,pz=1,k2=S/300;
+    c.addEventListener('pointerdown',function(e){
+      e.preventDefault();c.setPointerCapture(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+      if(P.size===2){var a=[...P.values()];pd=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])||1;pz=z}
+    });
+    c.addEventListener('pointermove',function(e){
+      if(!P.has(e.pointerId))return;
+      var pr=P.get(e.pointerId);P.set(e.pointerId,[e.clientX,e.clientY]);
+      if(P.size===1){tx+=(e.clientX-pr[0])*k2;ty+=(e.clientY-pr[1])*k2}
+      else if(P.size===2&&pd){var a=[...P.values()];z=Math.max(1,Math.min(5,pz*Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1])/pd));rg.value=z}
+      draw();
+    });
+    var up=function(e){P.delete(e.pointerId);pd=0};
+    c.addEventListener('pointerup',up);c.addEventListener('pointercancel',up);
+    c.addEventListener('wheel',function(e){e.preventDefault();z=Math.max(1,Math.min(5,z*(e.deltaY<0?1.1:0.9)));rg.value=z;draw()},{passive:false});
+    rg.oninput=function(){z=+rg.value;draw()};
+    draw();
+    var close=function(){o.remove();if(revoke)URL.revokeObjectURL(src)};
+    o.querySelector('.ng').onclick=function(){close();cb&&cb(new Error('cancel'))};
+    o.querySelector('.ok').onclick=function(){
+      draw();
+      var out=document.createElement('canvas');out.width=out.height=480;
+      out.getContext('2d').drawImage(c,0,0,480,480);
+      var data=out.toDataURL('image/jpeg',0.8);
+      close();cb&&cb(null,data);
+    };
+  };
+  img.onerror=function(){if(revoke)URL.revokeObjectURL(src);cb&&cb(new Error('画像を読めなかったよ'))};
+  img.src=src;
+}
+var pickName=null, pickSlot=null, replaceMode=false;
+var fileEl=document.getElementById('pgFile');
+fileEl.addEventListener('change',function(){
+  var f=fileEl.files&&fileEl.files[0]; fileEl.value='';
+  if(!f||pickName==null||pickSlot==null)return;
+  if(!/^image\//.test(f.type||'')){alert('画像ファイルを選んでね');return}
+  var name=pickName, slot=pickSlot;
+  openSquareCrop(URL.createObjectURL(f),true,function(err,data){
+    if(err){if(String(err.message||err)!=='cancel')alert(err.message||err);pickName=null;pickSlot=null;replaceMode=false;return}
+    setSlot(name,slot,{data:data,sent:false,at:Date.now()});
+    pickName=null;pickSlot=null;replaceMode=false;
+    if(window.__PF_DATA)render(window.__PF_DATA);
+    try{updatePendSt();var toast=document.createElement('div');toast.className='omToast';toast.textContent='📷 端末に保存したよ。下の💌でゆずに送ると公開されるよ';document.body.appendChild(toast);requestAnimationFrame(function(){toast.classList.add('on')});setTimeout(function(){toast.classList.remove('on');setTimeout(function(){toast.remove()},400)},2600)}catch(e){}
+  });
+});
+function openPicker(name,slot,replacing){
+  pickName=name;pickSlot=slot;replaceMode=!!replacing;
+  fileEl.click();
+}
+function openViewer(name,slot,src,pending){
+  var old=document.getElementById('pgOv');if(old)old.remove();
+  var ov=document.createElement('div');ov.id='pgOv';ov.className='pgOv';
+  ov.innerHTML='<img alt=""><div class="b">'+
+    '<button type="button" class="rep">入れ替え</button>'+
+    '<button type="button" class="del">削除</button>'+
+    '<button type="button" class="x">とじる</button></div>';
+  ov.querySelector('img').src=src;
+  ov.querySelector('.x').onclick=function(){ov.remove()};
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove()});
+  ov.querySelector('.rep').onclick=function(){ov.remove();openPicker(name,slot,true)};
+  ov.querySelector('.del').onclick=function(){
+    if(!confirm('この写真を消す？'))return;
+    // only remove local pending; published stay until ゆず removes
+    var loc=slotsFor(name)[slot];
+    if(loc&&loc.data){setSlot(name,slot,null)}
+    else{alert('公開済みの写真はゆずに「消して」と伝えてね')}
+    ov.remove(); if(window.__PF_DATA)render(window.__PF_DATA);
+  };
+  document.body.appendChild(ov);
+}
+function photoGridHtml(name, published){
+  var lim=photoLimit(name), loc=slotsFor(name), pub=Array.isArray(published)?published:[];
+  var wide=lim>4?' wide':'';
+  var h='<div class="pgH">📷 写真（最大'+lim+'枚）</div><div class="pg'+wide+'" data-who="'+esc(name)+'">';
+  for(var i=0;i<lim;i++){
+    var L=loc[i], P=pub[i], src=null, pending=false;
+    if(L&&L.data&&!L.sent){src=L.data;pending=true}
+    else if(L&&L.data&&L.sent&&!(P)){src=L.data;pending=true} // sent but not yet on server
+    else if(P){src=P}
+    else if(L&&L.data){src=L.data;pending=true}
+    if(src){
+      h+='<button type="button" class="pgSlot has" data-i="'+i+'"><img src="'+esc(src)+'" alt="">'+(pending?'<span class="tag">未送信</span>':'')+'</button>';
+    }else{
+      h+='<button type="button" class="pgSlot" data-i="'+i+'"><span class="plus"><span class="cam">📷</span><span class="lab">追加</span></span></button>';
+    }
+  }
+  return h+'</div>';
+}
+function bindPhotoGrid(card,name){
+  card.querySelectorAll('.pgSlot').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var i=+btn.dataset.i;
+      var loc=slotsFor(name)[i];
+      var pub=(window.__PF_DATA.members[name].photos||[])[i];
+      var src=(loc&&loc.data)?loc.data:pub;
+      if(src)openViewer(name,i,src,!(pub)||(loc&&loc.data&&!loc.sent));
+      else openPicker(name,i,false);
+    });
+  });
+}
+function render(data){
+  window.__PF_DATA=data;
+  var order=mergeSeq(data.order||Object.keys(data.members||{}), data.members||{});
+  var fo=data.fieldsOrder||['名前','年齢','職業','性格','趣味','最近気になること','嫌いな食べ物'];
+  var toc=document.getElementById('toc');
+  var list=document.getElementById('list');
+  toc.innerHTML='';list.innerHTML='';
+  if(data.updated)document.querySelector('.sub').textContent='更新 '+data.updated+' · 仮置きあり・写真あり';
+  order.forEach(function(id){
+    var m=data.members[id];if(!m)return;
+    var look=m.look||{};
+    var photo=look.photo||'';
+    var icon=look.icon||'💬';
+    var avHtml=photo
+      ?'<img class="av" src="'+esc(photo)+(photo.indexOf('?')>=0?'':'?v=1')+'" alt="" width="64" height="64">'
+      :'<span class="avic">'+esc(icon)+'</span>';
+    toc.insertAdjacentHTML('beforeend','<a href="#p-'+encodeURIComponent(id)+'" title="'+esc(m.display||id)+'">'+(photo?'<img src="'+esc(photo)+'?v=1" alt="">':'<span>'+esc(icon)+'</span>')+'</a>');
+    var prov=m.provisional||[];
+    var localF=fieldsFor(id);
+    var canEdit=(EDITABLE_WHO==null)||!!EDITABLE_WHO[id];
+    var rows=fo.map(function(k){
+      var base=(m.fields&&m.fields[k]!=null)?m.fields[k]:'（本人記入待ち）';
+      var v=(localF[k]!=null&&String(localF[k]).length)?localF[k]:base;
+      var cls=fieldClass(v,prov,k);
+      var tag=(cls==='kari')?'<span class="kariTag">仮</span>':'';
+      if(canEdit && k!=='名前'){
+        var vv=isWait(v)?'':String(v).replace(/（仮）/g,'');
+        var multi=(k==='性格'||k==='趣味'||k==='最近気になること');
+        if(multi)return '<li><span class="k">'+esc(k)+'</span><span class="v edit"><textarea data-k="'+esc(k)+'" rows="2" placeholder="ここに書く…">'+esc(vv)+'</textarea></span></li>';
+        return '<li><span class="k">'+esc(k)+'</span><span class="v edit"><input type="text" data-k="'+esc(k)+'" value="'+esc(vv)+'" placeholder="ここに書く…"></span></li>';
+      }
+      return '<li><span class="k">'+esc(k)+'</span><span class="v '+cls+'">'+esc(v)+tag+'</span></li>';
+    }).join('');
+    var editBar=canEdit?'<div class="pfEditNote">✏️ '+esc(m.display||id)+'のプロフィールをここで編集・調整できるよ。保存したら💌 ゆずとみんなに送る でゆずに届くよ</div><div class="pfSaveRow"><button type="button" class="pfSave">💾 この内容を保存</button><span class="hint" data-hint></span></div>':'';
+    var rew=(look.rewardItems&&look.rewardItems.length)?'<div class="rew">🎒 装備中の月間アイテム：'+esc(look.rewardItems.join(' · '))+'</div>':'';
+    var font='font-'+(look.font||'maru');
+    var deco=DECO[look.decoration]||'✨';
+    var badge='';
+    if(id==='ゆず')badge='<span class="badge">👑 エイジの嫁</span>';
+    if(id==='エイジ')badge='<span class="badge">本人</span>';
+    var cardHtml='<article class="pcard '+font+'" id="p-'+esc(id)+'" style="background:'+esc(look.background||'#fff')+';border-color:'+esc(look.theme||'#ffb3c8')+'">'+
+      '<div class="deco">'+deco+'</div>'+
+      '<div class="ph">'+avHtml+'<div><h2 style="color:'+esc(look.theme||'#c0587f')+'">'+esc(m.display||id)+badge+
+      '</h2><span class="tone">口調：'+esc(look.tone||'—')+'</span></div></div>'+
+      editBar+
+      '<ul class="fields">'+rows+'</ul>'+
+      photoGridHtml(id,m.photos||[])+
+      rew+
+      '</article>';
+    list.insertAdjacentHTML('beforeend',cardHtml);
+    var cardEl=list.lastElementChild;
+    bindPhotoGrid(cardEl,id);
+    if(canEdit){
+      var hint=cardEl.querySelector('[data-hint]');
+      var markDirty=function(){if(hint){hint.textContent='未保存の変更あり';hint.className='hint pfDirty'}};
+      cardEl.querySelectorAll('.v.edit input,.v.edit textarea').forEach(function(inp){
+        inp.addEventListener('input',markDirty);
+      });
+      var saveBtn=cardEl.querySelector('.pfSave');
+      if(saveBtn)saveBtn.onclick=function(){
+        var all=loadFields(); if(!all[id])all[id]={};
+        cardEl.querySelectorAll('.v.edit input,.v.edit textarea').forEach(function(inp){
+          var k=inp.getAttribute('data-k'); if(!k)return;
+          all[id][k]=String(inp.value||'').trim();
+        });
+        saveFields(all);
+        if(hint){hint.textContent='保存したよ💖 💌でゆずに送ってね';hint.className='hint'} try{updatePendSt()}catch(e){}
+      };
+    }
+  });
+  if(location.hash){
+    var el=document.getElementById(decodeURIComponent(location.hash.slice(1)));
+    if(el)setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'start'})},100);
+  }
+}
+
+/* v38 arrange mode + all-member edit */
+var arrangeOn=false, arrangeDraft=null, dragIdx=-1;
+function paintArrange(){
+  var ul=document.getElementById("sortList"); if(!ul||!window.__PF_DATA)return;
+  var members=window.__PF_DATA.members||{};
+  ul.innerHTML="";
+  arrangeDraft.forEach(function(id,i){
+    var m=members[id]||{};
+    var li=document.createElement("li");
+    li.dataset.id=id; li.dataset.i=String(i);
+    li.innerHTML='<span class="handle" aria-hidden="true">≡</span><span class="nm">'+esc(m.display||id)+'</span>'+
+      '<input class="pos" type="number" min="1" max="'+arrangeDraft.length+'" value="'+(i+1)+'" aria-label="順番">'+
+      '<span class="mv"><button type="button" data-dir="-1" aria-label="上へ">▲</button><button type="button" data-dir="1" aria-label="下へ">▼</button></span>';
+    ul.appendChild(li);
+  });
+  ul.querySelectorAll(".mv button").forEach(function(b){
+    b.onclick=function(){
+      var li=b.closest("li"); var i=+li.dataset.i; var d=+b.dataset.dir; var j=i+d;
+      if(j<0||j>=arrangeDraft.length)return;
+      var tmp=arrangeDraft[i]; arrangeDraft[i]=arrangeDraft[j]; arrangeDraft[j]=tmp; paintArrange();
+    };
+  });
+  ul.querySelectorAll(".pos").forEach(function(inp){
+    inp.onchange=function(){
+      var li=inp.closest("li"); var i=+li.dataset.i; var to=Math.max(1,Math.min(arrangeDraft.length,+inp.value||1))-1;
+      if(to===i)return;
+      var id=arrangeDraft.splice(i,1)[0]; arrangeDraft.splice(to,0,id); paintArrange();
+    };
+  });
+  // pointer drag (touch-friendly)
+  ul.querySelectorAll("li").forEach(function(li){
+    var h=li.querySelector(".handle");
+    h.addEventListener("pointerdown",function(ev){
+      ev.preventDefault(); dragIdx=+li.dataset.i; li.classList.add("drag");
+      try{h.setPointerCapture(ev.pointerId)}catch(e){}
+    });
+  });
+  if(!ul._dragBound){
+    ul._dragBound=1;
+    ul.addEventListener("pointermove",function(ev){
+      if(dragIdx<0)return;
+      var y=ev.clientY; var items=[].slice.call(ul.querySelectorAll("li"));
+      for(var i=0;i<items.length;i++){
+        var r=items[i].getBoundingClientRect();
+        if(y>=r.top && y<=r.bottom && i!==dragIdx){
+          var tmp=arrangeDraft[dragIdx]; arrangeDraft.splice(dragIdx,1); arrangeDraft.splice(i,0,tmp); dragIdx=i; paintArrange();
+          var nh=ul.querySelectorAll(".handle")[dragIdx];
+          if(nh){try{nh.setPointerCapture(ev.pointerId)}catch(e){}}
+          break;
+        }
+      }
+    });
+    ul.addEventListener("pointerup",function(){dragIdx=-1; ul.querySelectorAll("li.drag").forEach(function(x){x.classList.remove("drag")})});
+    ul.addEventListener("pointercancel",function(){dragIdx=-1; ul.querySelectorAll("li.drag").forEach(function(x){x.classList.remove("drag")})});
+  }
+}
+function enterArrange(){
+  if(!window.__PF_DATA)return;
+  arrangeOn=true;
+  arrangeDraft=mergeSeq(window.__PF_DATA.order||Object.keys(window.__PF_DATA.members||{}), window.__PF_DATA.members||{}).slice();
+  document.body.classList.add("sortMode");
+  document.getElementById("sortBar").hidden=false;
+  document.getElementById("sortToggle").classList.add("on");
+  paintArrange();
+}
+function leaveArrange(apply){
+  if(apply && arrangeDraft){putSeq(arrangeDraft.slice()); if(window.__PF_DATA)render(window.__PF_DATA)}
+  arrangeOn=false; arrangeDraft=null; dragIdx=-1;
+  document.body.classList.remove("sortMode");
+  document.getElementById("sortBar").hidden=true;
+  document.getElementById("sortToggle").classList.remove("on");
+  document.getElementById("sortList").innerHTML="";
+}
+document.getElementById("sortToggle").onclick=function(){ if(arrangeOn) leaveArrange(false); else enterArrange(); };
+document.getElementById("sortDone").onclick=function(){ leaveArrange(true); alert("順番を保存したよ💖 💌 ゆずとみんなに送る でゆずに届くよ"); };
+document.getElementById("sortCancel").onclick=function(){ leaveArrange(false); };
+document.getElementById("sortReset").onclick=function(){
+  if(!window.__PF_DATA)return;
+  arrangeDraft=(window.__PF_DATA.order||Object.keys(window.__PF_DATA.members||{})).slice();
+  paintArrange();
+};
+
+
+function updatePendSt(){
+  var el=document.getElementById('pfPendSt'); if(!el)return;
+  var all=loadLocal(), n=0, names=[];
+  Object.keys(all||{}).forEach(function(nm){(all[nm]||[]).forEach(function(s){if(s&&s.data&&!s.sent){n++; if(names.indexOf(nm)<0)names.push(nm)}})});
+  var fields=loadFields(), nf=0;
+  Object.keys(fields||{}).forEach(function(nm){if(String(nm).indexOf('__')===0)return;var f=fields[nm];if(!f||typeof f!=='object')return;Object.keys(f).forEach(function(k){if(k.indexOf('__')!==0&&String(f[k]||'').trim())nf++})});
+  if(n||nf){el.className='st on';el.textContent=(n?('未送信の写真 '+n+'枚'+(names.length?('（'+names.join('・')+'）'):'')+'。'):'')+(nf?'プロフィール欄の変更あり。':'')+'下のボタンでゆずに送ってね♡'}
+  else{el.className='st';el.textContent=''}
+}
+
+window.__OM_PF_PHOTOS=loadLocal();
+window.__OM_PF_FIELDS=loadFields();
+fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
+  .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+  .then(function(d){render(d);try{updatePendSt()}catch(e){}})
+  .catch(function(e){document.getElementById('list').innerHTML='<p class="empty">読み込めなかったよ：'+esc(e.message)+'</p>'});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
+})();
+</script>
+<script src="send.js?v=4"></script>
+<script src="backup_om.js?v=9"></script>
+<script src="sent-status.js?v=ss6"></script>
+<script src="nav.js?v=nv4"></script>
+<script>
+/* v40: iOS PWA — bind send after scripts load (inline onclick + pointer-events:none parent was broken on Safari) */
+(function(){
+  function bind(){
+    var b=document.getElementById('yzs');
+    if(!b||b.__omBound)return;
+    b.__omBound=1;
+    b.addEventListener('click',function(ev){
+      ev.preventDefault();
+      try{
+        if(typeof window.omSend!=='function'){
+          alert('送信の準備ができてないよ。アプリを一度閉じて開き直してね💦');
+          return;
+        }
+        window.omSend();
+      }catch(e){
+        try{alert('送れなかったよ：'+(e&&e.message||e))}catch(x){}
+      }
+    }, false);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);
+  else bind();
+  [100,500,1500].forEach(function(t){setTimeout(bind,t)});
+})();
+</script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+/* v41: unchanged send sheet; large payloads stay in memory only */
 /* 💌 ゆずとみんなに送る — shared send sheet (mailto primary, navigator.share, copy). No network, no data changes. */
 (function(){
 var TO="k.ke.ea.ab.bm.mo.o@gmail.com",MAX=1800;

@@ -1,6 +1,6 @@
 /* 送信済みバッジ（sent-status v3）: 送るボタンの上にピル、ヘッダーに✅、同じデータの再送は確認。データは読むだけ（自分の yzss_<app> だけ書く） */
 (function(){
-var MAP={'benri-note':['benri',/^bn_/],'yuzu-health-note':['health',/^(yz_|yuzu_plans)/],'life-plan-note':['lifeplan',/^lp_/],'love-note':['love',/^ln_/],'yotei-note':['yotei',/^yt_/],'omoide-benri':['omoide',/^om_(react|reply)$/]}; /* v39: pf_photos/fieldsは巨大base64でhashが壊れ「もう一度送ってね」になるので除外 */
+var MAP={'benri-note':['benri',/^bn_/],'yuzu-health-note':['health',/^(yz_|yuzu_plans)/],'life-plan-note':['lifeplan',/^lp_/],'love-note':['love',/^ln_/],'yotei-note':['yotei',/^yt_/],'omoide-benri':['omoide',/^om_(react|reply)$/]}; /* v41: pf photos are in IndexedDB; finger uses __OM_PF_PHOTOS / om_pf_meta */
 var seg=location.pathname.split('/').filter(Boolean)[0]||'';var c=MAP[seg];
 if(!c){var t=document.title||'';c=/思い出/.test(t)?MAP['omoide-benri']:/予定/.test(t)?MAP['yotei-note']:/便利/.test(t)?MAP['benri-note']:/健康/.test(t)?MAP['yuzu-health-note']:/人生/.test(t)?MAP['life-plan-note']:MAP['love-note']}
 var APP=c[0],RX=c[1],SK='yzss_'+APP,SEL='.sendb,[onclick*="yzHealthSend"],#sendBottom,#sendSet,#ytSend,[onclick*="lpYuzuSendAll"],#yzs';
@@ -9,7 +9,7 @@ function jstNow(){return new Date(Date.now()+9*36e5)}
 function today(){return jstNow().toISOString().slice(0,10)}
 function md(ms){var d=new Date(ms+9*36e5);return (d.getUTCMonth()+1)+'/'+d.getUTCDate()+' '+('0'+d.getUTCHours()).slice(-2)+':'+('0'+d.getUTCMinutes()).slice(-2)}
 function tms(s){if(!s)return 0;s=String(s);if(!/[zZ]|[+-]\d\d:?\d\d$/.test(s))s=s+(s.length<=10?'T00:00':'')+'+09:00';var v=Date.parse(s);return isNaN(v)?0:v}
-function pfFinger(){var n=0,f=0;try{var ph=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{};Object.keys(ph).forEach(function(nm){(ph[nm]||[]).forEach(function(x,i){if(x&&x.data)n+=(x.sent?10:1)*(i+1)})})}catch(e){}try{var pf=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{};Object.keys(pf).forEach(function(nm){if(String(nm).indexOf('__')===0)return;var o=pf[nm];if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){if(k.indexOf('__')!==0&&String(o[k]||'').trim())f++})})}catch(e){}return 'p'+n+'f'+f}
+function pfFinger(){var n=0,f=0;try{var ph=window.__OM_PF_PHOTOS;if(!ph){try{ph=JSON.parse(localStorage.getItem('om_pf_meta')||'null')}catch(e2){ph=null}if(!ph){try{ph=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{}}catch(e3){ph={}}}}Object.keys(ph||{}).forEach(function(nm){(ph[nm]||[]).forEach(function(x,i){if(x&&(x.data||x.has))n+=(x.sent?10:1)*(i+1)})})}catch(e){}try{var pf=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{};Object.keys(pf).forEach(function(nm){if(String(nm).indexOf('__')===0)return;var o=pf[nm];if(!o||typeof o!=='object')return;Object.keys(o).forEach(function(k){if(k.indexOf('__')!==0&&String(o[k]||'').trim())f++})})}catch(e){}return 'p'+n+'f'+f}
 function hash(){var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&RX.test(k)&&!/_pw$|_lock|inbox|music|bgm|yzss/.test(k))ks.push(k)}ks.sort();
  var s='',h=5381;ks.forEach(function(k){s+=k+'='+localStorage.getItem(k)+'\n'});if(APP==='omoide')s+='__pf='+pfFinger()+'\n';for(var j=0;j<s.length;j++)h=((h<<5)+h+s.charCodeAt(j))|0;return (h>>>0).toString(36)+':'+s.length}
 function rec(){try{return JSON.parse(localStorage.getItem(SK))||null}catch(e){return null}}
@@ -39,7 +39,7 @@ function apply(){css();var s=state(),T=today();
 /* 再送の確認（同じデータをもう送ってる時だけ）。未送信の写真/プロフィール欄があれば止めない */
 document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest(SEL);if(!b||b.closest('#yzSendOv,#lpSendPick'))return;var s=state();
  var hasPendPhoto=false;
- try{var ph=JSON.parse(localStorage.getItem('om_pf_photos')||'{}')||{};Object.keys(ph).forEach(function(n){(ph[n]||[]).forEach(function(x){if(x&&x.data&&!x.sent)hasPendPhoto=true})})}catch(err){}
+ try{var ph=window.__OM_PF_PHOTOS;if(!ph){try{ph=JSON.parse(localStorage.getItem('om_pf_meta')||localStorage.getItem('om_pf_photos')||'{}')||{}}catch(e2){ph={}}}Object.keys(ph||{}).forEach(function(n){(ph[n]||[]).forEach(function(x){if(x&&(x.data||x.has)&&!x.sent)hasPendPhoto=true})})}catch(err){}
  if(hasPendPhoto||s.changed)return; /* 未送信写真 or 変更あり → 止めない */
  /* v39: 確認待ち(pending)中の再送は止めない。受け取り済み(ok)の同じ内容だけ確認 */
  if(s.st==='ok'&&!confirm('もう送ってるよ、また送る？')){e.preventDefault();e.stopImmediatePropagation()}},true);

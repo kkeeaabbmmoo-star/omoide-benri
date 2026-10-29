@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v40-mark-->
+<title>👤 みんなのプロフィール</title><!--v41-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -136,6 +136,7 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
 <div id="pfSendBar"><div class="inner"><div class="st" id="pfPendSt"></div><button type="button" id="yzs">💌 ゆずに送る／更新（写真・プロフィール）</button></div></div>
 <a id="jump" href="./">💞 ノート</a>
 <input type="file" id="pgFile" accept="image/*" style="display:none">
+<script src="pf_store.js?v=1"></script>
 <script>
 (function(){
 /* スロット上限（tools/photo_limits.py と同じ） */
@@ -163,8 +164,24 @@ function fieldClass(v,prov,key){
   if(/（仮）/.test(String(v))||/歳（仮）/.test(String(v)))return 'kari';
   return '';
 }
-function loadLocal(){try{return JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){return {}}}
-function saveLocal(all){localStorage.setItem(LS,JSON.stringify(all));window.__OM_PF_PHOTOS=all}
+function loadLocal(){
+  if(window.__OM_PF_PHOTOS) return window.__OM_PF_PHOTOS;
+  try{return JSON.parse(localStorage.getItem(LS)||'{}')||{}}catch(e){return {}}
+}
+function saveLocal(all){
+  window.__OM_PF_PHOTOS=all||{};
+  if(window.omPfStore){
+    window.omPfStore.saveAll(all||{}).catch(function(e){console.warn('pf save',e)});
+    return;
+  }
+  /* legacy fallback — never throw QuotaExceeded to UI */
+  try{localStorage.setItem(LS,JSON.stringify(all))}
+  catch(e){
+    if(e&&(e.name==='QuotaExceededError'||/quota/i.test(String(e.message||e)))){
+      alert('端末の保存がいっぱいだよ。アプリを更新して開き直すとIndexedDBに移せるよ（写真はまだメモリ上にあるよ）');
+    }else{throw e}
+  }
+}
 function slotsFor(name){
   var lim=photoLimit(name), all=loadLocal(), a=all[name];
   if(!Array.isArray(a))a=[];
@@ -176,7 +193,7 @@ function setSlot(name,i,val){
   var all=loadLocal(), lim=photoLimit(name), a=slotsFor(name);
   a[i]=val; all[name]=a.slice(0,lim); saveLocal(all);
 }
-/* square crop: drag + pinch(+slider) → 480 JPEG q0.8 (v33) */
+/* square crop: drag + pinch(+slider) → 720 JPEG q0.8 (v41) */
 function openSquareCrop(src,revoke,cb){
   if(document.getElementById('pgCrop'))return;
   var img=new Image();
@@ -222,8 +239,8 @@ function openSquareCrop(src,revoke,cb){
     o.querySelector('.ng').onclick=function(){close();cb&&cb(new Error('cancel'))};
     o.querySelector('.ok').onclick=function(){
       draw();
-      var out=document.createElement('canvas');out.width=out.height=480;
-      out.getContext('2d').drawImage(c,0,0,480,480);
+      var out=document.createElement('canvas');out.width=out.height=720;
+      out.getContext('2d').drawImage(c,0,0,720,720);
       var data=out.toDataURL('image/jpeg',0.8);
       close();cb&&cb(null,data);
     };
@@ -470,18 +487,34 @@ function updatePendSt(){
   else{el.className='st';el.textContent=''}
 }
 
-window.__OM_PF_PHOTOS=loadLocal();
 window.__OM_PF_FIELDS=loadFields();
-fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
-  .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
-  .then(function(d){render(d);try{updatePendSt()}catch(e){}})
-  .catch(function(e){document.getElementById('list').innerHTML='<p class="empty">読み込めなかったよ：'+esc(e.message)+'</p>'});
+window.updatePendSt=updatePendSt;
+function bootProfiles(){
+  fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
+    .then(function(d){render(d);try{updatePendSt()}catch(e){}})
+    .catch(function(e){document.getElementById('list').innerHTML='<p class="empty">読み込めなかったよ：'+esc(e.message)+'</p>'});
+}
+(async function(){
+  try{
+    if(window.omPfStore){
+      var mig=await window.omPfStore.migrate();
+      console.log('pf migrate',mig);
+      if(mig&&mig.ok&&mig.migrated){
+        try{var toast=document.createElement('div');toast.className='omToast';toast.textContent='📷 写真を安全な保存場所へ移したよ（'+mig.count+'枚・消えてないよ）';document.body.appendChild(toast);requestAnimationFrame(function(){toast.classList.add('on')});setTimeout(function(){toast.classList.remove('on');setTimeout(function(){toast.remove()},400)},3200)}catch(e){}
+      }
+    }else{
+      window.__OM_PF_PHOTOS=loadLocal();
+    }
+  }catch(e){console.warn(e);window.__OM_PF_PHOTOS=loadLocal()}
+  bootProfiles();
+})();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 })();
 </script>
-<script src="send.js?v=4"></script>
-<script src="backup_om.js?v=9"></script>
-<script src="sent-status.js?v=ss6"></script>
+<script src="send.js?v=5"></script>
+<script src="backup_om.js?v=10"></script>
+<script src="sent-status.js?v=ss7"></script>
 <script src="nav.js?v=nv4"></script>
 <script>
 /* v40: iOS PWA — bind send after scripts load (inline onclick + pointer-events:none parent was broken on Safari) */
@@ -492,15 +525,18 @@ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
     b.__omBound=1;
     b.addEventListener('click',function(ev){
       ev.preventDefault();
-      try{
-        if(typeof window.omSend!=='function'){
-          alert('送信の準備ができてないよ。アプリを一度閉じて開き直してね💦');
-          return;
-        }
-        window.omSend();
-      }catch(e){
-        try{alert('送れなかったよ：'+(e&&e.message||e))}catch(x){}
+      if(typeof window.omSend!=='function'){
+        alert('送信の準備ができてないよ。アプリを一度閉じて開き直してね💦');
+        return;
       }
+      Promise.resolve(window.omSend()).catch(function(e){
+        var msg=(e&&e.message)||String(e);
+        if(/quota/i.test(msg)||(e&&e.name==='QuotaExceededError')){
+          alert('端末の保存がいっぱいだったよ。写真は別の場所へ移すから、もう一度💌を押してね（消えてないよ）');
+        }else{
+          try{alert('送れなかったよ：'+msg)}catch(x){}
+        }
+      });
     }, false);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);
