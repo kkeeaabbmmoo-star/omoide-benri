@@ -219,7 +219,7 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
    /* v37: 月間報酬 11月🎄/12月🎍・紅葉は2027-11温存・2月TBD・profiles並び替え引用符修正 */
    /* v38: プロフィール全員編集 */
    /* v39: pf_preview無効化・送信hash・すーさん🍺 */
-   /* v40: profiles送信ボタン iOS pointer-events 修正 */
+   /* v40: profiles送信ボタン iOS pointer-events 修正 + 下部フォグ撤去 */
    s.onclick=function(){var v=i.value.trim();if(!v){i.focus();return}var o={t:v,at:TD};if(sel&&sel.textContent){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}var y=window.scrollY||window.pageYOffset||0;var mem=p.closest('.mem');P[id]=o;sv();markAck(p,'reply');draw();nwDraw();requestAnimationFrame(function(){var next=null;if(mem){var posts=[].slice.call(mem.querySelectorAll('.post:not(.hide)'));for(var ii=0;ii<posts.length;ii++){if(!replied(posts[ii].dataset.id)){next=posts[ii];break}}}if(next){var f=next.closest('.fold');if(f)f.open=true;var top=next.getBoundingClientRect().top+window.scrollY-120;window.scrollTo(0,Math.max(0,top))}else{window.scrollTo(0,y)}})};
    row.appendChild(i);attachMic(i,row);row.appendChild(s);a.appendChild(row)}
   paintPost(p)}

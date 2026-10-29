@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
-body{margin:0;background:linear-gradient(180deg,#fff0f5,#fff8e6) fixed;font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;color:#4a3340;line-height:1.55;padding-bottom:calc(env(safe-area-inset-bottom)+40px)}
+body{margin:0;background:linear-gradient(180deg,#fff0f5,#fff8e6) fixed;font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;color:#4a3340;line-height:1.55;padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
 header{padding:calc(env(safe-area-inset-top)+14px) 14px 8px;text-align:center}
 h1{font-size:20px;margin:0}
 .sub{color:#9a7b88;font-size:12px;margin-top:4px}
@@ -41,13 +41,16 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 .deco{position:absolute;right:8px;top:8px;font-size:22px;opacity:.55;pointer-events:none}
 .rew{margin-top:8px;font-size:12px;color:#c45c26;background:#fff8f0;border-radius:10px;padding:6px 8px;border:1px dashed #ffd0a8}
 #jump{position:fixed;right:calc(env(safe-area-inset-right)+12px);bottom:calc(env(safe-area-inset-bottom)+18px);z-index:9;border:0;border-radius:20px;background:#d0567f;color:#fff;font-weight:800;padding:10px 14px;box-shadow:0 3px 10px #0003;font-size:13px;text-decoration:none}
-#pfSendBar{position:fixed;left:0;right:0;bottom:0;z-index:10050;padding:10px 12px calc(env(safe-area-inset-bottom)+10px);background:linear-gradient(180deg,transparent,#fff 28%,#fff);box-sizing:border-box}
+#pfSendBar{position:fixed;left:0;right:0;bottom:0;z-index:10050;padding:8px 12px calc(env(safe-area-inset-bottom)+8px);background:#fff;border-top:1px solid #ffd0e0;box-shadow:0 -4px 16px #0001;box-sizing:border-box}
 #pfSendBar .inner{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
 #pfSendBar .st{font-size:12px;text-align:center;color:#8a5a10;background:#fff6e8;border:1px solid #ffe08a;border-radius:12px;padding:6px 8px;font-weight:700;display:none}
 #pfSendBar .st.on{display:block}
 #pfSendBar #yzs{display:block;width:100%;min-height:52px;border:0;border-radius:22px;background:linear-gradient(90deg,#ff8fb3,#d0567f);color:#fff;font-size:16px;font-weight:800;box-shadow:0 4px 14px #d0567f55;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer;position:relative;z-index:1}
 #jump{bottom:calc(env(safe-area-inset-bottom)+96px);z-index:20}
-body{padding-bottom:calc(env(safe-area-inset-bottom)+120px)}
+body{padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
+/* v40: header status must stay readable — no fog overlays */
+header{position:relative;z-index:2;background:linear-gradient(180deg,#fff0f5 70%,rgba(255,240,245,.92))}
+.sub{color:#6a4a58;font-size:12px;margin-top:4px;font-weight:700;background:rgba(255,255,255,.92);display:inline-block;padding:3px 10px;border-radius:999px;border:1px solid #ffd0e0}
 .empty{text-align:center;padding:40px;color:#9a7b88}
 .pgH{font-size:13px;font-weight:800;color:#a0466a;margin:10px 0 6px}
 .pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
