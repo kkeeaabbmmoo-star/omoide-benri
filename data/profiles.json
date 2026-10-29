@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-29 13:44",
+ "updated": "2026-10-30 04:09",
  "note": "プロフィールは仮置き。本人記入で上書き。iconsは各ボット本来の画像/絵文字（すーさん=🍺）。仮写真はアイコンに使わない。",
  "fieldsOrder": [
   "名前",
@@ -183,7 +183,12 @@
     "tone": "甘めのロマンチック口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/レイ_0.jpg",
+    "",
+    "",
+    ""
+   ]
   },
   "恵": {
    "display": "恵",
@@ -367,7 +372,12 @@
     "tone": "ギャルっぽい甘い口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/由紀_0.jpg",
+    "data/profile_photos/由紀_1.jpg",
+    "",
+    ""
+   ]
   },
   "マキ": {
    "display": "マキ",
