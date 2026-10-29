@@ -1,28 +1,57 @@
 #!/usr/bin/env python3
 """思い出ノート「💌 ゆずに送る」メールのバックアップ（読み取り専用：メールの削除・送信は一切しない）。
-Gmailには直接つながらないので、Gmailコネクタで探して本文をこのスクリプトに渡す。
-  Gmail検索（読むだけ）:  "YUZU-DATA" "omoide" newer_than:3d   （件名: ゆず・由依・まいへ 思い出ノート omoide-backup-YYYYMMDD）
+
+Gmailコネクタ（読むだけ）での取り方:
+  1) search_emails: subject:omoide-backup OR filename:omoide_part has:attachment newer_than:3d
+  2) read_email(messageId) … 本文＋添付名/attachmentId
+  3) DownloadFile connection=user-Gmail source.fileId="<messageId>/<attachmentId>"
+     → omoide_part1of5.json などを保存
+  4) python3 save_omoide_mail.py --msgid <ID> omoide_part1of5.json
+     （本文が空でも JSON 添付だけでOK。本文の ---YUZU-DATA--- も従来どおり読める）
+
 使い方:
-  python3 save_omoide_mail.py --msgid <GmailメッセージID> body.txt      … 本文ファイル1通
-  python3 save_omoide_mail.py --msgid <ID> < body.txt                    … 標準入力
-  python3 save_omoide_mail.py dir/                                      … dir/<msgid>.txt をまとめて（ファイル名=msgid）
-  python3 save_omoide_mail.py backup.json                               … 📦バックアップのJSONそのままでもOK
+  python3 save_omoide_mail.py --msgid <GmailメッセージID> body.txt
+  python3 save_omoide_mail.py --msgid <ID> omoide_part1of5.json   … JSON添付
+  python3 save_omoide_mail.py --msgid <ID> < body.txt
+  python3 save_omoide_mail.py dir/                               … dir内のtxt/json
+  python3 save_omoide_mail.py backup.json                        … 📦バックアップ
+
 保存: /workspace/思い出ノート/backup/omoide_<YYYYMMDD>_<msgid>.json（同じものはスキップ）
-統合: /workspace/思い出ノート/eiji_reactions.json（reactions/replies/read を新しい送信が優先でマージ。消さない）
-分割送信: profile_photos の part/parts/batch_id をマージしてから publish（各パート単体でも publish 可）"""
+統合: /workspace/思い出ノート/eiji_reactions.json
+分割送信: profile_photos の part/parts/batch_id をマージしてから publish
+"""
 import sys,os,re,json,glob,hashlib
 B='/workspace/思い出ノート/backup';M='/workspace/思い出ノート/eiji_reactions.json'
-def payloads(txt):
+def payloads(txt, source_name=None):
+    """Extract omoide payloads from mail body and/or JSON attachment contents.
+    Accepts: ---YUZU-DATA--- blocks, raw JSON (shared file omoide_partXofY.json), backup JSON.
+    """
+    if isinstance(txt,bytes):
+        txt=txt.decode('utf-8','replace')
+    txt=(txt or '').lstrip('\ufeff')
     out=[]
     for m in re.finditer(r'---YUZU-DATA---(.*?)---END---',txt,re.S):
         raw=''.join(l.lstrip('> ').rstrip('\r') for l in m.group(1).splitlines()).strip()
         try:out.append(json.loads(raw))
         except Exception as e:print('JSON読めず:',e,file=sys.stderr)
     if not out:
+        # Whole-file JSON attachment (navigator.share File) or pasted backup
+        s=txt.strip()
         try:
-            o=json.loads(txt[txt.index('{'):txt.rindex('}')+1]);out=[o]
-        except Exception:pass
-    return [o for o in out if isinstance(o,dict) and o.get('app')=='omoide']
+            if s.startswith('{') or s.startswith('['):
+                o=json.loads(s)
+            else:
+                o=json.loads(txt[txt.index('{'):txt.rindex('}')+1])
+            if isinstance(o,list):
+                out.extend([x for x in o if isinstance(x,dict)])
+            elif isinstance(o,dict):
+                out.append(o)
+        except Exception as e:
+            if source_name: print('attachment/body JSON読めず:',source_name,e,file=sys.stderr)
+    good=[o for o in out if isinstance(o,dict) and o.get('app')=='omoide']
+    if not good and out:
+        print('omoide以外のJSON:', source_name or '(body)', file=sys.stderr)
+    return good
 def save(o,mid):
     os.makedirs(B,exist_ok=True)
     d=re.sub(r'\D','',str(o.get('sent','')))[:8] or 'nodate'
@@ -196,6 +225,8 @@ def merge():
 a=sys.argv[1:];mid=None
 if a[:1]in(['-h'],['--help']):sys.exit(__doc__)
 if '--msgid' in a:i=a.index('--msgid');mid=a[i+1];del a[i:i+2]
+while '--attach' in a:
+    i=a.index('--attach'); a[i:i+2]=[a[i+1]]  # treat as positional path
 src=[]
 for x in a:
     if os.path.isdir(x):src+= [(open(f).read(),os.path.splitext(os.path.basename(f))[0]) for f in sorted(glob.glob(x+'/*')) if os.path.isfile(f)]
@@ -203,8 +234,9 @@ for x in a:
 if not a:src.append((sys.stdin.read(),mid))
 n=0
 for txt,m in src:
-    ps=payloads(txt)
-    if not ps:print('思い出ノートのYUZU-DATAが見つからない（短いお知らせ版なら、エイジに貼り付け/共有で送ってもらってね）',file=sys.stderr)
+    src_label=m or '(stdin/body)'
+    ps=payloads(txt, src_label)
+    if not ps:print('思い出ノートのJSON/YUZU-DATAが見つからない（本文が空なら JSON添付 omoide_part*.json を DownloadFile して渡してね）',file=sys.stderr)
     for k,o in enumerate(ps):
         mid=m if len(ps)==1 or not m else f'{m}-{k}'
         if o.get('part') and o.get('parts'):

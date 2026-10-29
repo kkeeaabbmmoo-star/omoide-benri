@@ -1,4 +1,4 @@
-/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v41 */
+/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v42 */
 (function(){
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 var PHOTO_BATCH=4;
@@ -121,8 +121,13 @@ function openPartSheet(parts, idx, ctx){
   try{ pushHistory(full) }catch(e){ console.warn('hist',e) }
   var levels=[{data:full,note:nph?'（写真あり・分割送信）':''}];
   var subject='ゆずとみんなへ 思い出ノート '+t.slice(0,10)+(total>1?(' '+partLabel):'')+' omoide-backup-'+ymd+(total>1?('-p'+(idx+1)+'of'+total):'');
+  var shareName=total>1
+    ? ('omoide_part'+(idx+1)+'of'+total+'.json')
+    : (nph?'omoide_photos.json':'omoide_backup.json');
   yuzuSend({subject:subject,intro:intro,levels:levels,full:full,
-    fullNote:nph?'※プロフィール写真つき。共有かコピーが確実だよ':undefined,
+    fullNote:nph?'※プロフィール写真つき。共有（JSONファイル）がおすすめ♡':undefined,
+    shareFileName:shareName,
+    preferShare:!!(nph||total>1),
     theme:{bg:'#fff',fg:'#2f3a45',acc:'#d0477a',btn:'linear-gradient(90deg,#ff8fb3,#d0567f)',btnfg:'#fff',sub:'#ffe3ee'}});
   var ov=document.getElementById('yzSendOv');
   if(!ov) return;
@@ -130,17 +135,17 @@ function openPartSheet(parts, idx, ctx){
     var tip=document.createElement('div');
     tip.style.cssText='font-size:13px;line-height:1.45;margin:8px 0;padding:8px 10px;border-radius:12px;background:#fff6e8;color:#8a5a10;font-weight:700';
     tip.textContent=total>1
-      ?('📷 写真が多いから '+total+'通に分けて送るよ。今は '+(idx+1)+'/'+total+' 通目♡ 送ったら次が出るよ')
-      :'📷 写真つきだよ。📧メールは長いので本文コピー→貼り付け、または📤共有がおすすめ♡';
-    var firstBtn=ov.querySelector('#yzMail');
+      ?('📷 写真が多いから '+total+'通に分けて送るよ。今は '+(idx+1)+'/'+total+' 通目♡ ★「共有（JSONファイル）」がおすすめ（長い本文はGmailで消えるよ）')
+      :'📷 写真つきだよ。★「共有（JSONファイル）」がおすすめ♡ 長い本文はGmailで消えることがあるよ';
+    var firstBtn=ov.querySelector('#yzShare')||ov.querySelector('#yzMail');
     if(firstBtn&&firstBtn.parentNode) firstBtn.parentNode.insertBefore(tip,firstBtn);
   }
-  /* Replace mail button label for multi-part */
+  /* Clarify part labels; keep ★おすすめ on share when photos */
   if(total>1){
-    var a=ov.querySelector('#yzMail');
-    if(a) a.textContent='📧 '+(idx+1)+'/'+total+' をメールで送る';
     var sh=ov.querySelector('#yzShare');
-    if(sh) sh.textContent='📤 '+(idx+1)+'/'+total+' を共有で送る';
+    if(sh) sh.textContent='📤 '+(idx+1)+'/'+total+' を共有（JSONファイル）★おすすめ';
+    var a=ov.querySelector('#yzMail');
+    if(a) a.textContent='📧 '+(idx+1)+'/'+total+' をメール（コピー貼り付け）';
     var cp=ov.querySelector('#yzCopy');
     if(cp) cp.textContent='📋 '+(idx+1)+'/'+total+' をコピー';
   }
