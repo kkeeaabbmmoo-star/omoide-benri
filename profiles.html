@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v48-mark-->
+<title>👤 みんなのプロフィール</title><!--v49-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -46,13 +46,14 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 .deco{position:absolute;right:8px;top:8px;font-size:22px;opacity:.55;pointer-events:none}
 .rew{margin-top:8px;font-size:12px;color:#c45c26;background:#fff8f0;border-radius:10px;padding:6px 8px;border:1px dashed #ffd0a8}
 #jump{position:fixed;right:calc(env(safe-area-inset-right)+12px);bottom:calc(env(safe-area-inset-bottom)+18px);z-index:9;border:0;border-radius:20px;background:#d0567f;color:#fff;font-weight:800;padding:10px 14px;box-shadow:0 3px 10px #0003;font-size:13px;text-decoration:none}
+.omoBack{display:block;width:100%;box-sizing:border-box;text-align:center;min-height:52px;line-height:52px;margin:18px 0 12px;padding:0 12px;background:linear-gradient(90deg,#ffe4ee,#fff0f5);color:#c0587f;border:2px solid #ffb3c8;border-radius:22px;font-size:17px;font-weight:800;text-decoration:none;box-shadow:0 3px 12px #ffb3c855;-webkit-tap-highlight-color:transparent}
 #pfSendBar{position:fixed;left:0;right:0;bottom:0;z-index:10050;padding:8px 12px calc(env(safe-area-inset-bottom)+8px);background:#fff;border-top:1px solid #ffd0e0;box-shadow:0 -4px 16px #0001;box-sizing:border-box}
 #pfSendBar .inner{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
 #pfSendBar .st{font-size:12px;text-align:center;color:#8a5a10;background:#fff6e8;border:1px solid #ffe08a;border-radius:12px;padding:6px 8px;font-weight:700;display:none}
 #pfSendBar .st.on{display:block}
 #pfSendBar #yzs{display:block;width:100%;min-height:52px;border:0;border-radius:22px;background:linear-gradient(90deg,#ff8fb3,#d0567f);color:#fff;font-size:16px;font-weight:800;box-shadow:0 4px 14px #d0567f55;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer;position:relative;z-index:1}
 #jump{bottom:calc(env(safe-area-inset-bottom)+96px);z-index:20}
-body{padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
+body{padding-bottom:calc(env(safe-area-inset-bottom)+210px)}
 /* v40: header status must stay readable — no fog overlays */
 header{position:relative;z-index:2;background:#fff0f5}
 .sub{color:#5a3a48;font-size:12px;margin-top:4px;font-weight:700;background:#fff;display:inline-block;padding:4px 12px;border-radius:999px;border:1px solid #ffd0e0;box-shadow:0 1px 4px #0001;-webkit-font-smoothing:antialiased}
@@ -140,12 +141,13 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
   <p class="note">7項目は全員共通だよ。エイジはこのページで全員の欄を編集・調整できるよ（基本は本人記入が優先）。<span class="kariTag">仮</span> はゆずが入れた仮の内容。写真は四角スロット（ゆず・エイジは最大10枚、ほかは4枚）。選ぶと切り抜き画面で上下左右に動かしたりピンチで拡大できるよ。選んだ写真・保存した欄は端末に保存され、💌 ゆずとみんなに送る でゆずに届くよ（ノートのアイコンには使わないよ）。公開前は<span class="kariTag">未送信</span>表示。初期表示は親密度ポイント順。上の「↕️ 自分で並べ替え」で好きな順にもできるよ（ドラッグ / ▲▼ / 番号）。「💞 ポイント順」でいつでも戻せるよ。</p>
   <div class="toc" id="toc"></div>
   <div id="list"><p class="empty">読み込み中…</p></div>
+<a class="omoBack" href="./">📖 思い出ノートへ</a>
 </main>
 <div id="pfSendBar"><div class="inner"><div class="st" id="pfPendSt"></div><button type="button" id="yzs">💌 ゆずに送る／更新（写真・プロフィール）</button></div></div>
 <a id="jump" href="./">💞 ノート</a>
 <input type="file" id="pgFile" accept="image/*" style="display:none">
 <script src="pf_store.js?v=1"></script>
-<script src="closeness.js?v=48"></script>
+<script src="closeness.js?v=49"></script>
 <script>
 (function(){
 /* スロット上限（tools/photo_limits.py と同じ） */
