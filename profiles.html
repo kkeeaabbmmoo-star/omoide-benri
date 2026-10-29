@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v39-mark-->
+<title>👤 みんなのプロフィール</title><!--v40-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -41,13 +41,13 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 .deco{position:absolute;right:8px;top:8px;font-size:22px;opacity:.55;pointer-events:none}
 .rew{margin-top:8px;font-size:12px;color:#c45c26;background:#fff8f0;border-radius:10px;padding:6px 8px;border:1px dashed #ffd0a8}
 #jump{position:fixed;right:calc(env(safe-area-inset-right)+12px);bottom:calc(env(safe-area-inset-bottom)+18px);z-index:9;border:0;border-radius:20px;background:#d0567f;color:#fff;font-weight:800;padding:10px 14px;box-shadow:0 3px 10px #0003;font-size:13px;text-decoration:none}
-#pfSendBar{position:fixed;left:0;right:0;bottom:0;z-index:10;padding:10px 12px calc(env(safe-area-inset-bottom)+10px);background:linear-gradient(180deg,transparent,#fff9 30%,#fff);pointer-events:none}
-#pfSendBar .inner{pointer-events:auto;max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
+#pfSendBar{position:fixed;left:0;right:0;bottom:0;z-index:10050;padding:10px 12px calc(env(safe-area-inset-bottom)+10px);background:linear-gradient(180deg,transparent,#fff 28%,#fff);box-sizing:border-box}
+#pfSendBar .inner{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:6px;align-items:stretch}
 #pfSendBar .st{font-size:12px;text-align:center;color:#8a5a10;background:#fff6e8;border:1px solid #ffe08a;border-radius:12px;padding:6px 8px;font-weight:700;display:none}
 #pfSendBar .st.on{display:block}
-#pfSendBar #yzs{pointer-events:auto;display:block;width:100%;min-height:48px;border:0;border-radius:22px;background:linear-gradient(90deg,#ff8fb3,#d0567f);color:#fff;font-size:16px;font-weight:800;box-shadow:0 4px 14px #d0567f55}
-#jump{bottom:calc(env(safe-area-inset-bottom)+88px)}
-body{padding-bottom:calc(env(safe-area-inset-bottom)+110px)}
+#pfSendBar #yzs{display:block;width:100%;min-height:52px;border:0;border-radius:22px;background:linear-gradient(90deg,#ff8fb3,#d0567f);color:#fff;font-size:16px;font-weight:800;box-shadow:0 4px 14px #d0567f55;-webkit-tap-highlight-color:transparent;touch-action:manipulation;cursor:pointer;position:relative;z-index:1}
+#jump{bottom:calc(env(safe-area-inset-bottom)+96px);z-index:20}
+body{padding-bottom:calc(env(safe-area-inset-bottom)+120px)}
 .empty{text-align:center;padding:40px;color:#9a7b88}
 .pgH{font-size:13px;font-weight:800;color:#a0466a;margin:10px 0 6px}
 .pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -126,7 +126,7 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
   <div class="toc" id="toc"></div>
   <div id="list"><p class="empty">読み込み中…</p></div>
 </main>
-<div id="pfSendBar"><div class="inner"><div class="st" id="pfPendSt"></div><button type="button" id="yzs" onclick="typeof omSend==='function'&&omSend()">💌 ゆずに送る／更新（写真・プロフィール）</button></div></div>
+<div id="pfSendBar"><div class="inner"><div class="st" id="pfPendSt"></div><button type="button" id="yzs">💌 ゆずに送る／更新（写真・プロフィール）</button></div></div>
 <a id="jump" href="./">💞 ノート</a>
 <input type="file" id="pgFile" accept="image/*" style="display:none">
 <script>
@@ -472,9 +472,34 @@ fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 })();
 </script>
-<script src="send.js?v=3"></script>
-<script src="backup_om.js?v=8"></script>
-<script src="sent-status.js?v=ss5"></script>
+<script src="send.js?v=4"></script>
+<script src="backup_om.js?v=9"></script>
+<script src="sent-status.js?v=ss6"></script>
 <script src="nav.js?v=nv4"></script>
+<script>
+/* v40: iOS PWA — bind send after scripts load (inline onclick + pointer-events:none parent was broken on Safari) */
+(function(){
+  function bind(){
+    var b=document.getElementById('yzs');
+    if(!b||b.__omBound)return;
+    b.__omBound=1;
+    b.addEventListener('click',function(ev){
+      ev.preventDefault();
+      try{
+        if(typeof window.omSend!=='function'){
+          alert('送信の準備ができてないよ。アプリを一度閉じて開き直してね💦');
+          return;
+        }
+        window.omSend();
+      }catch(e){
+        try{alert('送れなかったよ：'+(e&&e.message||e))}catch(x){}
+      }
+    }, false);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);
+  else bind();
+  [100,500,1500].forEach(function(t){setTimeout(bind,t)});
+})();
+</script>
 </body>
 </html>

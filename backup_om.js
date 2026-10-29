@@ -1,4 +1,4 @@
-/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v39 */
+/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v40 */
 (function(){
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
