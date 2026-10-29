@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <circle cx="32" cy="32" r="28" stroke="#c0392b" stroke-width="3"/>
+  <circle cx="32" cy="32" r="24" stroke="#d4af37" stroke-width="2" opacity=".9"/>
+  <!-- kadomatsu left -->
+  <g transform="translate(6,18)">
+    <rect x="4" y="14" width="3" height="16" fill="#1e8449"/>
+    <rect x="8" y="10" width="3" height="20" fill="#196f3d"/>
+    <rect x="12" y="12" width="3" height="18" fill="#145a32"/>
+    <rect x="3" y="28" width="14" height="4" fill="#922b21"/>
+  </g>
+  <!-- kadomatsu right -->
+  <g transform="translate(38,18)">
+    <rect x="4" y="14" width="3" height="16" fill="#1e8449"/>
+    <rect x="8" y="10" width="3" height="20" fill="#196f3d"/>
+    <rect x="12" y="12" width="3" height="18" fill="#145a32"/>
+    <rect x="3" y="28" width="14" height="4" fill="#922b21"/>
+  </g>
+  <circle cx="32" cy="8" r="2.5" fill="#d4af37"/>
+</svg>

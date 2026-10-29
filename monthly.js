@@ -1,4 +1,4 @@
-/* 🏆 月間ランキング (om_monthly v36 · あみだ同点・報酬枠 floor((n-1)/2)) — 点数ルールは closeness scoreOne と同じ式・月で区切る。ゆず除外。 */
+/* 🏆 月間ランキング (om_monthly v37 · あみだ同点・報酬枠 floor((n-1)/2) · 11月🎄/12月🎍/2月TBD・紅葉は2027-11温存) — 点数ルールは closeness scoreOne と同じ式・月で区切る。ゆず除外。 */
 (function(){
 var START='2026-11-01';
 var KM='om_marks', KE='om_equip'; // local equip preview (never deletes server inventory)
@@ -111,14 +111,15 @@ function daysUntil(ymdTarget){
 var INV=null,REW={},SNAP={};
 function fetchJSON(u){return fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).catch(function(){return null})}
 function loadData(){
-  return Promise.all([
-    fetchJSON('data/inventory.json'),
-    fetchJSON('data/rewards/2026-11.json'),
-    fetchJSON('data/monthly/2026-11.json')
-  ]).then(function(arr){
+  var months=['2026-11','2026-12','2027-02','2027-11'];
+  var jobs=[fetchJSON('data/inventory.json')];
+  months.forEach(function(ym){jobs.push(fetchJSON('data/rewards/'+ym+'.json'));jobs.push(fetchJSON('data/monthly/'+ym+'.json'))});
+  return Promise.all(jobs).then(function(arr){
     INV=arr[0]||{members:{}};
-    if(arr[1])REW['2026-11']=arr[1];
-    if(arr[2])SNAP['2026-11']=arr[2];
+    months.forEach(function(ym,i){
+      if(arr[1+i*2])REW[ym]=arr[1+i*2];
+      if(arr[2+i*2])SNAP[ym]=arr[2+i*2];
+    });
   });
 }
 function ownedOf(name){
@@ -126,22 +127,24 @@ function ownedOf(name){
   return {owned:m.owned||[],equip:Object.assign({},m.equip||{},g(KE,{})[name]||{})};
 }
 function applyCosmetics(){
+  var MARK_EMOJI={'momiji-mark':'🍁','xmas-mark':'🎄','shogatsu-mark':'🎍'};
   membersExYuzu().concat([{name:'ゆず',el:document.getElementById('m-ゆず')}]).forEach(function(m){
     if(!m.el)return;
     var o=ownedOf(m.name),eq=o.equip||{};
     m.el.classList.remove('rw-frame','rw-bg','rw-icon','rw-fx','rw-sticker');
-    m.el.classList.toggle('rw-frame',eq.frame==='momiji-frame');
-    m.el.classList.toggle('rw-bg',eq.bg==='momiji-bg');
-    m.el.classList.toggle('rw-icon',eq.icon==='momiji-icon');
-    m.el.classList.toggle('rw-fx',eq.fx==='momiji-fx');
-    m.el.classList.toggle('rw-sticker',eq.sticker==='momiji-sticker');
-    // unlock seasonal mark into om_marks if owned and equipped
-    if(eq.mark==='momiji-mark'||(o.owned||[]).indexOf('momiji-mark')>=0){
-      try{
-        var marks=g(KM,null);if(!Array.isArray(marks))marks=['❤️','🙏','👏'];
-        if(marks.indexOf('🍁')<0){marks.push('🍁');localStorage.setItem(KM,JSON.stringify(marks.slice(0,8)))}
-      }catch(e){}
-    }
+    ['frame','bg','icon','fx','sticker'].forEach(function(slot){
+      if(eq[slot]){m.el.classList.add('rw-'+slot);m.el.setAttribute('data-rw-'+slot,eq[slot])}
+      else{m.el.removeAttribute('data-rw-'+slot)}
+    });
+    // unlock seasonal marks into om_marks if owned
+    Object.keys(MARK_EMOJI).forEach(function(id){
+      if(eq.mark===id||(o.owned||[]).indexOf(id)>=0){
+        try{
+          var em=MARK_EMOJI[id],marks=g(KM,null);if(!Array.isArray(marks))marks=['❤️','🙏','👏'];
+          if(marks.indexOf(em)<0){marks.push(em);localStorage.setItem(KM,JSON.stringify(marks.slice(0,8)))}
+        }catch(e){}
+      }
+    });
   });
 }
 function saveEquip(name,equip){
@@ -154,7 +157,7 @@ function openBag(name){
   Object.keys(REW).forEach(function(ym){(REW[ym].tiers['1'].items.concat(REW[ym].tiers['2'].items)).forEach(function(it){catalog[it.id]=it})});
   // also known stickers
   if(!items.length){
-    var html0='<div class="mnOv" id="mnBag"><div class="mnBox"><div class="mnH">🎒 '+esc(name)+' のアイテム</div><p class="mnSub">まだアイテムはないよ。月間ランキングでもらえるよ🍁</p><button type="button" class="mnX">とじる</button></div></div>';
+    var html0='<div class="mnOv" id="mnBag"><div class="mnBox"><div class="mnH">🎒 '+esc(name)+' のアイテム</div><p class="mnSub">まだアイテムはないよ。月間ランキングでもらえるよ🎄</p><button type="button" class="mnX">とじる</button></div></div>';
     var old=document.getElementById('mnBag');if(old)old.remove();
     document.body.insertAdjacentHTML('beforeend',html0);
     document.getElementById('mnBag').onclick=function(ev){if(ev.target.id==='mnBag'||ev.target.classList.contains('mnX'))this.remove()};
@@ -197,14 +200,18 @@ function rulesHTML(){
     +'<p><b>順位：</b>点数が多い順。同点のときは🎲あみだくじ（その月の名前から決まる運）で順番を決めるよ。エイジが選ぶことはない。1〜3位は同着なし。例：5人が同点ならあみだで1〜5位を決めて、次の人は6位</p>'
     +'<p><b>報酬：</b>1〜3位＝上位セット（🥇🥈🥉）、4位〜（参加人数の半分の少なめ＝floor((人数-1)/2)位）＝がんばりセット（🎀）。人数が増えても報酬枠は半分より少なめ。毎月テーマが変わるよ</p>'
     +'<p><b>アイテム：</b>一度もらったアイテムはずっと🎒に残る。装備はゆずに希望を伝えてね（エイジはプレビュー装備もできるよ）</p>'
-    +'<p><b>11月テーマ：</b>紅葉🍁　落ち葉フレーム・紅葉背景・花びら枠・🍁マーク・ひらひら落ち葉 など</p>'
+    +'<p><b>テーマ：</b>11月🎄クリスマス　／　12月🎍お正月グッズ　／　2月は近くなったら決めるよ　（紅葉🍁は来年2027年11月に温存）</p>'
     +'</div></details>';
 }
 function rewardsPreviewHTML(cfg){
   if(!cfg)return '';
+  if(cfg.status==='tbd'||!cfg.tiers||!(cfg.tiers['1']&&cfg.tiers['1'].items&&cfg.tiers['1'].items.length)){
+    return '<div class="mnRew"><div class="mnRewH">'+esc(cfg.themeEmoji||'💭')+' '+esc(cfg.title||'未定')+'</div>'
+      +'<p class="mnSub">'+esc(cfg.note||'近くなったら決めるよ')+'</p></div>';
+  }
   var t1=cfg.tiers['1'],t2=cfg.tiers['2'];
-  function lis(items){return '<ul>'+items.map(function(it){return '<li><b>'+esc(it.name)+'</b> — '+esc(it.desc)+'</li>'}).join('')+'</ul>'}
-  return '<div class="mnRew"><div class="mnRewH">'+esc(cfg.themeEmoji||'🍁')+' '+esc(cfg.title)+' の報酬</div>'
+  function lis(items){return '<ul>'+(items||[]).map(function(it){return '<li><b>'+esc(it.name)+'</b> — '+esc(it.desc)+'</li>'}).join('')+'</ul>'}
+  return '<div class="mnRew"><div class="mnRewH">'+esc(cfg.themeEmoji||'🎁')+' '+esc(cfg.title)+' の報酬</div>'
     +'<div class="mnRewT"><b>'+esc(t1.label)+'</b>'+lis(t1.items)+'</div>'
     +'<div class="mnRewT"><b>'+esc(t2.label)+'</b>'+lis(t2.items)+'</div></div>';
 }
@@ -226,12 +233,12 @@ function render(){
   var host=document.getElementById('mnSec');if(!host)return;
   var now=jstNow(),today=ymd(now),curYM=ym(now);
   var startDays=daysUntil(START);
-  var cfg=REW['2026-11'];
+  var cfg=REW[curYM]||REW['2026-11'];
   var html='<summary>🏆 月間ランキング</summary><div class="mnWrap">';
   html+=rulesHTML();
   if(today<START){
-    html+='<div class="mnHero">🍁 <b>11月スタート！</b><div class="mnCount">あと <b>'+Math.max(0,startDays)+'</b> 日（'+START.replace(/-/g,'/')+' 0:00 JST）</div>'
-      +'<p>11月1日から、ゆず以外のみんなで月間ポイントを競うよ。報酬は紅葉テーマ🍁</p></div>';
+    html+='<div class="mnHero">🎄 <b>11月スタート！</b><div class="mnCount">あと <b>'+Math.max(0,startDays)+'</b> 日（'+START.replace(/-/g,'/')+' 0:00 JST）</div>'
+      +'<p>11月1日から、ゆず以外のみんなで月間ポイントを競うよ。報酬はクリスマステーマ🎄（12月はお正月🎍）</p></div>';
     /* 同点あみだの見え方デモ（固定データ・本番集計ではない） */
     var demo=rankList([
       {name:'瀬戸',pts:50},{name:'らん',pts:50},{name:'レイ',pts:50},{name:'まい',pts:50},{name:'まちゃ',pts:50},
@@ -240,7 +247,9 @@ function render(){
     html+='<div class="mnDemo"><div class="mnDemoH">🎲 同点のときのあみだ例（お試し表示）</div>'
       +tableHTML(demo,false)
       +'<p class="mnSub">※これは説明用。本番は11月からリアルタイム集計。同点グループだけあみだで1・2・3…と並べるよ</p></div>';
-    html+=rewardsPreviewHTML(cfg);
+    html+=rewardsPreviewHTML(REW['2026-11']);
+    html+=rewardsPreviewHTML(REW['2026-12']);
+    html+=rewardsPreviewHTML(REW['2027-02']);
   }else{
     var b=monthBounds(curYM);
     var rows=membersExYuzu().map(function(m){return Object.assign({name:m.name},scoreMonth(m.name,b))});
@@ -250,7 +259,8 @@ function render(){
       +(snap&&snap.finalized?'（確定）':'（集計中）')+'</div>';
     if(snap&&snap.finalized&&snap.ranking)html+=tableHTML(snap.ranking,false);
     else html+=tableHTML(ranked,true);
-    html+=rewardsPreviewHTML(cfg||REW['2026-11']);
+    html+=rewardsPreviewHTML(cfg||REW[curYM]||REW['2026-11']);
+    if(curYM==='2026-11'&&REW['2026-12'])html+=rewardsPreviewHTML(REW['2026-12']);
   }
   html+='<div class="mnBagBar"><b>🎒 アイテム</b> ';
   membersExYuzu().forEach(function(m){

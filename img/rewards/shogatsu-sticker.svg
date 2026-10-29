@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect x="12" y="10" width="24" height="30" rx="2" fill="#c0392b"/>
+  <rect x="12" y="10" width="24" height="30" rx="2" fill="none" stroke="#7b241c" stroke-width="1.2"/>
+  <path fill="#f1c40f" d="M16 18h16v2H16zm0 6h16v2H16zm0 6h10v2H16z"/>
+  <circle cx="34" cy="14" r="3" fill="#d4af37"/>
+  <text x="24" y="36" text-anchor="middle" font-size="8" fill="#f1c40f" font-family="sans-serif">祝</text>
+</svg>

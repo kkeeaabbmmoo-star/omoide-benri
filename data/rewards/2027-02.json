@@ -1,0 +1,12 @@
+{
+ "month": "2027-02",
+ "theme": null,
+ "themeEmoji": "💭",
+ "title": "2月・まだ未定",
+ "status": "tbd",
+ "note": "近くなったら決めるよ",
+ "tiers": {
+  "1": {"label": "上位報酬（1〜3位）", "ranks": [1, 3], "items": []},
+  "2": {"label": "がんばり報酬（4位〜）", "ranks": [4, 7], "items": []}
+ }
+}

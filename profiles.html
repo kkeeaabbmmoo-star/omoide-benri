@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>👤 みんなのプロフィール</title><!--v36-mark-->
+<title>👤 みんなのプロフィール</title><!--v37-mark-->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffb3c8">
 <link rel="manifest" href="manifest.webmanifest">
@@ -359,7 +359,7 @@ function render(data){
   }
 }
 
-/* v36 arrange mode */
+/* v37 arrange mode (quote fix) */
 var arrangeOn=false, arrangeDraft=null, dragIdx=-1;
 function paintArrange(){
   var ul=document.getElementById("sortList"); if(!ul||!window.__PF_DATA)return;
@@ -369,9 +369,9 @@ function paintArrange(){
     var m=members[id]||{};
     var li=document.createElement("li");
     li.dataset.id=id; li.dataset.i=String(i);
-    li.innerHTML="<span class="handle" aria-hidden="true">≡</span><span class="nm">"+esc(m.display||id)+"</span>"+
-      "<input class="pos" type="number" min="1" max=""+arrangeDraft.length+"" value=""+(i+1)+"" aria-label="順番">"+
-      "<span class="mv"><button type="button" data-dir="-1" aria-label="上へ">▲</button><button type="button" data-dir="1" aria-label="下へ">▼</button></span>";
+    li.innerHTML='<span class="handle" aria-hidden="true">≡</span><span class="nm">'+esc(m.display||id)+'</span>'+
+      '<input class="pos" type="number" min="1" max="'+arrangeDraft.length+'" value="'+(i+1)+'" aria-label="順番">'+
+      '<span class="mv"><button type="button" data-dir="-1" aria-label="上へ">▲</button><button type="button" data-dir="1" aria-label="下へ">▼</button></span>';
     ul.appendChild(li);
   });
   ul.querySelectorAll(".mv button").forEach(function(b){

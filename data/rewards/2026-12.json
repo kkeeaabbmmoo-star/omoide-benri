@@ -1,0 +1,70 @@
+{
+ "month": "2026-12",
+ "theme": "お正月",
+ "themeEmoji": "🎍",
+ "title": "12月・お正月グッズ",
+ "tiers": {
+  "1": {
+   "label": "上位報酬（1〜3位）🥇🥈🥉",
+   "ranks": [1, 3],
+   "items": [
+    {
+     "id": "shogatsu-frame",
+     "name": "門松フレーム",
+     "slot": "frame",
+     "desc": "アバターに🎍門松の枠がつくよ"
+    },
+    {
+     "id": "shogatsu-bg",
+     "name": "お正月ノート背景",
+     "slot": "bg",
+     "desc": "メンバーカードが金と紅白のお正月色になるよ"
+    },
+    {
+     "id": "shogatsu-icon",
+     "name": "鏡餅アイコン枠",
+     "slot": "icon",
+     "desc": "名前の横に🍡鏡餅"
+    },
+    {
+     "id": "shogatsu-mark",
+     "name": "お正月アクションマーク",
+     "slot": "mark",
+     "desc": "🎍 をリアクションに使えるよ",
+     "emoji": "🎍"
+    },
+    {
+     "id": "shogatsu-fx",
+     "name": "めでた紙吹雪",
+     "slot": "fx",
+     "desc": "カードにめでたい紙吹雪が舞うよ"
+    }
+   ]
+  },
+  "2": {
+   "label": "がんばり報酬（4位〜・人数の半分の少なめ）🎀",
+   "ranks": [4, 7],
+   "items": [
+    {
+     "id": "shogatsu-frame",
+     "name": "門松フレーム",
+     "slot": "frame",
+     "desc": "アバターに🎍門松の枠がつくよ"
+    },
+    {
+     "id": "shogatsu-mark",
+     "name": "お正月アクションマーク",
+     "slot": "mark",
+     "desc": "🎍 をリアクションに使えるよ",
+     "emoji": "🎍"
+    },
+    {
+     "id": "shogatsu-sticker",
+     "name": "お年玉ステッカー",
+     "slot": "sticker",
+     "desc": "カードに🧧お年玉ステッカー"
+    }
+   ]
+  }
+ }
+}

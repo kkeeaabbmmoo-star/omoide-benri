@@ -58,7 +58,7 @@ def mbar():
 memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
 BENRI='<a class="mv" href="https://kkeeaabbmmoo-star.github.io/benri-note/">📒 便利帳は便利ノートへ引っ越したよ → 開く</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=6"></script><script src="sent-status.js?v=ss2"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=14"></script><script src="monthly.js?v=5"></script><script>
+JS=r'''<script src="send.js?v=2"></script><script src="backup_om.js?v=6"></script><script src="sent-status.js?v=ss2"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=14"></script><script src="monthly.js?v=7"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
@@ -216,6 +216,7 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
    /* v34: 月間ランキング同点→あみだくじ（決定的ハッシュ）。1〜3位同着なし */
    /* v35: プロフィール編集・写真再送・アイコン2倍・名前横書き・返信後スクロール維持 */
    /* v36: 親密度ランキング人数表示・報酬枠 floor((n-1)/2)・プロフィール並び替え */
+   /* v37: 月間報酬 11月🎄/12月🎍・紅葉は2027-11温存・2月TBD・profiles並び替え引用符修正 */
    s.onclick=function(){var v=i.value.trim();if(!v){i.focus();return}var o={t:v,at:TD};if(sel&&sel.textContent){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}var y=window.scrollY||window.pageYOffset||0;var mem=p.closest('.mem');P[id]=o;sv();markAck(p,'reply');draw();nwDraw();requestAnimationFrame(function(){var next=null;if(mem){var posts=[].slice.call(mem.querySelectorAll('.post:not(.hide)'));for(var ii=0;ii<posts.length;ii++){if(!replied(posts[ii].dataset.id)){next=posts[ii];break}}}if(next){var f=next.closest('.fold');if(f)f.open=true;var top=next.getBoundingClientRect().top+window.scrollY-120;window.scrollTo(0,Math.max(0,top))}else{window.scrollTo(0,y)}})};
    row.appendChild(i);attachMic(i,row);row.appendChild(s);a.appendChild(row)}
   paintPost(p)}
@@ -327,15 +328,33 @@ h2{{font-size:18px;margin:4px 0 8px}}h3{{font-size:15px;color:#d0567f;margin:10p
 .mnItem{{text-align:left;border:1px solid #ffd0a8;background:#fff8f0;border-radius:12px;padding:8px 10px}}.mnItem.on{{background:#ffe0c2;border-color:#c45c26}}
 .mnItem b{{display:block;font-size:14px}}.mnItem small{{color:#9a7b88}}
 .mnX{{display:block;width:100%;margin-top:8px;border:0;border-radius:14px;padding:12px;font-weight:800;background:#c45c26;color:#fff}}
-/* cosmetics */
-.mem.rw-bg{{background:linear-gradient(135deg,#fff0e0,#ffd7b5 40%,#ffe8d6)!important;border-radius:12px;padding:4px 6px}}
-.mem.rw-frame .avw,.mem.rw-frame .av{{box-shadow:0 0 0 3px #e67e22,0 0 0 6px #f5d76e55!important;border-radius:50%}}
-.mem.rw-frame .avw{{background:url(img/rewards/momiji-frame.svg) center/contain no-repeat}}
-.mem.rw-icon .avw::after{{content:"";position:absolute;right:-4px;top:-4px;width:16px;height:16px;background:url(img/rewards/momiji-icon.svg) center/contain no-repeat;pointer-events:none}}
+/* cosmetics (v37: theme via data-rw-*) */
+.mem.rw-bg{{border-radius:12px;padding:4px 6px}}
+.mem.rw-bg[data-rw-bg="momiji-bg"]{{background:linear-gradient(135deg,#fff0e0,#ffd7b5 40%,#ffe8d6)!important}}
+.mem.rw-bg[data-rw-bg="xmas-bg"]{{background:linear-gradient(135deg,#fff5f5,#e8f8ef 45%,#ffe8e8)!important}}
+.mem.rw-bg[data-rw-bg="shogatsu-bg"]{{background:linear-gradient(135deg,#fffaf0,#ffe8e8 40%,#fff4cc)!important}}
+.mem.rw-frame .avw,.mem.rw-frame .av{{border-radius:50%}}
+.mem.rw-frame[data-rw-frame="momiji-frame"] .avw,.mem.rw-frame[data-rw-frame="momiji-frame"] .av{{box-shadow:0 0 0 3px #e67e22,0 0 0 6px #f5d76e55!important}}
+.mem.rw-frame[data-rw-frame="momiji-frame"] .avw{{background:url(img/rewards/momiji-frame.svg) center/contain no-repeat}}
+.mem.rw-frame[data-rw-frame="xmas-frame"] .avw,.mem.rw-frame[data-rw-frame="xmas-frame"] .av{{box-shadow:0 0 0 3px #c0392b,0 0 0 6px #1e844955!important}}
+.mem.rw-frame[data-rw-frame="xmas-frame"] .avw{{background:url(img/rewards/xmas-frame.svg) center/contain no-repeat}}
+.mem.rw-frame[data-rw-frame="shogatsu-frame"] .avw,.mem.rw-frame[data-rw-frame="shogatsu-frame"] .av{{box-shadow:0 0 0 3px #c0392b,0 0 0 6px #d4af3755!important}}
+.mem.rw-frame[data-rw-frame="shogatsu-frame"] .avw{{background:url(img/rewards/shogatsu-frame.svg) center/contain no-repeat}}
+.mem.rw-icon .avw{{position:relative}}
+.mem.rw-icon .avw::after{{content:"";position:absolute;right:-4px;top:-4px;width:16px;height:16px;pointer-events:none}}
+.mem.rw-icon[data-rw-icon="momiji-icon"] .avw::after{{background:url(img/rewards/momiji-icon.svg) center/contain no-repeat}}
+.mem.rw-icon[data-rw-icon="xmas-icon"] .avw::after{{background:url(img/rewards/xmas-icon.svg) center/contain no-repeat}}
+.mem.rw-icon[data-rw-icon="shogatsu-icon"] .avw::after{{background:url(img/rewards/shogatsu-icon.svg) center/contain no-repeat}}
 .mem.rw-sticker{{position:relative}}
-.mem.rw-sticker::after{{content:"";position:absolute;right:4px;top:4px;width:28px;height:28px;background:url(img/rewards/momiji-sticker.svg) center/contain no-repeat;opacity:.9;pointer-events:none}}
+.mem.rw-sticker::after{{content:"";position:absolute;right:4px;top:4px;width:28px;height:28px;opacity:.9;pointer-events:none}}
+.mem.rw-sticker[data-rw-sticker="momiji-sticker"]::after{{background:url(img/rewards/momiji-sticker.svg) center/contain no-repeat}}
+.mem.rw-sticker[data-rw-sticker="xmas-sticker"]::after{{background:url(img/rewards/xmas-sticker.svg) center/contain no-repeat}}
+.mem.rw-sticker[data-rw-sticker="shogatsu-sticker"]::after{{background:url(img/rewards/shogatsu-sticker.svg) center/contain no-repeat}}
 .mem.rw-fx{{position:relative;overflow:hidden}}
-.mem.rw-fx::before{{content:"🍁🍂🍁";position:absolute;left:0;right:0;top:0;font-size:12px;opacity:.55;animation:leafFall 6s linear infinite;pointer-events:none;letter-spacing:8px}}
+.mem.rw-fx::before{{position:absolute;left:0;right:0;top:0;font-size:12px;opacity:.55;animation:leafFall 6s linear infinite;pointer-events:none;letter-spacing:8px}}
+.mem.rw-fx[data-rw-fx="momiji-fx"]::before{{content:"🍁🍂🍁"}}
+.mem.rw-fx[data-rw-fx="xmas-fx"]::before{{content:"❄️✨❄️"}}
+.mem.rw-fx[data-rw-fx="shogatsu-fx"]::before{{content:"🎊✨🧧"}}
 @keyframes leafFall{{0%{{transform:translateY(-120%)}}100%{{transform:translateY(220%)}}}}
 #yzs{{display:block;width:100%;min-height:44px;margin:12px 0 0;background:#fff;color:#d0567f;border:2px solid #d0567f;border-radius:22px;font-size:16px;font-weight:bold}}
 #pfBtn{{display:block;width:100%;box-sizing:border-box;text-align:center;min-height:44px;line-height:44px;margin:8px 0 2px;background:#fff;color:#6a4a9a;border:2px solid #c8a0e0;border-radius:22px;font-size:16px;font-weight:800;text-decoration:none}}
@@ -361,7 +380,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v36'
+SWV='omoide-v37'
 open(os.path.join(D,'sw.js'),'w').write("const C='"+SWV+"';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(fetch(e.request).then(r=>{const c=r.clone();caches.open(C).then(x=>x.put(e.request,c));return r}).catch(()=>caches.match(e.request)))});")
 json.dump({"name":"ゆず＆みんなの思い出","short_name":"みんなの思い出","start_url":"./","scope":"./","display":"standalone","background_color":"#fff0f5","theme_color":"#ffb3c8","icons":[{"src":"icon-192.png","sizes":"192x192","type":"image/png"},{"src":"icon-512.png","sizes":"512x512","type":"image/png"}]},open(os.path.join(D,'manifest.webmanifest'),'w'),ensure_ascii=False)
 dts=[(d,w) for d,w,_ in mem if re.match(r'\d{4}-\d\d-\d\d$',d)]
@@ -405,7 +424,7 @@ def comp_rank(score_map, ym='0000-00'):
 # ensure Nov stub exists (not finalized until after month end)
 nov='2026-11';nov_path=os.path.join(D,'data','monthly',nov+'.json')
 if not os.path.exists(nov_path):
-    json.dump({'month':nov,'finalized':False,'theme':'紅葉','note':'11月スタート！ライブ集計は端末のリアクション・返事＋公開投稿。確定スナップショットは月末以降にゆずが公開するよ。','ranking':[],'updated':now},open(nov_path,'w'),ensure_ascii=False,indent=1)
+    json.dump({'month':nov,'finalized':False,'theme':'クリスマス','note':'11月スタート！報酬はクリスマステーマ🎄。ライブ集計は端末のリアクション・返事＋公開投稿。確定スナップショットは月末以降にゆずが公開するよ。','ranking':[],'updated':now},open(nov_path,'w'),ensure_ascii=False,indent=1)
 # finalize previous months if any (post-only baseline when missing)
 jst=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
 cur_ym=jst.strftime('%Y-%m')

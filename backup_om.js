@@ -1,4 +1,4 @@
-/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v36 */
+/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v37 */
 (function(){
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
@@ -9,6 +9,7 @@ function markPhotosSent(pp){try{var all=JSON.parse(localStorage.getItem('om_pf_p
 function pendingProfileFields(){try{var all=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{},out={};Object.keys(all).forEach(function(name){if(String(name).indexOf('__')===0)return;var f=all[name];if(!f||typeof f!=='object'||Array.isArray(f))return;var clean={};Object.keys(f).forEach(function(k){if(k.indexOf('__')===0)return;if(f[k]!=null&&String(f[k]).trim()!=='')clean[k]=f[k]});if(Object.keys(clean).length)out[name]=clean});return out}catch(e){return {}}}
 function markFieldsSent(pf){try{var all=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{};Object.keys(pf||{}).forEach(function(name){if(!all[name])all[name]={};all[name].__sentAt=Date.now()});localStorage.setItem('om_pf_fields',JSON.stringify(all));window.__OM_PF_FIELDS=all}catch(e){}}
 /* v36: profile display order (Eiji) */
+/* v37: monthly christmas/shogatsu rewards + profiles arrange quote fix */
 function pendingProfileOrder(){try{var o=JSON.parse(localStorage.getItem('om_pf_seq')||'null');if(Array.isArray(o)&&o.length)return o.filter(function(x){return typeof x==='string'&&x});var f=JSON.parse(localStorage.getItem('om_pf_fields')||'{}')||{};if(Array.isArray(f.__order)&&f.__order.length)return f.__order.filter(function(x){return typeof x==='string'&&x})}catch(e){}return null}
 function markOrderSent(){try{localStorage.setItem('om_pf_seq_sent',String(Date.now()))}catch(e){}}
 function snap(){var c=(window.__OM_CLOSE)||{},pp=pendingProfilePhotos(),pf=pendingProfileFields(),po=pendingProfileOrder();var o={app:'omoide',v:7,sent:jst().slice(0,16),reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',seenrp:g('om_seenrp',{}),marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),profile_photos:pp,profile_fields:pf,closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}};if(po)o.profile_order=po;return o}
