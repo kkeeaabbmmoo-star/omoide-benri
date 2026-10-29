@@ -467,7 +467,7 @@ window.__OM_PF_PHOTOS=loadLocal();
 window.__OM_PF_FIELDS=loadFields();
 fetch('data/profiles.json?t='+Date.now(),{cache:'no-store'})
   .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
-  .then(render)
+  .then(function(d){render(d);try{updatePendSt()}catch(e){}})
   .catch(function(e){document.getElementById('list').innerHTML='<p class="empty">読み込めなかったよ：'+esc(e.message)+'</p>'});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');
 })();
