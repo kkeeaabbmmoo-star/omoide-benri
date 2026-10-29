@@ -47,7 +47,9 @@ def payloads(txt, source_name=None):
             elif isinstance(o,dict):
                 out.append(o)
         except Exception as e:
-            if source_name: print('attachment/body JSON読めず:',source_name,e,file=sys.stderr)
+            # short/empty mail bodies are normal when payload is in a JSON attachment
+            if source_name and '{' in (txt or ''):
+                print('attachment/body JSON読めず:',source_name,e,file=sys.stderr)
     good=[o for o in out if isinstance(o,dict) and o.get('app')=='omoide']
     if not good and out:
         print('omoide以外のJSON:', source_name or '(body)', file=sys.stderr)
@@ -101,8 +103,14 @@ def publish_profile_photos(o):
                 raw=base64.b64decode(b64)
             except Exception as e:
                 print('b64 fail', name, slot, e); continue
+            if len(raw)<32:
+                print('skip tiny jpeg', name, slot, len(raw),'bytes'); continue
             rel=f'data/profile_photos/{safe}_{slot}.jpg'
             dest=os.path.join(D, rel)
+            # never shrink/overwrite a larger existing photo with a smaller one unless clearly bigger content
+            if os.path.exists(dest) and os.path.getsize(dest)>len(raw) and os.path.getsize(dest)>=32:
+                print('keep existing larger photo', rel, os.path.getsize(dest),'>',len(raw)); 
+                photos[slot]=rel; n+=1; continue
             open(dest,'wb').write(raw)
             photos[slot]=rel
             n+=1
