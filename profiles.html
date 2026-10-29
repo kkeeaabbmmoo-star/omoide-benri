@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <style>
-body{margin:0;background:linear-gradient(180deg,#fff0f5,#fff8e6) fixed;font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;color:#4a3340;line-height:1.55;padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
+body{margin:0;background:#fff5f8;background-image:linear-gradient(180deg,#fff0f5,#fff8e6);background-attachment:scroll;font-family:-apple-system,"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif;color:#4a3340;line-height:1.55;padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
 header{padding:calc(env(safe-area-inset-top)+14px) 14px 8px;text-align:center}
 h1{font-size:20px;margin:0}
 .sub{color:#9a7b88;font-size:12px;margin-top:4px}
@@ -49,8 +49,8 @@ main{max-width:620px;margin:auto;padding:8px 12px 24px}
 #jump{bottom:calc(env(safe-area-inset-bottom)+96px);z-index:20}
 body{padding-bottom:calc(env(safe-area-inset-bottom)+130px)}
 /* v40: header status must stay readable — no fog overlays */
-header{position:relative;z-index:2;background:linear-gradient(180deg,#fff0f5 70%,rgba(255,240,245,.92))}
-.sub{color:#6a4a58;font-size:12px;margin-top:4px;font-weight:700;background:rgba(255,255,255,.92);display:inline-block;padding:3px 10px;border-radius:999px;border:1px solid #ffd0e0}
+header{position:relative;z-index:2;background:#fff0f5}
+.sub{color:#5a3a48;font-size:12px;margin-top:4px;font-weight:700;background:#fff;display:inline-block;padding:4px 12px;border-radius:999px;border:1px solid #ffd0e0;box-shadow:0 1px 4px #0001;-webkit-font-smoothing:antialiased}
 .empty{text-align:center;padding:40px;color:#9a7b88}
 .pgH{font-size:13px;font-weight:800;color:#a0466a;margin:10px 0 6px}
 .pg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
@@ -58,7 +58,9 @@ header{position:relative;z-index:2;background:linear-gradient(180deg,#fff0f5 70%
 .pgSlot{aspect-ratio:1;border-radius:12px;border:1.5px dashed #f3c6d5;background:#fff6f9;overflow:hidden;position:relative;padding:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .pgSlot.has{border-style:solid;border-color:#ffb3c8}
 .pgSlot img{width:100%;height:100%;object-fit:cover;display:block}
-.pgSlot .plus{font-size:22px;color:#c0587f;font-weight:800}
+.pgSlot .plus{font-size:22px;color:#c0587f;font-weight:800;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;height:100%;line-height:1.1}
+.pgSlot .plus .cam{font-size:26px}
+.pgSlot .plus .lab{font-size:9px;font-weight:800;color:#a0466a;opacity:.85}
 .pgSlot .tag{position:absolute;left:3px;bottom:3px;font-size:9px;font-weight:800;background:#ffe08a;color:#8a5a10;border-radius:6px;padding:1px 4px}
 .pgOv{position:fixed;inset:0;z-index:2147483600;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
 .pgOv img{max-width:min(92vw,520px);max-height:70vh;border-radius:14px;object-fit:contain;background:#222}
@@ -280,7 +282,7 @@ function photoGridHtml(name, published){
     if(src){
       h+='<button type="button" class="pgSlot has" data-i="'+i+'"><img src="'+esc(src)+'" alt="">'+(pending?'<span class="tag">未送信</span>':'')+'</button>';
     }else{
-      h+='<button type="button" class="pgSlot" data-i="'+i+'"><span class="plus">＋</span></button>';
+      h+='<button type="button" class="pgSlot" data-i="'+i+'"><span class="plus"><span class="cam">📷</span><span class="lab">追加</span></span></button>';
     }
   }
   return h+'</div>';
