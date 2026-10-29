@@ -55,11 +55,11 @@ def mbar():
         n=E(plain(w));ic=f'<img src="img/avatars/{AV[w]}.png?v=1" alt="{n}" width="48" height="48">' if w in AV else f'<span>{ICON.get(w,"💬")}</span>'
         it+=f'<a href="#m-{n}" title="{n}" aria-label="{n}" data-last="{E(last(w))}"><span class="mi">{ic}</span><small class="ago"></small></a>'
     return f'<div id="mbar">{it}</div>'
-memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button></div>'+mbar()
+memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思い出を書くノートだよ（{len(names)}人）</p>'+''.join(pcard(w) for w in names)+'<button id="yzs" onclick="omSend()">💌 ゆずとみんなに送る（リアクション・返事）</button><div id="bk"><button onclick="omBackup()">📦 バックアップ</button><button onclick="omRestore()">↩️ 復元</button><button onclick="omRestoreYuzu(this)" data-k="4873770f1996da81">💖 ゆずから復元</button></div>'+mbar()
 # v48: 最下部はプロフィールへの大きなボタンのみ（便利ノートリンクは置かない）
 BENRI='<a class="pfBottom" href="profiles.html">👭 みんなのプロフィールへ</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=6"></script><script src="pf_store.js?v=1"></script><script src="backup_om.js?v=11"></script><script src="sent-status.js?v=ss7"></script><script src="pf_preview.js?v=2"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=50"></script><script src="monthly.js?v=7"></script><script>
+JS=r'''<script src="send.js?v=6"></script><script src="pf_store.js?v=1"></script><script src="backup_om.js?v=12"></script><script src="sent-status.js?v=ss7"></script><script src="pf_preview.js?v=2"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=50"></script><script src="monthly.js?v=7"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
@@ -404,10 +404,10 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v51'
+SWV='omoide-v52'
 # v48: precache profiles + closeness so iPhone PWA picks up pt UI; network-first for HTML/JS
 _SW=("const C='"+SWV+"';"+
-"const PRE=['./','index.html','profiles.html','closeness.js','closeness.js?v=50','pf_store.js','pf_store.js?v=1','send.js','send.js?v=6','backup_om.js','backup_om.js?v=11','sent-status.js','sent-status.js?v=ss7','nav.js','nav.js?v=nv4','manifest.webmanifest','data/profiles.json','data/posts.json','data/levels.json'];"+
+"const PRE=['./','index.html','profiles.html','closeness.js','closeness.js?v=50','pf_store.js','pf_store.js?v=1','send.js','send.js?v=6','backup_om.js','backup_om.js?v=12','sent-status.js','sent-status.js?v=ss7','nav.js','nav.js?v=nv4','manifest.webmanifest','data/profiles.json','data/posts.json','data/levels.json'];"+
 "self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(PRE.map(u=>new Request(u,{cache:'reload'}))).catch(()=>{})).then(()=>self.skipWaiting()))});"+
 "self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));"+
 "self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;"+

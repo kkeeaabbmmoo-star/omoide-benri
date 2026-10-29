@@ -260,8 +260,8 @@ window.omBackup=function(){
     alert('📦 バックアップを保存＆コピーしたよ（'+name+'）※写真はファイル側。localStorageには書いてないよ');
   })();
 };
-window.omRestore=function(){
-  var s=prompt('バックアップのJSONを貼り付けてね（今のデータは消さずに足すだけだよ）');if(!s)return;
+window.omRestore=function(arg){
+  var s=(typeof arg==='string')?arg:prompt('バックアップのJSONを貼り付けてね（今のデータは消さずに足すだけだよ）');if(!s)return;
   var o;try{o=JSON.parse(s.slice(s.indexOf('{'),s.lastIndexOf('}')+1))}catch(e){alert('JSONが読めなかったよ💦');return}
   var add=0;function m(k,src,conv){var cur=g(k,{});Object.keys(src||{}).forEach(function(i){if(cur[i]==null){cur[i]=conv?conv(src[i]):src[i];add++}});lsSet(k,cur)}
   m(K.r,o.reactions);m(K.p,o.replies,function(v){return typeof v==='string'?{t:v}:v});m(K.d,o.read);m('om_ack',o.ack);m('om_ackrp',o.ackrp);m('om_seenrp',o.seenrp);if(o.filt&&!localStorage.getItem('om_filt'))lsSet('om_filt',o.filt);if(Array.isArray(o.marks)&&!localStorage.getItem('om_marks'))lsSet('om_marks',o.marks);
@@ -290,5 +290,6 @@ window.omRestore=function(){
   }
   alert(add+'件たしたよ💖');location.reload();
 };
+window.omRestoreYuzu=function(b){window.OM_RST=(b&&b.dataset.k)||window.OM_RST;if(!confirm('ゆずが保管してるバックアップを読み込むよ（今のデータは消さずに足すだけ）。いい？'))return;fetch('data/restore/'+(window.OM_RST||'')+'.json?'+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){window.omRestore(t)}).catch(function(){alert('読み込めなかったよ💦ゆずに教えてね')})};
 window.omSnap=snapSync;
 })();
