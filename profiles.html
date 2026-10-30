@@ -149,7 +149,7 @@ body.sortMode .sortHint,body.sortMode .sortList{display:block}
 <a id="jump" href="./">💞 ノート</a>
 <input type="file" id="pgFile" accept="image/*" style="display:none">
 <script src="pf_store.js?v=1"></script>
-<script src="closeness.js?v=50"></script>
+<script src="closeness.js?v=51"></script>
 <script>
 (function(){
 /* スロット上限（tools/photo_limits.py と同じ） */
@@ -162,27 +162,50 @@ function loadSeq(){var all=loadFields();var o=all&&all.__order;return (Array.isA
 function mergeSeq(base, members){var local=loadSeq(), seen={}, out=[];function add(n){if(n&&members[n]&&!seen[n]){out.push(n);seen[n]=1}}(local||[]).forEach(add);(base||[]).forEach(add);Object.keys(members||{}).forEach(add);return out}
 function putSeq(arr){var all=loadFields();all.__order=arr.slice();saveFields(all)}
 
-/* v48: 親密度pt（closeness.js scoreOne と同じ式。closeness未読込でも動く） */
+/* v48/v54: 親密度pt（closeness.js scoreOne と同じ式。closeness未読込でも動く） */
 var ORDER_MODE_KEY='om_pf_order_mode';
-var PF_RX={'❤️':3,'🙏':1,'👏':2};
+var PF_RX={'❤️':3,'🙏':1,'👏':2}; // 旧10月以前
+var PF_ACTION_FROM=window.__OM_ACTION_FROM||'2026-11-01';
+var PF_ACTION_PTS=window.__OM_ACTION_PTS||{1:3,2:5,3:10};
 function orderMode(){try{var m=localStorage.getItem(ORDER_MODE_KEY);return (m==='custom')?'custom':'pts'}catch(e){return 'pts'}}
 function setOrderMode(m){try{localStorage.setItem(ORDER_MODE_KEY,m==='custom'?'custom':'pts')}catch(e){}}
 function pfLs(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
-function pfPtsOfReaction(s){
+function pfKeyDate(k){var i=k.lastIndexOf('_');return i>=0?k.slice(i+1):''}
+function pfSplitRx(s){
+  if(!s)return [];
+  if(typeof s!=='string')s=String(s);
+  var known={'❤️':1,'🙏':1,'👏':1};
+  try{var marks=JSON.parse(localStorage.getItem('om_marks')||'null');if(Array.isArray(marks))marks.forEach(function(e){if(e)known[e]=1})}catch(e){}
+  var keys=Object.keys(known).sort(function(a,b){return b.length-a.length}),out=[],i=0;
+  while(i<s.length){
+    var hit=null;for(var k=0;k<keys.length;k++){if(s.indexOf(keys[k],i)===i){hit=keys[k];break}}
+    if(hit){out.push(hit);i+=hit.length;continue}
+    var rest=s.slice(i),g;(typeof Intl!=='undefined'&&Intl.Segmenter)?(g=Array.from(new Intl.Segmenter('ja',{granularity:'grapheme'}).segment(rest))[0].segment):(g=Array.from(rest)[0]);
+    out.push(g);i+=g.length;
+  }
+  return out;
+}
+function pfPtsOfReaction(s, dateStr){
   if(s==null||s==='')return 0;
+  try{if(window.omCloseness&&typeof window.omCloseness.ptsOfReaction==='function')return window.omCloseness.ptsOfReaction(s, dateStr)}catch(e){}
+  var useNew=!dateStr||dateStr>=PF_ACTION_FROM;
+  if(useNew){
+    var parts=pfSplitRx(s),n=parts.length;
+    if(n<=0)return 0;
+    if(n>=3)return PF_ACTION_PTS[3];
+    if(n===2)return PF_ACTION_PTS[2];
+    return PF_ACTION_PTS[1];
+  }
   if(PF_RX[s]!=null)return PF_RX[s];
-  try{
-    if(window.omCloseness&&typeof window.omCloseness.scoreOne==='function'){
-      /* prefer shared path below */
-    }
-  }catch(e){}
-  return 2;
+  var po=pfSplitRx(s);if(po.length<=1)return 2;
+  var mx=0;po.forEach(function(p){var v=PF_RX[p]!=null?PF_RX[p]:2;if(v>mx)mx=v});
+  return mx;
 }
 function pfScoreLocal(name){
   var R=pfLs('om_react',{}),P=pfLs('om_reply',{}),n=0;
   var postsN=+((window.__OM_POSTS||{})[name]||0);
   n+=postsN*10;
-  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=pfPtsOfReaction(R[k])});
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=pfPtsOfReaction(R[k], pfKeyDate(k))});
   Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)n+=15});
   var peak=pfLs('om_pts_peak',{});
   if((peak[name]||0)<n){

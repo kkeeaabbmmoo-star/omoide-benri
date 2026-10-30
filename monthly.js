@@ -1,8 +1,12 @@
-/* 🏆 月間ランキング (om_monthly v37 · あみだ同点・報酬枠 floor((n-1)/2) · 11月🎄/12月🎍/2月TBD・紅葉は2027-11温存) — 点数ルールは closeness scoreOne と同じ式・月で区切る。ゆず除外。 */
+/* 🏆 月間ランキング (om_monthly v38 · あみだ同点・報酬枠 floor((n-1)/2) · 11月🎄/12月🎍/2月TBD・紅葉は2027-11温存)
+ * 11/1〜アクションマーク点数は window.__OM_ACTION_PTS（closeness.js と共通・仮） */
 (function(){
 var START='2026-11-01';
 var KM='om_marks', KE='om_equip'; // local equip preview (never deletes server inventory)
-var RP='❤️',TH='🙏',CL='👏',PV={};PV[RP]=3;PV[TH]=1;PV[CL]=2;
+/* ★仮の点数。closeness が先に読めば同じ定数を共有。調整はこの1か所（または closeness の ACTION_MARK_PTS） */
+var ACTION_MARK_PTS=window.__OM_ACTION_PTS||{1:3,2:5,3:10};
+var ACTION_MARK_FROM=window.__OM_ACTION_FROM||START;
+var RP='❤️',TH='🙏',CL='👏',PV={};PV[RP]=3;PV[TH]=1;PV[CL]=2; // 旧式（月間は11月スタートなので基本使わない）
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}
 function esc(t){var d=document.createElement('div');d.textContent=t;return d.innerHTML}
 function jstNow(){return new Date(Date.now()+9*3600e3)}
@@ -41,16 +45,25 @@ function splitReaction(s){
   }
   return out;
 }
-function ptsOfReaction(s){
+function ptsOfReaction(s, dateStr){
   if(s==null||s==='')return 0;
+  /* 月間は11/1スタート。念のため日付で切替（旧式は10月以前向け） */
+  var useNew=!dateStr || dateStr>=ACTION_MARK_FROM;
+  if(useNew){
+    var parts=splitReaction(s), n=parts.length;
+    if(n<=0)return 0;
+    if(n>=3)return ACTION_MARK_PTS[3];
+    if(n===2)return ACTION_MARK_PTS[2];
+    return ACTION_MARK_PTS[1];
+  }
   if(PV[s]!=null)return PV[s];
-  var parts=splitReaction(s);
-  if(parts.length<=1)return 2;
-  var mx=0;parts.forEach(function(p){var v=PV[p]!=null?PV[p]:2;if(v>mx)mx=v});
+  var partsOld=splitReaction(s);
+  if(partsOld.length<=1)return 2;
+  var mx=0;partsOld.forEach(function(p){var v=PV[p]!=null?PV[p]:2;if(v>mx)mx=v});
   return mx;
 }
-function ptsOfEmoji(e){return ptsOfReaction(e)}
-/* 既存ルールを月でフィルタ：投稿+10 / ❤️+3 🙏+1 👏+2 他+2 / 返事+15。コンボは1件・最高pt。ピーク・減衰なし */
+function ptsOfEmoji(e){return ptsOfReaction(e, ACTION_MARK_FROM)}
+/* 月間：投稿+10 / アクションマーク個数加点 / 返事+15。コンボは1件。ピーク・減衰なし */
 function scoreMonth(name,b){
   var R=g('om_react',{}),P=g('om_reply',{});
   var postsN=0;
@@ -61,8 +74,9 @@ function scoreMonth(name,b){
   var rSum=0,rN=0,react={};
   Object.keys(R).forEach(function(k){
     if(k.indexOf(name+'_')!==0)return;
-    if(!inMonth(keyDate(k),b))return;
-    var e=R[k],v=ptsOfReaction(e);react[e]=(react[e]||0)+1;rSum+=v;rN++;
+    var d=keyDate(k);
+    if(!inMonth(d,b))return;
+    var e=R[k],v=ptsOfReaction(e, d);react[e]=(react[e]||0)+1;rSum+=v;rN++;
   });
   var replyN=0;
   Object.keys(P).forEach(function(k){
@@ -185,15 +199,17 @@ function openBag(name){
   ov.onclick=function(ev){if(ev.target===ov||ev.target.classList.contains('mnX'))ov.remove()};
 }
 function rulesHTML(){
-  return '<details class="mnRules"><summary>🏆 月間ランキングのルール</summary>'
+  var p1=ACTION_MARK_PTS[1],p2=ACTION_MARK_PTS[2],p3=ACTION_MARK_PTS[3];
+  return '<details class="mnRules" open><summary>🏆 月間ランキングのルール</summary>'
     +'<div class="mnRulesB">'
     +'<p><b>スタート：</b>2026年11月1日（Asia/Tokyo）から毎月開催</p>'
-    +'<p><b>対象：</b>ゆず以外の全員（いまのノートにいるメンバー全員）。人数はメンバーが増減したら自動で変わるよ</p>'
-    +'<p><b>集計：</b>その月の1日〜月末までの親密度ポイント合計だけ（通常の点数ルールと同じ）</p>'
+    +'<p><b>対象：</b>ゆず以外の全員（いまのノートにいるメンバー全員）。人数はメンバーが増減したら自動で変わるよ。ゆずはランキング対象外（レベルだけ上がるよ）</p>'
+    +'<p><b>集計：</b>その月の1日〜月末までのポイント合計</p>'
     +'<ul>'
     +'<li>投稿1件 → +10pt</li>'
-    +'<li>リアクション：❤️+3　🙏+1　👏+2　その他の絵文字+2</li>'
-    +'<li>組み合わせ（例😉✨）は1件。点数は中のマークの最高pt</li>'
+    +'<li><b>アクションマーク（エイジが投稿につけるマーク）</b>：1つ → <b>+'+p1+'pt</b>　／　2つコンボ → <b>+'+p2+'pt</b>　／　3つトリプル（👏お礼入り） → <b>+'+p3+'pt</b></li>'
+    +'<li>※この点数は仮だよ。運用してみて調整するかも♡</li>'
+    +'<li>組み合わせは1件のリアクションとして数えるよ</li>'
     +'<li>返事1件 → +15pt</li>'
     +'<li>しきい値なし・減衰なし。その月の合計のみ（過去月のピークは使わない）</li>'
     +'</ul>'
@@ -237,8 +253,19 @@ function render(){
   var html='<summary>🏆 月間ランキング</summary><div class="mnWrap">';
   html+=rulesHTML();
   if(today<START){
+    var p1=ACTION_MARK_PTS[1],p2=ACTION_MARK_PTS[2],p3=ACTION_MARK_PTS[3];
     html+='<div class="mnHero">🎄 <b>11月スタート！</b><div class="mnCount">あと <b>'+Math.max(0,startDays)+'</b> 日（'+START.replace(/-/g,'/')+' 0:00 JST）</div>'
       +'<p>11月1日から、ゆず以外のみんなで月間ポイントを競うよ。報酬はクリスマステーマ🎄（12月はお正月🎍）</p></div>';
+    html+='<div class="mnHero" style="background:#ffe8f0;border:2px solid #ff8fb3">'
+      +'<b>📣 お知らせ（みんなへ）</b>'
+      +'<p style="margin:6px 0 0">11月1日から、エイジがつける<strong>アクションマークの点数</strong>が新しくなるよ♡</p>'
+      +'<ul style="margin:6px 0 0;padding-left:18px">'
+      +'<li>マーク <b>1つ</b> → <b>'+p1+'pt</b></li>'
+      +'<li>マーク <b>2つ</b>コンボ → <b>'+p2+'pt</b></li>'
+      +'<li>マーク <b>3つ</b>トリプル（👏お礼入り） → <b>'+p3+'pt</b></li>'
+      +'</ul>'
+      +'<p style="margin:6px 0 0;font-size:12.5px">投稿+10・返事+15はそのまま。点数は仮だから、様子を見て調整するかも。ゆずはランキング対象外（レベルだけ上がるよ）💖</p>'
+      +'</div>';
     /* 同点あみだの見え方デモ（固定データ・本番集計ではない） */
     var demo=rankList([
       {name:'瀬戸',pts:50},{name:'らん',pts:50},{name:'レイ',pts:50},{name:'まい',pts:50},{name:'まちゃ',pts:50},

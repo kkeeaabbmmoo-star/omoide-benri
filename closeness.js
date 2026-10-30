@@ -1,6 +1,12 @@
-/* 💞 親密度と関係図 (om_close v39) — ptは om_pts_peak を維持。レベル閾値/報酬は data/levels.json */
+/* 💞 親密度と関係図 (om_close v40) — ptは om_pts_peak を維持。レベル閾値/報酬は data/levels.json
+ * 2026-11-01〜 アクションマーク点数は ACTION_MARK_PTS のみで調整（1つ/2コンボ/3トリプル） */
 (function(){
-var RP='❤️',TH='🙏',CL='👏',PV={}; // ハート3 いいね1 拍手2
+/* ★点数の仮設定（ここだけ変えれば全体に反映）。月間側は window.__OM_ACTION_PTS を参照 */
+var ACTION_MARK_FROM='2026-11-01';
+var ACTION_MARK_PTS={1:3,2:5,3:10}; // 1マーク=3 / 2コンボ=5 / 3トリプル(👏入り)=10
+window.__OM_ACTION_FROM=ACTION_MARK_FROM;
+window.__OM_ACTION_PTS=ACTION_MARK_PTS;
+var RP='❤️',TH='🙏',CL='👏',PV={}; // 〜2026-10-31 旧ルール：ハート3 いいね1 拍手2
 PV[RP]=3;PV[TH]=1;PV[CL]=2;
 var FL={
  'しの':[[1000,'やさしい言葉が増えたよ'],[3000,'エイジって名前で呼んでくれる']],
@@ -25,7 +31,7 @@ function rewardLabel(lv, unlocked){
 }
 function members(){return [].map.call(document.querySelectorAll('.mem[id^="m-"]'),function(el){return {id:el.id,name:el.id.slice(2),el:el,av:el.dataset.av||'',ic:el.dataset.ic||'💬'}})}
 function posts(){return window.__OM_POSTS||{}}
-/* コンボ（例 😉✨）は1リアクション。点数はその中の最高pt（❤️3 👏2 他2 🙏1） */
+/* コンボ（例 😉✨）は1リアクション。11/1〜はマーク個数で加点（ACTION_MARK_PTS）。〜10/31は旧・最高pt */
 function splitReaction(s){
   if(!s)return [];
   if(typeof s!=='string')s=String(s);
@@ -45,18 +51,28 @@ function splitReaction(s){
   }
   return out;
 }
-function ptsOfReaction(s){
+function keyDate(k){var i=k.lastIndexOf('_');return i>=0?k.slice(i+1):''}
+/* dateStr が ACTION_MARK_FROM 以降（または未指定で新ルール）なら個数加点。10月以前は旧PV */
+function ptsOfReaction(s, dateStr){
   if(s==null||s==='')return 0;
+  var useNew=!dateStr || dateStr>=ACTION_MARK_FROM;
+  if(useNew){
+    var parts=splitReaction(s), n=parts.length;
+    if(n<=0)return 0;
+    if(n>=3)return ACTION_MARK_PTS[3];
+    if(n===2)return ACTION_MARK_PTS[2];
+    return ACTION_MARK_PTS[1];
+  }
   if(PV[s]!=null)return PV[s];
-  var parts=splitReaction(s);
-  if(parts.length<=1)return 2; // その他の単発絵文字
-  var mx=0;parts.forEach(function(p){var v=PV[p]!=null?PV[p]:2;if(v>mx)mx=v});
+  var partsOld=splitReaction(s);
+  if(partsOld.length<=1)return 2; // その他の単発絵文字（旧）
+  var mx=0;partsOld.forEach(function(p){var v=PV[p]!=null?PV[p]:2;if(v>mx)mx=v});
   return mx;
 }
 function scoreOne(name){
   var R=g('om_react',{}),P=g('om_reply',{}),n=0,postsN=+posts()[name]||0;
   n+=postsN*10;
-  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=ptsOfReaction(R[k])});
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')===0)n+=ptsOfReaction(R[k], keyDate(k))});
   Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)n+=15});
   var peak=g('om_pts_peak',{});if((peak[name]||0)<n){peak[name]=n;try{localStorage.setItem('om_pts_peak',JSON.stringify(peak))}catch(e){}}
   return Math.max(n,peak[name]||0);
@@ -65,7 +81,7 @@ function scoreOne(name){
 function scoreBreak(name){
   var R=g('om_react',{}),P=g('om_reply',{}),postsN=+posts()[name]||0;
   var react={};var rSum=0,rN=0;
-  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')!==0)return;var e=R[k],v=ptsOfReaction(e);react[e]=(react[e]||0)+1;rSum+=v;rN++});
+  Object.keys(R).forEach(function(k){if(k.indexOf(name+'_')!==0)return;var e=R[k],v=ptsOfReaction(e, keyDate(k));react[e]=(react[e]||0)+1;rSum+=v;rN++});
   var replyN=0;Object.keys(P).forEach(function(k){if(k.indexOf(name+'_')===0)replyN++});
   var cur=postsN*10+rSum+replyN*15;
   var peak=(g('om_pts_peak',{})[name]||0);
@@ -74,7 +90,7 @@ function scoreBreak(name){
 }
 function openPts(name){
   var b=scoreBreak(name);
-  var reactLines=Object.keys(b.react).map(function(e){var c=b.react[e],v=ptsOfReaction(e);return e+' ×'+c+'（'+v+'pt×'+c+'='+(v*c)+'）'});
+  var reactLines=Object.keys(b.react).map(function(e){var c=b.react[e],v=ptsOfReaction(e, ACTION_MARK_FROM);return e+' ×'+c+'（いまのルール '+v+'pt×'+c+'='+(v*c)+'）'});
   if(!reactLines.length)reactLines=['（まだリアクションなし）'];
   var html='<div class="clPtsOv" id="clPtsOv"><div class="clPtsBox" role="dialog" aria-label="親密度の内訳">'+
     '<div class="clPtsH">💞 '+esc(name)+' の親密度 <b>'+b.shown.toLocaleString()+'pt</b></div>'+
@@ -87,11 +103,12 @@ function openPts(name){
     '</ul>'+
     '<div class="clPtsRule"><b>ルール（実際の計算）</b><ul>'+
       '<li>投稿1件 → <b>+10pt</b>（公開ページの件数）</li>'+
-      '<li>リアクション：❤️+3　🙏+1　👏+2　その他の絵文字+2（その人の投稿につけた分だけ）</li>'+
-      '<li>組み合わせ（例😉✨）は<strong>1件</strong>のリアクション。点数は中のマークの<strong>最高pt</strong>（❤️があれば3pt）</li>'+
+      '<li><b>2026/11/1〜</b> アクションマーク：1つ=<b>'+ACTION_MARK_PTS[1]+'pt</b>　2つコンボ=<b>'+ACTION_MARK_PTS[2]+'pt</b>　3つトリプル（👏お礼入り）=<b>'+ACTION_MARK_PTS[3]+'pt</b>（仮・様子見て調整するかも）</li>'+
+      '<li>〜2026/10/31 は旧ルール：❤️+3　🙏+1　👏+2　他+2／コンボは最高pt</li>'+
+      '<li>組み合わせは<strong>1件</strong>のリアクションとして数えるよ</li>'+
       '<li>返事1件 → <b>+15pt</b>（その人の投稿への返事）</li>'+
       '<li>減衰・上限なし。一度ついたピークptは下がらない（om_pts_peak）</li>'+
-      '<li>ゆずも同じ式。ランキング表はゆず以外</li>'+
+      '<li>ゆずも同じ式。ランキング表はゆず以外（ゆずはレベルだけ）</li>'+
     '</ul></div>'+
     '<button type="button" class="clPtsX">とじる</button></div></div>';
   var old=document.getElementById('clPtsOv');if(old)old.remove();
@@ -412,5 +429,5 @@ function boot(){
   var _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.apply(this,arguments);if(/om_react|om_reply|om_pts_peak/.test(k))setTimeout(render,80)};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
-window.omCloseness={render:render,scoreOne:scoreOne,scoreBreak:scoreBreak,ensureScoreReady:ensureScoreReady,lvOf:lvOf,nextOf:nextOf,prevOf:prevOf,levels:function(){return LEVELS}};
+window.omCloseness={render:render,scoreOne:scoreOne,scoreBreak:scoreBreak,ensureScoreReady:ensureScoreReady,lvOf:lvOf,nextOf:nextOf,prevOf:prevOf,levels:function(){return LEVELS},ptsOfReaction:ptsOfReaction,actionMarkPts:function(){return ACTION_MARK_PTS},actionMarkFrom:function(){return ACTION_MARK_FROM}};
 })();
