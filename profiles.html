@@ -166,7 +166,7 @@ function putSeq(arr){var all=loadFields();all.__order=arr.slice();saveFields(all
 var ORDER_MODE_KEY='om_pf_order_mode';
 var PF_RX={'❤️':3,'🙏':1,'👏':2}; // 旧10月以前
 var PF_ACTION_FROM=window.__OM_ACTION_FROM||'2026-11-01';
-var PF_ACTION_PTS=window.__OM_ACTION_PTS||{1:3,2:5,3:10};
+var PF_ACTION_PTS=window.__OM_ACTION_PTS||{1:2,2:5,3:10};
 function orderMode(){try{var m=localStorage.getItem(ORDER_MODE_KEY);return (m==='custom')?'custom':'pts'}catch(e){return 'pts'}}
 function setOrderMode(m){try{localStorage.setItem(ORDER_MODE_KEY,m==='custom'?'custom':'pts')}catch(e){}}
 function pfLs(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}

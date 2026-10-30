@@ -4,7 +4,7 @@
 var START='2026-11-01';
 var KM='om_marks', KE='om_equip'; // local equip preview (never deletes server inventory)
 /* ★仮の点数。closeness が先に読めば同じ定数を共有。調整はこの1か所（または closeness の ACTION_MARK_PTS） */
-var ACTION_MARK_PTS=window.__OM_ACTION_PTS||{1:3,2:5,3:10};
+var ACTION_MARK_PTS=window.__OM_ACTION_PTS||{1:2,2:5,3:10};
 var ACTION_MARK_FROM=window.__OM_ACTION_FROM||START;
 var RP='❤️',TH='🙏',CL='👏',PV={};PV[RP]=3;PV[TH]=1;PV[CL]=2; // 旧式（月間は11月スタートなので基本使わない）
 function g(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v}catch(e){return d}}

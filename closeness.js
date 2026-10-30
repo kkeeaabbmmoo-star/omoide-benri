@@ -3,7 +3,7 @@
 (function(){
 /* ★点数の仮設定（ここだけ変えれば全体に反映）。月間側は window.__OM_ACTION_PTS を参照 */
 var ACTION_MARK_FROM='2026-11-01';
-var ACTION_MARK_PTS={1:3,2:5,3:10}; // 1マーク=3 / 2コンボ=5 / 3トリプル(👏入り)=10
+var ACTION_MARK_PTS={1:2,2:5,3:10}; // 1マーク=2 / 2コンボ=5 / 3トリプル(👏入り)=10
 window.__OM_ACTION_FROM=ACTION_MARK_FROM;
 window.__OM_ACTION_PTS=ACTION_MARK_PTS;
 var RP='❤️',TH='🙏',CL='👏',PV={}; // 〜2026-10-31 旧ルール：ハート3 いいね1 拍手2
