@@ -137,13 +137,39 @@ var SR='om_seenrp',SRD=JSON.parse(localStorage.getItem(SR)||'{}'); /* legacy kee
 var KA='om_ack',ACK=JSON.parse(localStorage.getItem(KA)||'{}');
 var KAR='om_ackrp',ACKR=JSON.parse(localStorage.getItem(KAR)||'{}');
 var KF='om_filt',FILT=localStorage.getItem(KF)||'all';
+/* v50: 端末・ブラウザごとの localStorage 差（ホーム画面PWA vs Grok内ブラウザ）対策。
+   既存キーは絶対に消さない・上書きしない。足りない分だけ足す。 */
+function saveAck(){localStorage.setItem(KA,JSON.stringify(ACK));localStorage.setItem(KAR,JSON.stringify(ACKR))}
+function softAckFromLocal(){
+  var ch=0,now=Date.now();
+  Object.keys(R).forEach(function(id){if(!ACK[id]){ACK[id]={at:now,via:'react'};ch=1}});
+  Object.keys(P).forEach(function(id){if(P[id]&&P[id].t&&!ACK[id]){ACK[id]={at:P[id].at||now,via:'reply'};ch=1}});
+  Object.keys(RD).forEach(function(id){if(RD[id]&&!ACK[id]){ACK[id]={at:(RD[id]&&RD[id].at)||now,via:'legacy-read'};ch=1}});
+  Object.keys(SRD).forEach(function(id){if(SRD[id]&&!ACKR[id]){ACKR[id]={at:(SRD[id]&&SRD[id].at)||now,via:'legacy-seenrp'};ch=1}});
+  if(ch)saveAck();
+}
+softAckFromLocal();
 if(localStorage.getItem('om_ack_mig')!=='1'){
-  /* スクロール自動既読は未読に戻す。返事済みの投稿だけ確認済み扱い */
-  Object.keys(P).forEach(function(id){if(P[id]&&P[id].t&&!ACK[id])ACK[id]={at:P[id].at||Date.now(),via:'reply'}});
-  localStorage.setItem(KA,JSON.stringify(ACK));
+  softAckFromLocal();
   localStorage.setItem('om_ack_mig','1');
 }
-function saveAck(){localStorage.setItem(KA,JSON.stringify(ACK));localStorage.setItem(KAR,JSON.stringify(ACKR))}
+/* ゆず保管の公開スナップショットを足すだけマージ（空のブラウザ向け）。ホーム画面の値は触らない */
+function softMergePublished(){
+  return fetch('data/restore/4873770f1996da81.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(o){
+    if(!o)return 0;
+    var add=0;
+    function mLS(k,src,conv){if(!src||typeof src!=='object')return;var cur;try{cur=JSON.parse(localStorage.getItem(k)||'{}')||{}}catch(e){cur={}}
+      Object.keys(src).forEach(function(i){if(cur[i]==null){cur[i]=conv?conv(src[i]):src[i];add++}});
+      try{localStorage.setItem(k,JSON.stringify(cur))}catch(e){}}
+    mLS('om_react',o.reactions);mLS('om_reply',o.replies,function(v){return typeof v==='string'?{t:v}:v});
+    mLS('om_ack',o.ack);mLS('om_ackrp',o.ackrp);mLS('om_read',o.read);mLS('om_seenrp',o.seenrp);
+    Object.keys(o.reactions||{}).forEach(function(i){if(R[i]==null){R[i]=o.reactions[i];add++}});
+    Object.keys(o.replies||{}).forEach(function(i){if(P[i]==null){var v=o.replies[i];P[i]=typeof v==='string'?{t:v}:v;add++}});
+    Object.keys(o.ack||{}).forEach(function(i){if(ACK[i]==null){ACK[i]=o.ack[i];add++}});
+    Object.keys(o.ackrp||{}).forEach(function(i){if(ACKR[i]==null){ACKR[i]=o.ackrp[i];add++}});
+    softAckFromLocal();sv();saveAck();
+    return add;
+  }).catch(function(){return 0})}
 function isAck(p){return !!ACK[p.dataset.id]}
 function urp(p){return [].filter.call(p.querySelectorAll('.rp[data-rid]'),function(r){return !ACKR[r.dataset.rid]})}
 function unreadN(p){return (isAck(p)?0:1)+urp(p).length}
@@ -228,7 +254,8 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
    /* v45: ホーム画面名を思い出ノートに */
    /* v46: プロフィール欄折り返し縦スクロール・マキ写真付け替え */
    /* v47: プロフィールに親密度pt表示・ポイント順デフォルト */
-   /* v49: 11/1〜アクションマーク点数 1=3 / 2コンボ=5 / 3トリプル=10（仮・ACTION_MARK_PTS） */
+   /* v49: 11/1〜アクションマーク点数（仮・ACTION_MARK_PTS） */
+   /* v50: 公開スナップショット足すだけマージ＋反応/返事→確認済み（Grok内ブラウザの空LS対策） */
    s.onclick=function(){var v=i.value.trim();if(!v){i.focus();return}var o={t:v,at:TD};if(sel&&sel.textContent){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}var y=window.scrollY||window.pageYOffset||0;var mem=p.closest('.mem');P[id]=o;sv();markAck(p,'reply');draw();nwDraw();requestAnimationFrame(function(){var next=null;if(mem){var posts=[].slice.call(mem.querySelectorAll('.post:not(.hide)'));for(var ii=0;ii<posts.length;ii++){if(!replied(posts[ii].dataset.id)){next=posts[ii];break}}}if(next){var f=next.closest('.fold');if(f)f.open=true;var top=next.getBoundingClientRect().top+window.scrollY-120;window.scrollTo(0,Math.max(0,top))}else{window.scrollTo(0,y)}})};
    row.appendChild(i);attachMic(i,row);row.appendChild(s);a.appendChild(row)}
   paintPost(p)}
@@ -302,6 +329,14 @@ document.querySelectorAll('.mem').forEach(function(mem){
   });
 });
 nwDraw();
+softMergePublished().then(function(n){
+  if(!n)return;
+  try{R=JSON.parse(localStorage.getItem(K)||'{}');P=JSON.parse(localStorage.getItem(KR)||'{}');Object.keys(P).forEach(function(k){if(typeof P[k]==='string')P[k]={t:P[k]}})}catch(e){}
+  try{ACK=JSON.parse(localStorage.getItem(KA)||'{}');ACKR=JSON.parse(localStorage.getItem(KAR)||'{}')}catch(e){}
+  softAckFromLocal();
+  document.querySelectorAll('.post').forEach(function(p){if(p._omDraw)p._omDraw();else paintPost(p)});
+  nwDraw();
+});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js');})();
 </script></body></html>'''
 page=f'''<!doctype html><html lang="ja"><head><meta charset="utf-8">
@@ -405,7 +440,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v55'
+SWV='omoide-v56'
 # v48: precache profiles + closeness so iPhone PWA picks up pt UI; network-first for HTML/JS
 _SW=("const C='"+SWV+"';"+
 "const PRE=['./','index.html','profiles.html','closeness.js','closeness.js?v=52','monthly.js','monthly.js?v=9','pf_store.js','pf_store.js?v=1','send.js','send.js?v=6','backup_om.js','backup_om.js?v=12','sent-status.js','sent-status.js?v=ss7','nav.js','nav.js?v=nv4','manifest.webmanifest','data/profiles.json','data/posts.json','data/levels.json'];"+
