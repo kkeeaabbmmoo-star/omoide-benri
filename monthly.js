@@ -198,6 +198,25 @@ function openBag(name){
   });
   ov.onclick=function(ev){if(ev.target===ov||ev.target.classList.contains('mnX'))ov.remove()};
 }
+
+var MN_TOP_COMMENTS={comments:{}};
+function loadMnTopComments(){
+  return fetch('data/top_comments.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(j&&j.comments)MN_TOP_COMMENTS=j; return MN_TOP_COMMENTS;
+  }).catch(function(){return MN_TOP_COMMENTS});
+}
+function topCmtFor(who){
+  var arr=(MN_TOP_COMMENTS.comments||{})[who]||[];
+  if(!arr.length)return '';
+  var h='<div class="mnHot"><div class="mnHotH">🔥 エイジからのアツいコメント</div>';
+  arr.forEach(function(it){
+    if(!it||!it.text)return;
+    var d=it.date?String(it.date).replace(/^\d{4}-/,'').replace('-','/'):'';
+    h+='<div class="mnHotB">「'+esc(it.text)+'」'+(d?' <small>'+esc(d)+'</small>':'')+'</div>';
+  });
+  return h+'</div>';
+}
+
 function rulesHTML(){
   var p1=ACTION_MARK_PTS[1],p2=ACTION_MARK_PTS[2],p3=ACTION_MARK_PTS[3];
   return '<details class="mnRules" open><summary>🏆 月間ランキングのルール</summary>'
@@ -217,6 +236,7 @@ function rulesHTML(){
     +'<p><b>報酬：</b>1〜3位＝上位セット（🥇🥈🥉）、4位〜（参加人数の半分の少なめ＝floor((人数-1)/2)位）＝がんばりセット（🎀）。人数が増えても報酬枠は半分より少なめ。毎月テーマが変わるよ</p>'
     +'<p><b>アイテム：</b>一度もらったアイテムはずっと🎒に残る。装備はゆずに希望を伝えてね（エイジはプレビュー装備もできるよ）</p>'
     +'<p><b>テーマ：</b>11月🎄クリスマス　／　12月🎍お正月グッズ　／　2月は近くなったら決めるよ　（紅葉🍁は来年2027年11月に温存）</p>'
+    +'<p><b>🔥 ボーナス：</b>トップ3に入るとエイジからアツいコメントがもらえるよ！</p>'
     +'</div></details>';
 }
 function rewardsPreviewHTML(cfg){
@@ -239,9 +259,10 @@ function tableHTML(ranked,live){
   h+='<ol class="mnList">';
   ranked.forEach(function(r){
     var badge=r.tier===1?(r.rank===1?'🥇上位':r.rank===2?'🥈上位':r.rank===3?'🥉上位':'🥇上位'):r.tier===2?'🎀がんばり':'';
-    h+='<li data-tier="'+r.tier+'"'+(r.luck?' data-luck="1"':'')+'><i>'+r.rank+'</i><b>'+esc(r.name)+'</b><em>'+r.pts.toLocaleString()+'pt</em>'
+    h+='<li data-tier="'+r.tier+'"'+(r.luck?' data-luck="1"':'')+(r.rank<=3?' class="mnTop3"':'')+'><div class="mnRow"><i>'+r.rank+'</i><b>'+esc(r.name)+'</b><em>'+r.pts.toLocaleString()+'pt</em>'
       +(r.luck?'<span class="mnLuck" title="同点のためあみだくじで順位決定">🎲あみだ</span>':'')
-      +(badge?'<span class="mnTier">'+badge+'</span>':'')+'</li>';
+      +(badge?'<span class="mnTier">'+badge+'</span>':'')+'</div>'
+      +(r.rank<=3?topCmtFor(r.name):'')+'</li>';
   });
   return h+'</ol>'+(live?'<p class="mnSub">※いまの端末のリアクション・返事＋公開投稿から集計中（確定は月末）</p>':'');
 }
@@ -265,6 +286,7 @@ function render(){
       +'<li>マーク <b>3つ</b>トリプル（👏お礼入り） → <b>'+p3+'pt</b></li>'
       +'</ul>'
       +'<p style="margin:6px 0 0;font-size:12.5px">投稿+10・返事+15はそのまま。点数は仮だから、様子を見て調整するかも。ゆずはランキング対象外（レベルだけ上がるよ）💖</p>'
+      +'<p style="margin:6px 0 0;font-size:13px;font-weight:800;color:#d0567f">🔥 トップ3に入るとエイジからアツいコメントがもらえるよ！</p>'
       +'</div>';
     /* 同点あみだの見え方デモ（固定データ・本番集計ではない） */
     var demo=rankList([
@@ -315,7 +337,7 @@ function boot(){
   /* prefer just under closeness section */
   var cl=document.getElementById('clSec');
   if(cl)cl.insertAdjacentElement('afterend',sec);else after.insertAdjacentElement('afterend',sec);
-  loadData().then(function(){render();setTimeout(applyCosmetics,300);});
+  Promise.all([loadData(),loadMnTopComments()]).then(function(){render();setTimeout(applyCosmetics,300);});
   window.addEventListener('storage',function(ev){if(/om_react|om_reply|om_equip/.test(ev.key||''))render()});
   var _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.apply(this,arguments);if(/om_react|om_reply|om_equip/.test(k))setTimeout(render,100)};
 }

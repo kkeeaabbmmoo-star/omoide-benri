@@ -19,6 +19,7 @@ Gmailコネクタ（読むだけ）での取り方:
 保存: /workspace/思い出ノート/backup/omoide_<YYYYMMDD>_<msgid>.json（同じものはスキップ）
 統合: /workspace/思い出ノート/eiji_reactions.json
 分割送信: profile_photos の part/parts/batch_id をマージしてから publish
+トップ3コメント: payload.top_comments を data/top_comments.json に追記マージ（消さない）
 """
 import sys,os,re,json,glob,hashlib
 B='/workspace/思い出ノート/backup';M='/workspace/思い出ノート/eiji_reactions.json'
@@ -216,6 +217,51 @@ def merge_photo_parts(payloads_list):
     return merged
 
 
+def publish_top_comments(o):
+    """Merge top_comments from mail payload into data/top_comments.json (add-only, never delete)."""
+    tc=o.get('top_comments')
+    if not tc or not isinstance(tc, dict):
+        return 0
+    root=os.path.dirname(os.path.abspath(__file__))
+    path=os.path.join(root,'data','top_comments.json')
+    import datetime
+    jst=datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+    stamp=jst.strftime('%Y-%m-%d %H:%M')
+    if os.path.exists(path):
+        data=json.load(open(path,encoding='utf-8'))
+    else:
+        data={'v':1,'comments':{},'updated':stamp,'note':'トップ3へのエイジのアツいコメント（追記のみ・消さない）'}
+    data.setdefault('comments',{})
+    added=0
+    for who,arr in tc.items():
+        if not isinstance(arr,list):
+            continue
+        who=str(who).strip()
+        if not who: continue
+        cur=data['comments'].setdefault(who,[])
+        seen={(x.get('date') or '')+'|'+(x.get('text') or '') for x in cur if isinstance(x,dict)}
+        for x in arr:
+            if not isinstance(x,dict): continue
+            text=(x.get('text') or '').strip()
+            if not text: continue
+            date=x.get('date') or stamp[:10]
+            key=date+'|'+text
+            if key in seen: continue
+            entry={'text':text,'date':date,'at':x.get('at') or stamp,'by':x.get('by') or 'エイジ'}
+            cur.append(entry); seen.add(key); added+=1
+    if added:
+        data['updated']=stamp
+        tmp=path+'.tmp'
+        with open(tmp,'w',encoding='utf-8') as f:
+            json.dump(data,f,ensure_ascii=False,indent=1); f.write('\n')
+        os.replace(tmp,path)
+        print('top_comments +',added,'→',path)
+    else:
+        print('top_comments: no new')
+    # eiji_reactions へのミラーは merge() 末尾で行う（途中上書きで消えないように）
+    return added
+
+
 def merge():
     m=json.load(open(M)) if os.path.exists(M) else {}
     for k in ('reactions','replies','read'):m.setdefault(k,{})
@@ -228,6 +274,17 @@ def merge():
                 if k=='replies' and isinstance(m[k].get(i),dict) and isinstance(v,dict) and 'q' not in v and m[k][i].get('t')==v.get('t'):v={**m[k][i],**v}
                 m[k][i]=v
         m['last_sent']=o.get('sent',m.get('last_sent'))
+        try: publish_top_comments(o)
+        except Exception as e: print('top_comments merge:',e,file=sys.stderr)
+    # mirror published top_comments (add-only source of truth)
+    try:
+        tc_path=os.path.join(os.path.dirname(os.path.abspath(__file__)),'data','top_comments.json')
+        if os.path.exists(tc_path):
+            tc=json.load(open(tc_path,encoding='utf-8'))
+            m['top_comments']=tc.get('comments') or {}
+            m['top_comments_updated']=tc.get('updated')
+    except Exception as e:
+        print('top_comments mirror:',e,file=sys.stderr)
     m['files']=len(fs);json.dump(m,open(M,'w'),ensure_ascii=False,indent=1)
     print('merged →',M,f"reactions {len(m['reactions'])}・replies {len(m['replies'])}・read {len(m['read'])}")
 a=sys.argv[1:];mid=None
@@ -256,6 +313,8 @@ for txt,m in src:
         except Exception as e: print('profile_fields:',e,file=sys.stderr)
         try: publish_profile_order(o)
         except Exception as e: print('profile_order:',e,file=sys.stderr)
+        try: publish_top_comments(o)
+        except Exception as e: print('top_comments:',e,file=sys.stderr)
     # Also publish a merged view when multiple parts share a batch_id (idempotent overwrite)
     try:
         for mo in merge_photo_parts(ps):

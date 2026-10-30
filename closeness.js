@@ -109,6 +109,7 @@ function openPts(name){
       '<li>返事1件 → <b>+15pt</b>（その人の投稿への返事）</li>'+
       '<li>減衰・上限なし。一度ついたピークptは下がらない（om_pts_peak）</li>'+
       '<li>ゆずも同じ式。ランキング表はゆず以外（ゆずはレベルだけ）</li>'+
+      '<li>🔥 <b>トップ3に入るとエイジからアツいコメントがもらえるよ！</b></li>'+
     '</ul></div>'+
     '<button type="button" class="clPtsX">とじる</button></div></div>';
   var old=document.getElementById('clPtsOv');if(old)old.remove();
@@ -360,16 +361,42 @@ function render(){
   var rewardN=Math.max(3,Math.floor((rankAll.length-1)/2));
   var rankRew=rankAll.slice(0,rewardN);
   if(top){
-    var th='<div class="clTopH">💞 エイジとの親密度ランキング（'+nAll+'人）</div><ol class="clTopL">';
+    var th='<div class="clTopH">💞 エイジとの親密度ランキング（'+nAll+'人）</div>'
+      +'<div class="clTopBanner">🔥 トップ3に入るとエイジからアツいコメントがもらえるよ！</div>'
+      +'<ol class="clTopL">';
     rankAll.forEach(function(m,i){
       var r=i+1;
       var av=m.av?'<img src="img/avatars/'+esc(m.av)+'.png?v=1" alt="">':'<span>'+esc(m.ic||'💬')+'</span>';
       var med=r===1?'🥇':r===2?'🥈':r===3?'🥉':(r<=rewardN?'🎀':'');
       var ri=med?('<span class="clTopMed">'+med+'</span><span class="clTopN">'+r+'</span>'):String(r);
-      th+='<li data-r="'+r+'"'+(r<=rewardN?' class="rw"':'')+'><i>'+ri+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em class="clPtsTap" data-who="'+esc(m.name)+'" role="button" tabindex="0">'+(scores[m.name]||0).toLocaleString()+'pt ▾</em></li>';
+      var row='<div class="clTopRow"><i>'+ri+'</i><span class="clTopAv">'+av+'</span><b>'+esc(m.name)+'</b><em class="clPtsTap" data-who="'+esc(m.name)+'" role="button" tabindex="0">'+(scores[m.name]||0).toLocaleString()+'pt ▾</em></div>';
+      var hot=(r<=3)?hotHTML(m.name):'';
+      th+='<li data-r="'+r+'" class="'+(r<=rewardN?'rw ':'')+(r<=3?'clTop3':'')+'">'+row+hot+'</li>';
     });
     top.innerHTML=th+'</ol>';
-    if(!top._ptsBound){top._ptsBound=1;top.addEventListener('click',function(ev){var e=ev.target.closest('.clPtsTap');if(!e)return;ev.preventDefault();openPts(e.dataset.who)})}
+    if(!top._ptsBound){
+      top._ptsBound=1;
+      top.addEventListener('click',function(ev){
+        var e=ev.target.closest('.clPtsTap');
+        if(e){ev.preventDefault();openPts(e.dataset.who);return}
+        var btn=ev.target.closest('.clHotSave');
+        if(!btn)return;
+        ev.preventDefault();
+        var box=btn.closest('.clHot'); if(!box)return;
+        var who=box.dataset.who;
+        var inp=box.querySelector('input');
+        if(!inp)return;
+        if(saveLocalTop(who,inp.value)){inp.value='';render()}
+      });
+      top.addEventListener('keydown',function(ev){
+        if(ev.key!=='Enter')return;
+        var inp=ev.target.closest('.clHotEdit input');
+        if(!inp)return;
+        ev.preventDefault();
+        var box=inp.closest('.clHot'); if(!box)return;
+        if(saveLocalTop(box.dataset.who,inp.value)){inp.value='';render()}
+      });
+    }
   }
   // medals / 🎀 on main .mem avatars for reward slots (ゆず never)
   var rankOf={};rankRew.forEach(function(m,i){rankOf[m.name]=i});
@@ -398,6 +425,77 @@ function render(){
   drawMap(sec.querySelector('.clMap'),scores,total);
   window.__OM_CLOSE={scores:scores,total:total,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),levels:LEVELS};
 }
+
+/* トップ3アツいコメント（公開JSON＋端末ローカル。足すだけ・消さない） */
+var TOP_COMMENTS={v:1,comments:{}};
+var TOP_C_KEY='om_top_comments';
+function jstYmd(){var d=new Date(Date.now()+9*3600e3);return d.toISOString().slice(0,10)}
+function jstStamp(){var d=new Date(Date.now()+9*3600e3);return d.toISOString().slice(0,16).replace('T',' ')}
+function loadTopComments(){
+  return fetch('data/top_comments.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+    if(j&&j.comments)TOP_COMMENTS=j; return TOP_COMMENTS;
+  }).catch(function(){return TOP_COMMENTS});
+}
+function localTopComments(){return g(TOP_C_KEY,{})}
+function isOwnerDevice(){
+  try{
+    if(localStorage.getItem('om_owner')==='1')return true;
+    if(localStorage.getItem('om_react')||localStorage.getItem('om_reply')||localStorage.getItem('om_ack'))return true;
+    /* エイジ専用ページなので既定で入力OK。公開閲覧だけなら om_owner=0 を置けば隠せる */
+    return true;
+  }catch(e){return true}
+}
+function mergeTopFor(who){
+  var out=[],seen={};
+  function add(arr,src){
+    (arr||[]).forEach(function(x){
+      if(!x||!x.text)return;
+      var k=(x.date||'')+'|'+(x.text||'');
+      if(seen[k])return; seen[k]=1;
+      out.push({text:x.text,date:x.date||'',at:x.at||'',by:x.by||'エイジ',src:src});
+    });
+  }
+  add((TOP_COMMENTS.comments||{})[who],'pub');
+  add((localTopComments()[who])||[],'local');
+  out.sort(function(a,b){return String(a.date||a.at).localeCompare(String(b.date||b.at))});
+  return out;
+}
+function saveLocalTop(who,text){
+  text=String(text||'').trim();
+  if(!text){alert('コメントを書いてね');return false}
+  if(text.length>200){alert('200文字までだよ');return false}
+  var all=localTopComments();
+  if(!all[who])all[who]=[];
+  var entry={text:text,date:jstYmd(),at:jstStamp(),by:'エイジ'};
+  if(all[who].some(function(x){return x.text===entry.text&&x.date===entry.date})){
+    alert('同じコメントがもうあるよ');return false;
+  }
+  all[who].push(entry);
+  try{localStorage.setItem(TOP_C_KEY,JSON.stringify(all));localStorage.setItem('om_owner','1')}catch(e){alert('保存できなかったよ');return false}
+  return true;
+}
+function hotHTML(who){
+  var items=mergeTopFor(who);
+  var h='<div class="clHot" data-who="'+esc(who)+'">';
+  h+='<div class="clHotH">🔥 エイジからのアツいコメント</div>';
+  if(!items.length){
+    h+='<div class="clHotEmpty">まだコメントないよ — トップ3だから一言どうぞ！</div>';
+  }else{
+    items.forEach(function(it){
+      var d=it.date?it.date.replace(/^\d{4}-/,'').replace('-','/'):'';
+      var badge=it.src==='local'?'<span class="clHotBadge">端末のみ・💌で公開</span>':'';
+      h+='<div class="clHotB">「'+esc(it.text)+'」'+(d?' <small>'+esc(d)+'</small>':'')+badge+'</div>';
+    });
+  }
+  if(isOwnerDevice()){
+    h+='<div class="clHotEdit"><input type="text" maxlength="200" placeholder="アツい一言（感謝・応援）…" aria-label="'+esc(who)+'へのコメント">'
+      +'<button type="button" class="clHotSave">保存</button></div>'
+      +'<div class="clHotHint">保存は端末だけ。みんなに見せるには下の💌「ゆずとみんなに送る」を押してね</div>';
+  }
+  h+='</div>';
+  return h;
+}
+
 function loadPosts(){
   if(window.__OM_POSTS) return Promise.resolve(window.__OM_POSTS);
   if(window.__OM_POSTS_P) return window.__OM_POSTS_P;
@@ -405,7 +503,7 @@ function loadPosts(){
   return window.__OM_POSTS_P;
 }
 function loadLevels(){return fetch('data/levels.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&Array.isArray(j.segments)){LEVELS=j;if(!LEVELS.lockedLabel)LEVELS.lockedLabel='？？？ お楽しみ'}}).catch(function(){})}
-function ensureScoreReady(){return Promise.all([loadPosts(),loadLevels()])}
+function ensureScoreReady(){return Promise.all([loadPosts(),loadLevels(),loadTopComments()])}
 function boot(){
   // attach av/ic data from DOM
   document.querySelectorAll('.mem[id^="m-"]').forEach(function(el){
@@ -426,7 +524,7 @@ function boot(){
   sec.addEventListener('toggle',function(){try{localStorage.setItem('om_close_open',JSON.stringify(!!sec.open))}catch(e){}});
   ensureScoreReady().then(function(){render()});
   // re-render after reactions/replies change
-  var _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.apply(this,arguments);if(/om_react|om_reply|om_pts_peak/.test(k))setTimeout(render,80)};
+  var _set=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){_set.apply(this,arguments);if(/om_react|om_reply|om_pts_peak|om_top_comments/.test(k))setTimeout(render,80)};
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 window.omCloseness={render:render,scoreOne:scoreOne,scoreBreak:scoreBreak,ensureScoreReady:ensureScoreReady,lvOf:lvOf,nextOf:nextOf,prevOf:prevOf,levels:function(){return LEVELS},ptsOfReaction:ptsOfReaction,actionMarkPts:function(){return ACTION_MARK_PTS},actionMarkFrom:function(){return ACTION_MARK_FROM}};

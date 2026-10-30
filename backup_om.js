@@ -1,4 +1,4 @@
-/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v42 */
+/* 思い出ノート: 送る・バックアップ・復元（データは消さない／マージのみ） v43 top_comments */
 (function(){
 var K={r:'om_react',p:'om_reply',d:'om_read',h:'om_sent_history'};
 var PHOTO_BATCH=4;
@@ -23,7 +23,7 @@ function histLite(full){
   var o={app:full.app,v:full.v,sent:full.sent,
     reactions:full.reactions,replies:full.replies,read:full.read,
     ack:full.ack,ackrp:full.ackrp,filt:full.filt,seenrp:full.seenrp,marks:full.marks,
-    closeness:full.closeness,profile_fields:full.profile_fields,profile_order:full.profile_order,
+    closeness:full.closeness,profile_fields:full.profile_fields,profile_order:full.profile_order,top_comments:full.top_comments,
     photo_summary:{}};
   var pp=full.profile_photos||{};
   Object.keys(pp).forEach(function(nm){o.photo_summary[nm]=(pp[nm]||[]).map(function(it){return {slot:it.slot,bytes:(it.jpeg||'').length}})});
@@ -85,13 +85,15 @@ async function markPhotosSent(pp){
 function baseSnap(extra){
   var c=(window.__OM_CLOSE)||{};
   var pf=pendingProfileFields(), po=pendingProfileOrder();
-  var o={app:'omoide',v:8,sent:jst().slice(0,16),
+  var tc=(function(){try{return JSON.parse(localStorage.getItem('om_top_comments')||'{}')||{}}catch(e){return {}}})();
+  var o={app:'omoide',v:9,sent:jst().slice(0,16),
     reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),
     ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',
     seenrp:g('om_seenrp',{}),
     marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),
     profile_fields:pf,
-    closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)}
+    closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)},
+    top_comments:tc
   };
   if(po) o.profile_order=po;
   if(extra) Object.keys(extra).forEach(function(k){o[k]=extra[k]});
@@ -114,7 +116,7 @@ function openPartSheet(parts, idx, ctx){
   var partLabel=(total>1)?('【写真 '+(idx+1)+'/'+total+'】'):'';
   var intro=function(note){
     return 'ゆずへ💌 思い出ノート'+(partLabel?' '+partLabel:'')+'（'+(+t.slice(5,7))+'/'+(+t.slice(8,10))+'）\n'
-      +(isFirst?('リアクション '+nr+'・返事 '+np+(nf?'・プロフィール欄更新 '+nf+'人':'')+(full.profile_order?'・並び順更新':'')+'\n'):'')
+      +(isFirst?('リアクション '+nr+'・返事 '+np+(nf?'・プロフィール欄更新 '+nf+'人':'')+(full.profile_order?'・並び順更新':'')+(function(){var t=full.top_comments||{},n=Object.keys(t).reduce(function(s,k){return s+(t[k]||[]).length},0);return n?'・アツいコメント '+n+'件':'';})()+'\n'):'')
       +(nph?('プロフィール写真 '+nph+'枚（全体 '+(idx+1)+'/'+total+'）'):'')
       +(note?'\n'+note:'');
   };
@@ -205,8 +207,10 @@ window.omSend=function(){
       var R=g(K.r,{}),P=g(K.p,{});
       var pf=pendingProfileFields(), po=pendingProfileOrder();
       var nfe=Object.keys(pf).length, nord=(po&&po.length)?1:0;
-      if(!Object.keys(R).length&&!Object.keys(P).length&&!flat.length&&!nfe&&!nord){
-        alert('まだリアクションも返事も写真もないよ💖'); return;
+      var tc=(function(){try{return JSON.parse(localStorage.getItem('om_top_comments')||'{}')||{}}catch(e){return {}}})();
+      var ntc=Object.keys(tc).reduce(function(s,k){return s+(tc[k]||[]).length},0);
+      if(!Object.keys(R).length&&!Object.keys(P).length&&!flat.length&&!nfe&&!nord&&!ntc){
+        alert('まだリアクションも返事も写真もコメントもないよ💖'); return;
       }
       var batches=flat.length? (window.omPfStore?window.omPfStore.chunk(flat,PHOTO_BATCH):[flat]) : [[]];
       if(!flat.length) batches=[[]];
@@ -269,6 +273,19 @@ window.omRestore=function(arg){
    if(cl.peak){var pk=g('om_pts_peak',{});Object.keys(cl.peak).forEach(function(k){pk[k]=Math.max(pk[k]||0,cl.peak[k]||0)});lsSet('om_pts_peak',pk)}
    if(cl.open!=null)lsSet('om_close_open',!!cl.open)}
   if(Array.isArray(o.profile_order)&&o.profile_order.length){try{var ff=g('om_pf_fields',{});ff.__order=o.profile_order;lsSet('om_pf_fields',ff)}catch(e){}}
+  if(o.top_comments&&typeof o.top_comments==='object'){
+    var cur=g('om_top_comments',{});
+    Object.keys(o.top_comments).forEach(function(who){
+      if(!cur[who])cur[who]=[];
+      var seen={};cur[who].forEach(function(x){seen[(x.date||'')+'|'+(x.text||'')]=1});
+      (o.top_comments[who]||[]).forEach(function(x){
+        if(!x||!x.text)return;
+        var k=(x.date||'')+'|'+(x.text||'');
+        if(!seen[k]){cur[who].push(x);seen[k]=1;add++}
+      });
+    });
+    lsSet('om_top_comments',cur);
+  }
   if(Array.isArray(o.history)){var h=g(K.h,[]),seen={};h.forEach(function(x){seen[x.sent]=1});o.history.forEach(function(x){if(!seen[x.sent])h.push(histLite(x))});lsSet(K.h,h.slice(-30))}
   /* restore photos into IDB if present */
   if(o.profile_photos&&window.omPfStore){
