@@ -86,11 +86,12 @@ function baseSnap(extra){
   var c=(window.__OM_CLOSE)||{};
   var pf=pendingProfileFields(), po=pendingProfileOrder();
   var tc=(function(){try{return JSON.parse(localStorage.getItem('om_top_comments')||'{}')||{}}catch(e){return {}}})();
-  var o={app:'omoide',v:9,sent:jst().slice(0,16),
+  var o={app:'omoide',v:10,sent:jst().slice(0,16),
     reactions:g(K.r,{}),replies:g(K.p,{}),read:g(K.d,{}),
     ack:g('om_ack',{}),ackrp:g('om_ackrp',{}),filt:localStorage.getItem('om_filt')||'all',
     seenrp:g('om_seenrp',{}),
     marks:(function(){try{return JSON.parse(localStorage.getItem('om_marks')||'null')}catch(e){return null}})(),
+    mark_preset:(function(){try{var o=JSON.parse(localStorage.getItem('om_mark_preset')||'{}');return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}}catch(e){return {}}})(),
     profile_fields:pf,
     closeness:{scores:c.scores||{},total:c.total||0,lv:g('om_lv',{}),peak:g('om_pts_peak',{}),open:g('om_close_open',false)},
     top_comments:tc
@@ -269,6 +270,7 @@ window.omRestore=function(arg){
   var o;try{o=JSON.parse(s.slice(s.indexOf('{'),s.lastIndexOf('}')+1))}catch(e){alert('JSONが読めなかったよ💦');return}
   var add=0;function m(k,src,conv){var cur=g(k,{});Object.keys(src||{}).forEach(function(i){if(cur[i]==null){cur[i]=conv?conv(src[i]):src[i];add++}});lsSet(k,cur)}
   m(K.r,o.reactions);m(K.p,o.replies,function(v){return typeof v==='string'?{t:v}:v});m(K.d,o.read);m('om_ack',o.ack);m('om_ackrp',o.ackrp);m('om_seenrp',o.seenrp);if(o.filt&&!localStorage.getItem('om_filt'))lsSet('om_filt',o.filt);if(Array.isArray(o.marks)&&!localStorage.getItem('om_marks'))lsSet('om_marks',o.marks);
+  if(o.mark_preset&&typeof o.mark_preset==='object'){var mp=g('om_mark_preset',{});Object.keys(o.mark_preset).forEach(function(nm){if(mp[nm]==null&&Array.isArray(o.mark_preset[nm])){mp[nm]=o.mark_preset[nm];add++}});lsSet('om_mark_preset',mp)}
   if(o.closeness){var cl=o.closeness;if(cl.lv){var lv=g('om_lv',{});Object.keys(cl.lv).forEach(function(k){lv[k]=Math.max(lv[k]||1,cl.lv[k]||1)});lsSet('om_lv',lv)}
    if(cl.peak){var pk=g('om_pts_peak',{});Object.keys(cl.peak).forEach(function(k){pk[k]=Math.max(pk[k]||0,cl.peak[k]||0)});lsSet('om_pts_peak',pk)}
    if(cl.open!=null)lsSet('om_close_open',!!cl.open)}

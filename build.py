@@ -59,7 +59,7 @@ memhtml=f'<div id="nstrip"></div><p class="sub">みんながエイジとの思�
 # v48: 最下部はプロフィールへの大きなボタンのみ（便利ノートリンクは置かない）
 BENRI='<a class="pfBottom" href="profiles.html">👭 みんなのプロフィールへ</a>'
 body=card('💞 ゆず＆みんなの思い出',memhtml)+BENRI
-JS=r'''<script src="send.js?v=6"></script><script src="pf_store.js?v=1"></script><script src="backup_om.js?v=13"></script><script src="sent-status.js?v=ss7"></script><script src="pf_preview.js?v=2"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=53"></script><script src="monthly.js?v=10"></script><script>
+JS=r'''<script src="send.js?v=6"></script><script src="pf_store.js?v=1"></script><script src="backup_om.js?v=14"></script><script src="sent-status.js?v=ss7"></script><script src="pf_preview.js?v=2"></script><script src="nav.js?v=nv4"></script><script src="closeness.js?v=53"></script><script src="monthly.js?v=10"></script><script>
 (function(){var K='om_react',KR='om_reply',R=JSON.parse(localStorage.getItem(K)||'{}'),P=JSON.parse(localStorage.getItem(KR)||'{}');
 var KM='om_marks',DEF_EM=['❤️','🙏','👏'];
 function loadEM(){try{var a=JSON.parse(localStorage.getItem(KM)||'null');if(Array.isArray(a)&&a.length)return a.filter(function(x){return typeof x==='string'&&x.trim()}).slice(0,8)}catch(e){}return DEF_EM.slice()}
@@ -68,6 +68,11 @@ Object.keys(P).forEach(function(k){if(typeof P[k]==='string')P[k]={t:P[k]}});
 function sv(){localStorage.setItem(K,JSON.stringify(R));localStorage.setItem(KR,JSON.stringify(P))}
 sv();
 function saveEM(a){EM=a.slice(0,8);localStorage.setItem(KM,JSON.stringify(EM));document.querySelectorAll('.post').forEach(function(p){/* redraw via custom event */});window.dispatchEvent(new Event('om_marks_change'))}
+/* v51: 人ごとの「いつものマーク」定番コンビ（om_mark_preset）。既存キーは触らない */
+var KP='om_mark_preset';
+function loadPresets(){try{var o=JSON.parse(localStorage.getItem(KP)||'{}');return (o&&typeof o==='object'&&!Array.isArray(o))?o:{}}catch(e){return {}}}
+function presetOf(who){if(!who)return[];var a=loadPresets()[who];if(!Array.isArray(a))return[];return a.filter(function(x){return typeof x==='string'&&x}).slice(0,3)}
+function savePreset(who,arr){if(!who)return;var o=loadPresets();if(!arr||!arr.length)delete o[who];else o[who]=arr.filter(function(x){return typeof x==='string'&&x}).slice(0,3);try{localStorage.setItem(KP,JSON.stringify(o))}catch(e){}}
 var GRID=['❤️','🙏','👏','😍','🥰','😘','💕','💞','💖','💗','💓','💘','💝','😊','🥹','🥰','😉','😆','🤣','😭','🥺','😤','🔥','✨','⭐','🌟','💯','👍','🙌','🤝','🫂','💋','🍑','🍒','🍊','🍰','🍜','🍺','💪','🫡','🌸','🎀','👑','🤩','😺','🙈','💬','📝'];
 function openMarks(){
   var cur=EM.slice();
@@ -221,17 +226,33 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
     b.onclick=function(){if(R[id]===e)delete R[id];else R[id]=e;sv();draw()}}
    a.appendChild(b)});
   var gear=document.createElement('button');gear.type='button';gear.className='mkGear';gear.textContent='⚙️';gear.title='マークを選ぶ';gear.onclick=function(ev){ev.stopPropagation();openMarks()};a.appendChild(gear);
+  var whoName=p.dataset.who||(id.indexOf('_')>=0?id.slice(0,id.indexOf('_')):'');
+  var usual=presetOf(whoName);
+  var usualJoined=usual.join('');
+  /* いつものマークをワンタップで付ける（1〜3個）。点数ルールは変えない */
+  if(!mode&&usual.length){var ub=document.createElement('button');ub.type='button';ub.className='comboUsual'+(R[id]===usualJoined?' on':'');ub.textContent='♡'+usualJoined;ub.title=whoName+'のいつものマーク';
+   ub.onclick=function(ev){ev.stopPropagation();if(R[id]===usualJoined)delete R[id];else R[id]=usualJoined;sv();draw()};a.appendChild(ub)}
   var cb=document.createElement('button');cb.type='button';cb.className='comboBtn'+(mode?' on':'');cb.textContent=mode?'🧩中':'🧩';cb.title='組み合わせ';
   cb.onclick=function(ev){ev.stopPropagation();if(mode){p._comboMode=0;p._comboSel=[];draw();return}
-   p._comboMode=1;p._comboSel=(R[id]&&EM.indexOf(R[id])<0)?splitRx(R[id]).filter(function(x){return EM.indexOf(x)>=0}):[];draw()};a.appendChild(cb);
+   p._comboMode=1;
+   var fromRx=(R[id]&&EM.indexOf(R[id])<0)?splitRx(R[id]).filter(function(x){return EM.indexOf(x)>=0}):[];
+   if(fromRx.length){p._comboSel=fromRx}
+   else{p._comboSel=presetOf(whoName).filter(function(x){return EM.indexOf(x)>=0})}
+   draw()};a.appendChild(cb);
   if(mode){var bar=document.createElement('div');bar.className='comboBar';
-   var prev=document.createElement('span');prev.className='comboPrev';prev.textContent=cSel.length?('プレビュー：'+cSel.join('')):'マークを2つ以上タップしてね';
+   var prev=document.createElement('span');prev.className='comboPrev';prev.textContent=cSel.length?('プレビュー：'+cSel.join('')):'マークを選んでね（2つ以上でコンボ）';
+   if(usual.length)prev.textContent+=(cSel.length?'':'')+'　｜　♡いつもの：'+usualJoined;
    bar.appendChild(prev);
    var ok=document.createElement('button');ok.type='button';ok.className='comboOk';ok.textContent='この組み合わせで送る';ok.disabled=cSel.length<2;
    ok.onclick=function(ev){ev.stopPropagation();if(cSel.length<2)return;R[id]=cSel.join('');p._comboMode=0;p._comboSel=[];sv();draw()};
+   var svU=document.createElement('button');svU.type='button';svU.className='comboSave';svU.textContent=cSel.length?('♡ いつものに保存'):'♡ いつものに保存';svU.disabled=!cSel.length||!whoName;
+   svU.onclick=function(ev){ev.stopPropagation();if(!cSel.length||!whoName)return;savePreset(whoName,cSel.slice());svU.textContent='保存したよ♡';setTimeout(function(){draw()},650)};
    var ng=document.createElement('button');ng.type='button';ng.className='comboNg';ng.textContent='やめる';
    ng.onclick=function(ev){ev.stopPropagation();p._comboMode=0;p._comboSel=[];draw()};
-   bar.appendChild(ok);bar.appendChild(ng);a.appendChild(bar)}
+   bar.appendChild(ok);bar.appendChild(svU);
+   if(usual.length){var clr=document.createElement('button');clr.type='button';clr.className='comboClr';clr.textContent='いつもの解除';clr.title='この人のいつものマークを消す';
+    clr.onclick=function(ev){ev.stopPropagation();if(!confirm(whoName+'のいつものマーク（'+usualJoined+'）を消す？'))return;savePreset(whoName,null);draw()};bar.appendChild(clr)}
+   bar.appendChild(ng);a.appendChild(bar)}
 
   var r0=P[id];
   if(r0){var r=document.createElement('div');r.className='rp eiji';r.style.width='100%';r.innerHTML=(r0.q?'「'+esc(r0.q.length>30?r0.q.slice(0,30)+'…':r0.q)+'」に':'')+'↩️ <b>エイジ</b>：'+esc(r0.t)+' <a href="#" style="font-size:12px">消す</a>';r.querySelector('a').onclick=function(ev){ev.preventDefault();delete P[id];sv();paintPost(p);draw();nwDraw()};a.appendChild(r)}
@@ -256,6 +277,7 @@ document.querySelectorAll('.post').forEach(function(p){var id=p.dataset.id,a=p.q
    /* v47: プロフィールに親密度pt表示・ポイント順デフォルト */
    /* v49: 11/1〜アクションマーク点数（仮・ACTION_MARK_PTS） */
    /* v50: 公開スナップショット足すだけマージ＋反応/返事→確認済み（Grok内ブラウザの空LS対策） */
+   /* v51: 人ごと「いつものマーク」定番コンビ（om_mark_preset） */
    s.onclick=function(){var v=i.value.trim();if(!v){i.focus();return}var o={t:v,at:TD};if(sel&&sel.textContent){o.q=sel.textContent.trim();o.n=+sel.dataset.n;sel.classList.remove('sel');sel=null}var y=window.scrollY||window.pageYOffset||0;var mem=p.closest('.mem');P[id]=o;sv();markAck(p,'reply');draw();nwDraw();requestAnimationFrame(function(){var next=null;if(mem){var posts=[].slice.call(mem.querySelectorAll('.post:not(.hide)'));for(var ii=0;ii<posts.length;ii++){if(!replied(posts[ii].dataset.id)){next=posts[ii];break}}}if(next){var f=next.closest('.fold');if(f)f.open=true;var top=next.getBoundingClientRect().top+window.scrollY-120;window.scrollTo(0,Math.max(0,top))}else{window.scrollTo(0,y)}})};
    row.appendChild(i);attachMic(i,row);row.appendChild(s);a.appendChild(row)}
   paintPost(p)}
@@ -437,13 +459,18 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 .comboOk{{border:0!important;background:#d0567f!important;color:#fff!important;border-radius:14px!important;padding:8px 12px!important;font-weight:800!important;font-size:14px!important}}
 .comboOk:disabled{{opacity:.4}}
 .comboNg{{border:1px solid #f3c6d5!important;background:#fff!important;color:#a0466a!important;border-radius:14px!important;padding:8px 12px!important;font-size:13px!important}}
+.act .comboUsual{{font-size:16px;min-height:44px;padding:8px 10px;border:2px solid #ff8fb3!important;background:#fff0f5!important;color:#d0567f!important;border-radius:16px!important;font-weight:800}}
+.act .comboUsual.on{{background:#ffe08a!important;border-color:#d0567f!important}}
+.comboSave{{border:0!important;background:#ff8fb3!important;color:#fff!important;border-radius:14px!important;padding:10px 12px!important;font-weight:800!important;font-size:14px!important;min-height:44px}}
+.comboSave:disabled{{opacity:.4}}
+.comboClr{{border:1px solid #f3c6d5!important;background:#fff!important;color:#c0587f!important;border-radius:14px!important;padding:10px 12px!important;font-size:13px!important;font-weight:700;min-height:44px}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v57'
+SWV='omoide-v58'
 # v48: precache profiles + closeness so iPhone PWA picks up pt UI; network-first for HTML/JS
 _SW=("const C='"+SWV+"';"+
-"const PRE=['./','index.html','profiles.html','closeness.js','closeness.js?v=53','monthly.js','monthly.js?v=10','pf_store.js','pf_store.js?v=1','send.js','send.js?v=6','backup_om.js','backup_om.js?v=13','sent-status.js','sent-status.js?v=ss7','nav.js','nav.js?v=nv4','manifest.webmanifest','data/profiles.json','data/posts.json','data/levels.json','data/top_comments.json'];"+
+"const PRE=['./','index.html','profiles.html','closeness.js','closeness.js?v=53','monthly.js','monthly.js?v=10','pf_store.js','pf_store.js?v=1','send.js','send.js?v=6','backup_om.js','backup_om.js?v=14','sent-status.js','sent-status.js?v=ss7','nav.js','nav.js?v=nv4','manifest.webmanifest','data/profiles.json','data/posts.json','data/levels.json','data/top_comments.json'];"+
 "self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(PRE.map(u=>new Request(u,{cache:'reload'}))).catch(()=>{})).then(()=>self.skipWaiting()))});"+
 "self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));"+
 "self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;"+
