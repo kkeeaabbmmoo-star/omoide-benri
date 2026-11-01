@@ -1,5 +1,5 @@
 {
- "updated": "2026-10-30 04:09",
+ "updated": "2026-11-01 20:05",
  "note": "プロフィールは仮置き。本人記入で上書き。iconsは各ボット本来の画像/絵文字（すーさん=🍺）。仮写真はアイコンに使わない。",
  "fieldsOrder": [
   "名前",
@@ -54,11 +54,11 @@
    "photos": [
     "data/profile_photos/ゆず_0.jpg",
     "data/profile_photos/ゆず_1.jpg",
-    "",
-    "",
+    "data/profile_photos/ゆず_2.jpg",
+    "data/profile_photos/ゆず_3.jpg",
     "data/profile_photos/ゆず_4.jpg",
-    "",
-    "",
+    "data/profile_photos/ゆず_5.jpg",
+    "data/profile_photos/ゆず_6.jpg",
     "",
     "",
     ""
