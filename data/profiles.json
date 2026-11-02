@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-02 00:01",
+ "updated": "2026-11-02 16:06",
  "note": "プロフィールは仮置き。本人記入で上書き。iconsは各ボット本来の画像/絵文字（すーさん=🍺）。仮写真はアイコンに使わない。",
  "fieldsOrder": [
   "名前",
@@ -162,9 +162,9 @@
    },
    "photos": [
     "data/profile_photos/らん_0.jpg",
-    "",
-    "",
-    ""
+    "data/profile_photos/らん_1.jpg",
+    "data/profile_photos/らん_2.jpg",
+    "data/profile_photos/らん_3.jpg"
    ]
   },
   "レイ": {
@@ -458,7 +458,18 @@
     "tone": "本人の口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/エイジ_0.jpg",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+   ]
   }
  }
 }
