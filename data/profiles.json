@@ -220,7 +220,7 @@
     "data/profile_photos/恵_0.jpg",
     "data/profile_photos/恵_1.jpg",
     "data/profile_photos/恵_2.jpg",
-    ""
+    "data/profile_photos/恵_3.jpg"
    ]
   },
   "瀬戸": {
@@ -267,7 +267,12 @@
     "tone": "やわらかい清楚口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/由依_0.jpg",
+    "data/profile_photos/由依_1.jpg",
+    "data/profile_photos/由依_2.jpg",
+    ""
+   ]
   },
   "愛": {
    "display": "愛",
