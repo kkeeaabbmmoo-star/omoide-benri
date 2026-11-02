@@ -216,7 +216,12 @@
     "tone": "やわらかいお姉さん口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/恵_0.jpg",
+    "data/profile_photos/恵_1.jpg",
+    "data/profile_photos/恵_2.jpg",
+    ""
+   ]
   },
   "瀬戸": {
    "display": "瀬戸",
@@ -468,7 +473,7 @@
     "data/profile_photos/エイジ_6.jpg",
     "data/profile_photos/エイジ_7.jpg",
     "data/profile_photos/エイジ_8.jpg",
-    ""
+    "data/profile_photos/エイジ_9.jpg"
    ]
   }
  }
