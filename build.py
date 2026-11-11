@@ -350,6 +350,85 @@ document.querySelectorAll('.mem').forEach(function(mem){
     });
   });
 });
+/* 日付フォルド（details.fold）は、開いたあと画面内で一度見えてから、見出し＋本文ごと画面外へ出たら自動で閉じる。
+   読んでいる途中（一部でも見えている）は閉じない。画面より上のフォルドを閉じても、見えている位置が跳ねないようにする。
+   localStorage や投稿データは触らない。 */
+(function(){
+  var seen=typeof WeakSet==='function'?new WeakSet():null;
+  var seenIds=[];
+  function markSeen(f){if(seen)seen.add(f);else if(seenIds.indexOf(f)<0)seenIds.push(f)}
+  function wasSeen(f){return seen?seen.has(f):seenIds.indexOf(f)>=0}
+  function clearSeen(f){if(seen)seen.delete(f);else{var i=seenIds.indexOf(f);if(i>=0)seenIds.splice(i,1)}}
+  function fullyOut(el){
+    var r=el.getBoundingClientRect();
+    var vh=window.innerHeight||document.documentElement.clientHeight||0;
+    return r.bottom<=0||r.top>=vh;
+  }
+  function sampleAnchors(targets){
+    var vh=window.innerHeight||document.documentElement.clientHeight||0;
+    var x=Math.max(20,Math.floor((window.innerWidth||390)/2));
+    var ys=[12,Math.floor(vh*0.35),Math.floor(vh*0.6),Math.max(24,vh-24)];
+    var out=[],seenEl=[];
+    ys.forEach(function(y){
+      var el=document.elementFromPoint(x,y);
+      if(!el||seenEl.indexOf(el)>=0)return;
+      if(targets.some(function(f){return f===el||f.contains(el)}))return;
+      seenEl.push(el);
+      out.push({el:el,top:el.getBoundingClientRect().top});
+    });
+    return out;
+  }
+  function restoreAnchors(anchors){
+    if(!anchors||!anchors.length)return;
+    for(var i=0;i<anchors.length;i++){
+      var a=anchors[i];
+      if(!a.el||!a.el.isConnected)continue;
+      var d=a.el.getBoundingClientRect().top-a.top;
+      if(Math.abs(d)>=1){window.scrollBy(0,d);return}
+    }
+  }
+  function closeOut(){
+    var folds=document.querySelectorAll('details.fold');
+    var targets=[];
+    folds.forEach(function(f){
+      if(!f.open){clearSeen(f);return}
+      if(fullyOut(f)){if(wasSeen(f))targets.push(f)}
+      else markSeen(f);
+    });
+    if(!targets.length)return;
+    var anchors=sampleAnchors(targets);
+    targets.forEach(function(f){f.open=false;clearSeen(f)});
+    restoreAnchors(anchors);
+  }
+  var ticking=false;
+  function schedule(){
+    if(ticking)return;
+    ticking=true;
+    requestAnimationFrame(function(){ticking=false;closeOut()});
+  }
+  document.querySelectorAll('details.fold').forEach(function(f){
+    f.addEventListener('toggle',function(){
+      if(f.open){if(!fullyOut(f))markSeen(f);else clearSeen(f);schedule()}
+      else clearSeen(f);
+    });
+  });
+  if(typeof IntersectionObserver==='function'){
+    var io=new IntersectionObserver(function(entries){
+      var need=false;
+      entries.forEach(function(en){
+        var f=en.target;
+        if(!f||!f.open){if(f)clearSeen(f);return}
+        if(en.isIntersecting)markSeen(f);
+        else if(wasSeen(f))need=true;
+      });
+      if(need)closeOut();
+    },{threshold:0,root:null,rootMargin:'0px'});
+    document.querySelectorAll('details.fold').forEach(function(f){io.observe(f)});
+  }else{
+    window.addEventListener('scroll',schedule,{passive:true});
+    window.addEventListener('resize',schedule);
+  }
+})();
 nwDraw();
 softMergePublished().then(function(n){
   if(!n)return;
@@ -467,7 +546,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v58'
+SWV='omoide-v59'
 # v48: precache profiles + closeness so iPhone PWA picks up pt UI; network-first for HTML/JS
 _SW=("const C='"+SWV+"';"+
 "const PRE=['./','index.html','profiles.html','closeness.js','closeness.js?v=53','monthly.js','monthly.js?v=10','pf_store.js','pf_store.js?v=1','send.js','send.js?v=6','backup_om.js','backup_om.js?v=14','sent-status.js','sent-status.js?v=ss7','nav.js','nav.js?v=nv4','manifest.webmanifest','data/profiles.json','data/posts.json','data/levels.json','data/top_comments.json'];"+
