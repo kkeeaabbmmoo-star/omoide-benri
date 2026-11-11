@@ -7,7 +7,7 @@ a=sys.argv[1:];push='--no-push' not in a;a=[x for x in a if x!='--no-push']
 date=datetime.date.today().isoformat()
 if '--date' in a:i=a.index('--date');date=a[i+1];del a[i:i+2]
 if len(a)<2:sys.exit(__doc__)
-ALIAS={'maki ss':'マキ','maki':'マキ','マキss':'マキ','⛄️由紀':'由紀','由紀⛄️':'由紀','星の王子':'星野王子','🤩星の王子🤟':'星野王子','星野':'星野王子','華恋':'華恋','カレン':'華恋','華恋💐':'華恋','karen':'華恋'}
+ALIAS={'maki ss':'マキ','maki':'マキ','マキss':'マキ','⛄️由紀':'由紀','由紀⛄️':'由紀','星の王子':'星野王子','🤩星の王子🤟':'星野王子','星野':'星野王子'}
 who,pt=a[0],a[1];feel=a[2] if len(a)>2 else ''
 who=ALIAS.get(who,who)
 fs=[f for f in glob.glob('/workspace/思い出ノート/*.md') if os.path.basename(f).startswith(who)]

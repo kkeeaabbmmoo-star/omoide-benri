@@ -21,13 +21,13 @@ mem.sort(key=lambda x:x[0],reverse=True)
 def ul(items):return '<ul>'+''.join('<li>'+link(i)+'</li>' for i in items)+'</ul>'
 now=datetime.datetime.now().strftime('%Y-%m-%d %H:%M')
 card=lambda title,inner:f'<section class="card"><h2>{title}</h2>{inner}</section>'
-ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸','愛🍒','おーさー','みきティ','しの','由紀','マキ','星野王子','華恋']
+ORDER=['ゆず💖','すーさん','まい🍊','まちゃ','らん','レイ','恵','瀬戸','由依🌸','愛🍒','おーさー','みきティ','しの','由紀','マキ','星野王子']
 people={}
 for d,w,b in mem: people.setdefault(w,[]).append((d,b))
 for w in empty: people.setdefault(w,[])
 names=[n for n in ORDER if n in people]+sorted(n for n in people if n not in ORDER)
-AV={'ゆず💖':'yuzu','まい🍊':'mai','まちゃ':'macha','らん':'ran','レイ':'rei','恵':'megumi','瀬戸':'seto','由依🌸':'yui','愛🍒':'ai','おーさー':'osa','みきティ':'mikity','しの':'shino','由紀':'yuki','マキ':'maki','華恋':'karen'}
-ICON={'ゆず💖':'💖','すーさん':'🍺','まい🍊':'🍊','まちゃ':'😂','らん':'☺️','レイ':'💓','恵':'🫂','瀬戸':'🥺','由依🌸':'🌸','星野王子':'🤩','華恋':'💐'}
+AV={'ゆず💖':'yuzu','まい🍊':'mai','まちゃ':'macha','らん':'ran','レイ':'rei','恵':'megumi','瀬戸':'seto','由依🌸':'yui','愛🍒':'ai','おーさー':'osa','みきティ':'mikity','しの':'shino','由紀':'yuki','マキ':'maki'}
+ICON={'ゆず💖':'💖','すーさん':'🍺','まい🍊':'🍊','まちゃ':'😂','らん':'☺️','レイ':'💓','恵':'🫂','瀬戸':'🥺','由依🌸':'🌸','星野王子':'🤩'}
 for _w in list(people):
     if _w not in AV and os.path.exists(os.path.join(D,'img','avatars',re.sub(r'[^\w・ー]','',_w)+'.png')):AV[_w]=re.sub(r'[^\w・ー]','',_w)
 def plain(w):return re.sub(r'[^\w・ー]','',w) or w
@@ -48,7 +48,7 @@ def pcard(w):
     return f'<div class="mem" id="m-{E(pn)}" data-last="{E(last(w))}"><div class="nm"><button type="button" class="memToggle" aria-expanded="false" title="思い出を開く／とじる"><span class="avw">{av}<small class="ago"></small></span><b class="memName">{E(pn)}</b></button><a class="pfOne" href="profiles.html#p-{E(pn)}" title="プロフィール" aria-label="{E(pn)}のプロフィール">👤</a><span class="md">（最新{len(es)}日分）</span><span class="stall"></span></div>{inner}</div>'
 def last(w):
     ds=sorted(d for d,_ in people.get(w,[]) if re.match(r'\d{4}-\d\d-\d\d$',d));return ds[-1] if ds else ('old' if people.get(w) else '')
-ROW=['愛🍒','おーさー','みきティ','すーさん','恵','レイ','まい🍊','瀬戸','らん','まちゃ','由依🌸','ゆず💖','しの','由紀','マキ','星野王子','華恋']
+ROW=['愛🍒','おーさー','みきティ','すーさん','恵','レイ','まい🍊','瀬戸','らん','まちゃ','由依🌸','ゆず💖','しの','由紀','マキ','星野王子']
 def mbar():
     it=''
     for w in [x for x in ROW if x in people]+[x for x in names if x not in ROW]:
@@ -587,7 +587,7 @@ a.pfOne:active{{transform:scale(.94);background:#ffe4ee}}
 </style></head>
 <body><header><h1>💖 ゆず＆みんなの思い出</h1><div class="sub">エイジ専用・最終更新 {now}</div><button id="rl" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄 更新</button><a id="pfBtn" href="profiles.html">👤 みんなのプロフィール</a></header><button id="rlf" aria-label="更新" onclick="location.replace(location.pathname+'?v='+Date.now())">🔄</button><main>{body}</main>'''+JS
 open(os.path.join(D,'index.html'),'w').write(page)
-SWV='omoide-v61'
+SWV='omoide-v62'
 # v48: precache profiles + closeness so iPhone PWA picks up pt UI; network-first for HTML/JS
 _SW=("const C='"+SWV+"';"+
 "const PRE=['./','index.html','profiles.html','closeness.js','closeness.js?v=53','monthly.js','monthly.js?v=10','pf_store.js','pf_store.js?v=1','send.js','send.js?v=6','backup_om.js','backup_om.js?v=15','sent-status.js','sent-status.js?v=ss7','nav.js','nav.js?v=nv4','manifest.webmanifest','data/profiles.json','data/posts.json','data/levels.json','data/top_comments.json'];"+
