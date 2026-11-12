@@ -16,7 +16,9 @@ if a[:1]==['--list']:
         for d in re.findall(r'^## (.+)$',open(f).read(),re.M):print(plain(w)+'_'+d.strip())
     sys.exit()
 if len(a)<3:sys.exit(__doc__)
+ALIAS={'華恋':'華恋','カレン':'華恋','華恋💐':'華恋','karen':'華恋'}
 who,key,text=a[0],a[1],a[2]
+who=ALIAS.get(who,who)
 fs=[f for f in glob.glob('/workspace/思い出ノート/*.md') if os.path.basename(f).startswith(who)]
 if len(fs)!=1:sys.exit(f'名前が見つからない/複数: {fs}')
 w=plain(os.path.basename(fs[0])[:-3]);pid=key if '_' in key else w+'_'+key
