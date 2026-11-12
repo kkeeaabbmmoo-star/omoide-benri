@@ -125,6 +125,7 @@ function daysUntil(ymdTarget){
 var INV=null,REW={},SNAP={};
 function fetchJSON(u){return fetch(u+'?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).catch(function(){return null})}
 function loadData(){
+  /* 報酬月の固定リスト（計算で年を足しているのではない）。2027-11は紅葉セットの温存先。rewards と対になる data/monthly/<ym>.json が無いと 404 になる */
   var months=['2026-11','2026-12','2027-02','2027-11'];
   var jobs=[fetchJSON('data/inventory.json')];
   months.forEach(function(ym){jobs.push(fetchJSON('data/rewards/'+ym+'.json'));jobs.push(fetchJSON('data/monthly/'+ym+'.json'))});
