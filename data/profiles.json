@@ -365,7 +365,12 @@
     "tone": "やさしくて静かな口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/しの_0.jpg",
+    "data/profile_photos/しの_1.jpg",
+    "",
+    ""
+   ]
   },
   "由紀": {
    "display": "由紀",
@@ -503,7 +508,12 @@
     "tone": "やさしく丁寧で、ちょっぴり得意げな口調",
     "rewardItems": []
    },
-   "photos": []
+   "photos": [
+    "data/profile_photos/華恋_0.jpg",
+    "data/profile_photos/華恋_1.jpg",
+    "",
+    ""
+   ]
   }
  }
 }
