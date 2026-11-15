@@ -675,3 +675,17 @@ for ym,sc in sorted(by_m.items()):
 print('built',len(mem),'memories')
 if '--push' in sys.argv:
     subprocess.run(['git','-C',D,'add','-A']);subprocess.run(['git','-C',D,'commit','-qm','update '+now]);subprocess.run(['git','-C',D,'push','-q'],check=True)
+    # Worker への同期＋配備は既定オフ。エイジの確認とゆずの合図があるまで有効化しないこと。
+    # 有効化に必要なもの（まだやってはいけない）:
+    #   1) エイジ本人のOK
+    #   2) 環境変数 OMOIDE_AUTO_DEPLOY=1 を付けて build.py --push（または add_memory.py）を実行
+    # 有効時は sync_deploy.sh --deploy --confirm-deploy のあと check_drift.sh で dist と main の一致を確認する。
+    # 自動でフラグを立てたり、配備を起動したりしない。
+    if os.environ.get('OMOIDE_AUTO_DEPLOY') == '1':
+        _sync = '/workspace/omoide-cf-deploy/sync_deploy.sh'
+        _drift = '/workspace/omoide-cf-deploy/check_drift.sh'
+        print('OMOIDE_AUTO_DEPLOY=1: running sync_deploy.sh --deploy --confirm-deploy, then check_drift.sh')
+        subprocess.run([_sync, '--deploy', '--confirm-deploy'], check=True)
+        subprocess.run([_drift], check=True)
+    else:
+        print('Worker deploy skipped (OMOIDE_AUTO_DEPLOY is not 1; GitHub Pages only).')
