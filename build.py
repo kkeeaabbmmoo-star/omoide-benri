@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Regenerate 💖 ゆず＆みんなの思い出 (旧 思い出＆便利帳) from md sources. Usage: python3 build.py [--push]
+--push also deploys the login phone version and runs check_drift.sh (opt out: OMOIDE_AUTO_DEPLOY=0).
 PUBLIC page: never put passwords/passphrases in the md sources."""
 import glob,os,re,html,json,sys,subprocess,datetime
 D=os.path.dirname(os.path.abspath(__file__))
@@ -674,18 +675,8 @@ for ym,sc in sorted(by_m.items()):
     json.dump({'month':ym,'finalized':True,'source':'posts+publish','ranking':ranking,'updated':now},open(path,'w'),ensure_ascii=False,indent=1)
 print('built',len(mem),'memories')
 if '--push' in sys.argv:
-    subprocess.run(['git','-C',D,'add','-A']);subprocess.run(['git','-C',D,'commit','-qm','update '+now]);subprocess.run(['git','-C',D,'push','-q'],check=True)
-    # Worker への同期＋配備は既定オフ。エイジの確認とゆずの合図があるまで有効化しないこと。
-    # 有効化に必要なもの（まだやってはいけない）:
-    #   1) エイジ本人のOK
-    #   2) 環境変数 OMOIDE_AUTO_DEPLOY=1 を付けて build.py --push（または add_memory.py）を実行
-    # 有効時は sync_deploy.sh --deploy --confirm-deploy のあと check_drift.sh で dist と main の一致を確認する。
-    # 自動でフラグを立てたり、配備を起動したりしない。
-    if os.environ.get('OMOIDE_AUTO_DEPLOY') == '1':
-        _sync = '/workspace/omoide-cf-deploy/sync_deploy.sh'
-        _drift = '/workspace/omoide-cf-deploy/check_drift.sh'
-        print('OMOIDE_AUTO_DEPLOY=1: running sync_deploy.sh --deploy --confirm-deploy, then check_drift.sh')
-        subprocess.run([_sync, '--deploy', '--confirm-deploy'], check=True)
-        subprocess.run([_drift], check=True)
-    else:
-        print('Worker deploy skipped (OMOIDE_AUTO_DEPLOY is not 1; GitHub Pages only).')
+    # エイジ承認（2026-11-15 22:14 JST）: publish のたびにログイン付きスマホ版も更新する。
+    # 非常時のみ OMOIDE_AUTO_DEPLOY=0 で省略。--no-push ならこの塊自体が走らない（配備もしない）。
+    sys.path.insert(0, '/workspace/omoide-cf-deploy')
+    from after_push_deploy import publish_after_build
+    publish_after_build(now, D)

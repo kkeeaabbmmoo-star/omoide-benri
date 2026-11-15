@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """みんなの思い出に1件追加して再ビルド。
   python3 add_memory.py <名前(例: すーさん / まい / 由依)> "<要点>" ["<感じたこと>"] [--date YYYY-MM-DD] [--no-push]
+--no-push は build だけ（git push もログイン版の配備もしない）。既定の --push は GitHub とログイン版の両方を更新する。
 名前は /workspace/思い出ノート/<名前>.md の先頭一致（絵文字なしでOK）。見つからなければ新メンバーとして作る（アイコンは img/avatars/ に置いて build.py の AV に足す、なければ💬）。公開ページなので個人情報・パスワードは書かないこと。"""
 import sys,glob,os,datetime,subprocess
 a=sys.argv[1:];push='--no-push' not in a;a=[x for x in a if x!='--no-push']
